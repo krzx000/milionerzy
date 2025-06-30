@@ -26,3 +26,10 @@ export interface GameState {
   currentReward: number; // nagroda za aktualne pytanie
   lastCorrectLevel: number; // ostatni poprawnie ukończony poziom
 }
+
+export interface GameResult {
+  status: "won" | "lost" | "quit";
+  finalReward: number;
+  answeredQuestions: number;
+  guaranteedReward: number;
+}
