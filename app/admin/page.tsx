@@ -16,6 +16,7 @@ import { Question as QuestionType } from "@/types/question";
 import { QuestionDialog } from "@/components/question-dialog";
 import { QuestionViewDialog } from "@/components/question-view-dialog";
 import { ThemeButton, ThemeToggle } from "@/components/theme-toggle";
+import { QuestionsAPI } from "@/lib/api/questions";
 
 const sampleQuestions: QuestionType[] = [
   {
@@ -55,8 +56,9 @@ const sampleQuestions: QuestionType[] = [
 ];
 
 export default function Admin() {
-  const [questions, setQuestions] =
-    React.useState<QuestionType[]>(sampleQuestions);
+  const [questions, setQuestions] = React.useState<QuestionType[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
   const [isQuestionDialogOpen, setIsQuestionDialogOpen] = React.useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = React.useState(false);
   const [editingQuestion, setEditingQuestion] = React.useState<
@@ -68,50 +70,101 @@ export default function Admin() {
     QuestionType[]
   >([]);
 
-  const handleAddQuestion = () => {
+  // Ładowanie pytań z API przy inicjalizacji
+  React.useEffect(() => {
+    loadQuestions();
+  }, []);
+
+  const loadQuestions = async () => {
+    setLoading(true);
+    setError(null);
+
+    const response = await QuestionsAPI.getAll();
+
+    if (response.success && response.data) {
+      setQuestions(response.data);
+    } else {
+      setError(response.error || "Błąd ładowania pytań");
+      // Fallback do przykładowych pytań
+      setQuestions(sampleQuestions);
+    }
+
+    setLoading(false);
+  };
+
+  const showErrorMessage = React.useCallback((message: string) => {
+    setError(message);
+    setTimeout(() => setError(null), 5000);
+  }, []);
+
+  const handleAddQuestion = React.useCallback(() => {
     setEditingQuestion(undefined);
     setIsQuestionDialogOpen(true);
-  };
+  }, []);
 
-  const handleEditQuestion = (question: QuestionType) => {
+  const handleEditQuestion = React.useCallback((question: QuestionType) => {
     setEditingQuestion(question);
     setIsQuestionDialogOpen(true);
-  };
+  }, []);
 
-  const handleViewQuestion = (question: QuestionType) => {
+  const handleViewQuestion = React.useCallback((question: QuestionType) => {
     setViewingQuestion(question);
     setIsViewDialogOpen(true);
-  };
+  }, []);
 
-  const handleDeleteQuestion = (id: string) => {
-    if (confirm("Czy na pewno chcesz usunąć to pytanie?")) {
-      setQuestions((prev) => prev.filter((q) => q.id !== id));
-    }
-  };
+  const handleDeleteQuestion = React.useCallback(
+    async (id: string) => {
+      if (confirm("Czy na pewno chcesz usunąć to pytanie?")) {
+        const response = await QuestionsAPI.delete(id);
 
-  const handleSaveQuestion = (
-    questionData: Omit<QuestionType, "id"> & { id?: string }
-  ) => {
-    if (questionData.id) {
-      // Edit existing question
-      setQuestions((prev) =>
-        prev.map((q) =>
-          q.id === questionData.id
-            ? { ...questionData, id: questionData.id }
-            : q
-        )
-      );
-    } else {
-      // Add new question
-      const newQuestion: QuestionType = {
-        ...questionData,
-        id: Date.now().toString(),
-      };
-      setQuestions((prev) => [...prev, newQuestion]);
-    }
-  };
+        if (response.success) {
+          setQuestions((prev) => prev.filter((q) => q.id !== id));
+          // Usuń pytanie z listy zaznaczonych jeśli było zaznaczone
+          setSelectedQuestions((prev) => prev.filter((q) => q.id !== id));
+        } else {
+          showErrorMessage(response.error || "Błąd usuwania pytania");
+        }
+      }
+    },
+    [showErrorMessage]
+  );
 
-  const handleDeleteSelectedQuestions = () => {
+  const handleSaveQuestion = React.useCallback(
+    async (questionData: Omit<QuestionType, "id"> & { id?: string }) => {
+      if (questionData.id) {
+        // Edit existing question
+        const response = await QuestionsAPI.update(questionData.id, {
+          content: questionData.content,
+          answers: questionData.answers,
+          correctAnswer: questionData.correctAnswer,
+        });
+
+        if (response.success && response.data) {
+          setQuestions((prev) =>
+            prev.map((q) => (q.id === questionData.id ? response.data! : q))
+          );
+        } else {
+          showErrorMessage(response.error || "Błąd aktualizacji pytania");
+        }
+      } else {
+        // Add new question
+        const response = await QuestionsAPI.create({
+          content: questionData.content,
+          answers: questionData.answers,
+          correctAnswer: questionData.correctAnswer,
+        });
+
+        if (response.success && response.data) {
+          setQuestions((prev) => [...prev, response.data!]);
+        } else {
+          showErrorMessage(response.error || "Błąd dodawania pytania");
+        }
+      }
+    },
+    [showErrorMessage]
+  );
+
+  const handleDeleteSelectedQuestions = React.useCallback(async () => {
     if (selectedQuestions.length === 0) return;
 
     const message =
@@ -121,12 +174,18 @@ export default function Admin() {
 
     if (confirm(message)) {
       const selectedIds = selectedQuestions.map((q) => q.id);
-      setQuestions((prev) => prev.filter((q) => !selectedIds.includes(q.id)));
-      setSelectedQuestions([]);
-    }
-  };
+      const response = await QuestionsAPI.deleteMany(selectedIds);
 
-  const handleDeleteAllQuestions = () => {
+      if (response.success) {
+        setQuestions((prev) => prev.filter((q) => !selectedIds.includes(q.id)));
+        setSelectedQuestions([]);
+      } else {
+        showErrorMessage(response.error || "Błąd usuwania pytań");
+      }
+    }
+  }, [selectedQuestions, showErrorMessage]);
+
+  const handleDeleteAllQuestions = React.useCallback(async () => {
     if (questions.length === 0) return;
 
     if (
@@ -134,10 +193,16 @@ export default function Admin() {
         `Czy na pewno chcesz usunąć wszystkie ${questions.length} pytań? Ta akcja jest nieodwracalna!`
       )
     ) {
-      setQuestions([]);
-      setSelectedQuestions([]);
+      const response = await QuestionsAPI.deleteAll();
+
+      if (response.success) {
+        setQuestions([]);
+        setSelectedQuestions([]);
+      } else {
+        showErrorMessage(response.error || "Błąd usuwania wszystkich pytań");
+      }
     }
-  };
+  }, [questions.length, showErrorMessage]);
 
   const handleRowSelectionChange = React.useCallback(
     (selectedRows: QuestionType[]) => {
@@ -146,58 +211,61 @@ export default function Admin() {
     []
   );
 
-  const columns = [
-    {
-      accessorKey: "content" as keyof QuestionType,
-      header: "Pytanie",
-      cell: ({ row }: { row: { original: QuestionType } }) => (
-        <div className="max-w-[300px] truncate" title={row.original.content}>
-          {row.original.content}
-        </div>
-      ),
-    },
+  const columns = React.useMemo(
+    () => [
+      {
+        accessorKey: "content" as keyof QuestionType,
+        header: "Pytanie",
+        cell: ({ row }: { row: { original: QuestionType } }) => (
+          <div className="max-w-[300px] truncate" title={row.original.content}>
+            {row.original.content}
+          </div>
+        ),
+      },
 
-    {
-      accessorKey: "correctAnswer" as keyof QuestionType,
-      header: "Poprawna odpowiedź",
-      cell: ({ row }: { row: { original: QuestionType } }) => (
-        <Badge variant="outline">
-          {row.original.correctAnswer}:{" "}
-          {row.original.answers[row.original.correctAnswer]}
-        </Badge>
-      ),
-    },
-    {
-      id: "actions",
-      header: "Akcje",
-      cell: ({ row }: { row: { original: QuestionType } }) => (
-        <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleViewQuestion(row.original)}
-          >
-            <EyeIcon className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleEditQuestion(row.original)}
-          >
-            <EditIcon className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => handleDeleteQuestion(row.original.id)}
-          >
-            <TrashIcon className="w-4 h-4" />
-          </Button>
-        </div>
-      ),
-      enableSorting: false,
-    },
-  ];
+      {
+        accessorKey: "correctAnswer" as keyof QuestionType,
+        header: "Poprawna odpowiedź",
+        cell: ({ row }: { row: { original: QuestionType } }) => (
+          <Badge variant="outline">
+            {row.original.correctAnswer}:{" "}
+            {row.original.answers[row.original.correctAnswer]}
+          </Badge>
+        ),
+      },
+      {
+        id: "actions",
+        header: "Akcje",
+        cell: ({ row }: { row: { original: QuestionType } }) => (
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleViewQuestion(row.original)}
+            >
+              <EyeIcon className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleEditQuestion(row.original)}
+            >
+              <EditIcon className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => handleDeleteQuestion(row.original.id)}
+            >
+              <TrashIcon className="w-4 h-4" />
+            </Button>
+          </div>
+        ),
+        enableSorting: false,
+      },
+    ],
+    [handleViewQuestion, handleEditQuestion, handleDeleteQuestion]
+  );
   return (
     <div className="flex flex-col items-center justify-center">
       {/* Header z przełącznikiem motywu */}
@@ -209,6 +277,13 @@ export default function Admin() {
       </div>
 
       <div className="grid min-h-screen grid-cols-12 gap-4 p-4">
+        {/* Powiadomienie o błędach */}
+        {error && (
+          <div className="col-span-12 p-4 mb-4 text-red-800 bg-red-100 border border-red-300 rounded">
+            <strong>Błąd:</strong> {error}
+          </div>
+        )}
+
         {/* Lista pytań + edycja i wgrywanie (duży panel po lewej) */}
         <section className="col-span-5 row-span-3">
           <Card>
@@ -218,7 +293,7 @@ export default function Admin() {
             </CardHeader>
             <CardContent>
               <div className="mb-4 flex flex-wrap gap-2">
-                <Button onClick={handleAddQuestion}>
+                <Button onClick={handleAddQuestion} disabled={loading}>
                   <PlusIcon className="w-4 h-4 mr-2" />
                   Dodaj pytanie
                 </Button>
@@ -226,6 +301,7 @@ export default function Admin() {
                   <Button
                     variant="destructive"
                     onClick={handleDeleteSelectedQuestions}
+                    disabled={loading}
                   >
                     <TrashIcon className="w-4 h-4 mr-2" />
                     Usuń wybrane ({selectedQuestions.length})
@@ -235,6 +311,7 @@ export default function Admin() {
                   <Button
                     variant="outline"
                     onClick={handleDeleteAllQuestions}
+                    disabled={loading}
                     className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
                   >
                     <TrashIcon className="w-4 h-4 mr-2" />
@@ -242,12 +319,20 @@ export default function Admin() {
                   </Button>
                 )}
               </div>
-              <DataTable
-                columns={columns}
-                data={questions}
-                enableRowSelection={true}
-                onRowSelectionChange={handleRowSelectionChange}
-              />
+
+              {loading ? (
+                <div className="flex items-center justify-center p-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-2">Ładowanie pytań...</span>
+                </div>
+              ) : (
+                <DataTable
+                  columns={columns}
+                  data={questions}
+                  enableRowSelection={true}
+                  onRowSelectionChange={handleRowSelectionChange}
+                />
+              )}
             </CardContent>
           </Card>
         </section>

@@ -357,7 +357,7 @@ export function DataTable<TData>({
                   },
                 }))
               }
-              className="h-8 w-[70px] rounded border border-input bg-background px-3 py-1 text-sm"
+              className="h-8 w-[70px] rounded-md border border-input bg-background px-3 py-1 text-sm"
             >
               {[10, 20, 30, 40, 50].map((pageSize) => (
                 <option key={pageSize} value={pageSize}>
