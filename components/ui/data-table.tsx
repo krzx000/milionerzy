@@ -327,8 +327,8 @@ export function DataTable<TData>({
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-between px-2">
-        <div className="flex-1 text-sm text-muted-foreground">
+      <div className="flex flex-col space-y-4 px-2 xl:flex-row sm:items-center sm:justify-between sm:space-y-0">
+        <div className="flex-1 text-sm text-muted-foreground order-2 sm:order-1 text-center sm:text-left">
           {enableRowSelection ? (
             <>
               {
@@ -342,9 +342,11 @@ export function DataTable<TData>({
             <>Razem {sortedData.length} wierszy.</>
           )}
         </div>
-        <div className="flex items-center space-x-6 lg:space-x-8">
-          <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Wierszy na stronie</p>
+        <div className="flex flex-col space-y-3 order-1 sm:order-2 xl:flex-row sm:items-center sm:space-x-4 sm:space-y-0 xl:space-x-6 2xl:space-x-8">
+          <div className="flex items-center justify-center space-x-2 sm:justify-start xl:space-x-3">
+            <p className="text-sm font-medium whitespace-nowrap">
+              Wierszy na stronie
+            </p>
             <select
               value={state.pagination.pageSize}
               onChange={(e) =>
@@ -357,7 +359,7 @@ export function DataTable<TData>({
                   },
                 }))
               }
-              className="h-8 w-[70px] rounded-md border border-input bg-background px-3 py-1 text-sm"
+              className="h-8 w-[70px] rounded-md border border-input bg-background px-3 py-1 text-sm xl:w-[80px]"
             >
               {[10, 20, 30, 40, 50].map((pageSize) => (
                 <option key={pageSize} value={pageSize}>
@@ -366,45 +368,45 @@ export function DataTable<TData>({
               ))}
             </select>
           </div>
-          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+          <div className="flex w-full items-center justify-center text-sm font-medium sm:w-[100px] xl:w-[120px] xl:text-base">
             Strona {state.pagination.pageIndex + 1} z {pageCount}
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-center space-x-1 sm:space-x-2 xl:space-x-3">
             <Button
               variant="outline"
-              className="hidden h-8 w-8 p-0 lg:flex"
+              className="hidden h-8 w-8 p-0 lg:flex xl:h-9 xl:w-9"
               onClick={() => handlePageChange(0)}
               disabled={!canPreviousPage}
             >
               <span className="sr-only">Idź do pierwszej strony</span>
-              <ChevronsLeftIcon className="h-4 w-4" />
+              <ChevronsLeftIcon className="h-4 w-4 xl:h-5 xl:w-5" />
             </Button>
             <Button
               variant="outline"
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 xl:h-9 xl:w-9"
               onClick={() => handlePageChange(state.pagination.pageIndex - 1)}
               disabled={!canPreviousPage}
             >
               <span className="sr-only">Idź do poprzedniej strony</span>
-              <ChevronLeftIcon className="h-4 w-4" />
+              <ChevronLeftIcon className="h-4 w-4 xl:h-5 xl:w-5" />
             </Button>
             <Button
               variant="outline"
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 xl:h-9 xl:w-9"
               onClick={() => handlePageChange(state.pagination.pageIndex + 1)}
               disabled={!canNextPage}
             >
               <span className="sr-only">Idź do następnej strony</span>
-              <ChevronRightIcon className="h-4 w-4" />
+              <ChevronRightIcon className="h-4 w-4 xl:h-5 xl:w-5" />
             </Button>
             <Button
               variant="outline"
-              className="hidden h-8 w-8 p-0 lg:flex"
+              className="hidden h-8 w-8 p-0 lg:flex xl:h-9 xl:w-9"
               onClick={() => handlePageChange(pageCount - 1)}
               disabled={!canNextPage}
             >
               <span className="sr-only">Idź do ostatniej strony</span>
-              <ChevronsRightIcon className="h-4 w-4" />
+              <ChevronsRightIcon className="h-4 w-4 xl:h-5 xl:w-5" />
             </Button>
           </div>
         </div>

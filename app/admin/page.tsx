@@ -532,7 +532,10 @@ export default function Admin() {
         accessorKey: "content" as keyof QuestionType,
         header: "Pytanie",
         cell: ({ row }: { row: { original: QuestionType } }) => (
-          <div className="max-w-[300px] truncate" title={row.original.content}>
+          <div
+            className="w-80 break-words leading-relaxed"
+            title={row.original.content}
+          >
             {row.original.content}
           </div>
         ),
@@ -542,9 +545,11 @@ export default function Admin() {
         accessorKey: "correctAnswer" as keyof QuestionType,
         header: "Poprawna odpowiedź",
         cell: ({ row }: { row: { original: QuestionType } }) => (
-          <Badge variant="outline">
-            {row.original.correctAnswer}:{" "}
-            {row.original.answers[row.original.correctAnswer]}
+          <Badge variant="outline" className="break-words max-w-full">
+            <span className="break-all">
+              {row.original.correctAnswer}:{" "}
+              {row.original.answers[row.original.correctAnswer]}
+            </span>
           </Badge>
         ),
       },
@@ -625,10 +630,11 @@ export default function Admin() {
                   </p>
                 </div>
               )}
-              <div className="mb-4 flex flex-wrap gap-2">
+              <div className="mb-4 flex flex-col sm:flex-row flex-wrap gap-2">
                 <Button
                   onClick={handleAddQuestion}
                   disabled={loading || isGameActive}
+                  className="flex-1 xl:flex-none"
                 >
                   <PlusIcon className="w-4 h-4 mr-2" />
                   Dodaj pytanie
@@ -638,6 +644,7 @@ export default function Admin() {
                     variant="destructive"
                     onClick={handleDeleteSelectedQuestions}
                     disabled={loading || isGameActive}
+                    className="flex-1 xl:flex-none"
                   >
                     <TrashIcon className="w-4 h-4 mr-2" />
                     Usuń wybrane ({selectedQuestions.length})
@@ -648,7 +655,7 @@ export default function Admin() {
                     variant="outline"
                     onClick={handleDeleteAllQuestions}
                     disabled={loading || isGameActive}
-                    className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground flex-1 xl:flex-none"
                   >
                     <TrashIcon className="w-4 h-4 mr-2" />
                     Usuń wszystkie ({questions.length})
@@ -729,7 +736,7 @@ export default function Admin() {
                       size="sm"
                       disabled={usedLifelines.fiftyFifty || gameLoading}
                       onClick={() => handleUseLifeline("fiftyFifty")}
-                      className="text-xs"
+                      className="text-xs whitespace-normal break-words h-auto py-2"
                     >
                       {usedLifelines.fiftyFifty ? (
                         <span className="line-through">⚖️ 50:50</span>
@@ -744,7 +751,7 @@ export default function Admin() {
                       size="sm"
                       disabled={usedLifelines.phoneAFriend || gameLoading}
                       onClick={() => handleUseLifeline("phoneAFriend")}
-                      className="text-xs"
+                      className="text-xs whitespace-normal break-words h-auto py-2"
                     >
                       {usedLifelines.phoneAFriend ? (
                         <span className="line-through">📞 Przyjaciel</span>
@@ -759,7 +766,7 @@ export default function Admin() {
                       size="sm"
                       disabled={usedLifelines.askAudience || gameLoading}
                       onClick={() => handleUseLifeline("askAudience")}
-                      className="text-xs"
+                      className="text-xs whitespace-normal break-words h-auto py-2"
                     >
                       {usedLifelines.askAudience ? (
                         <span className="line-through">👥 Publiczność</span>
@@ -843,7 +850,7 @@ export default function Admin() {
                     <h3 className="text-lg font-semibold text-blue-900 mb-2">
                       Pytanie za {getCurrentPrize()}
                     </h3>
-                    <p className="text-blue-800 leading-relaxed">
+                    <p className="text-blue-800 leading-relaxed break-words">
                       {currentQuestion.content}
                     </p>
                   </div>
@@ -869,7 +876,7 @@ export default function Admin() {
                           | "destructive"
                           | "outline" = "outline";
                         let className =
-                          "justify-start text-left h-auto py-3 px-4";
+                          "justify-start text-left h-auto py-3 px-4 whitespace-normal break-words min-h-[3rem]";
 
                         if (isCorrect) {
                           variant = "default";
@@ -893,10 +900,18 @@ export default function Admin() {
                             disabled={gameLoading || isAnswerRevealed}
                             onClick={() => handleSelectAnswer(key)}
                           >
-                            <span className="font-bold mr-3">{key}:</span>
-                            <span className="flex-1">{value}</span>
-                            {isCorrect && <span className="ml-2">✓</span>}
-                            {isWrong && <span className="ml-2">✗</span>}
+                            <span className="font-bold mr-3 flex-shrink-0">
+                              {key}:
+                            </span>
+                            <span className="flex-1 break-words leading-relaxed">
+                              {value}
+                            </span>
+                            {isCorrect && (
+                              <span className="ml-2 flex-shrink-0">✓</span>
+                            )}
+                            {isWrong && (
+                              <span className="ml-2 flex-shrink-0">✗</span>
+                            )}
                           </Button>
                         );
                       }
@@ -909,10 +924,10 @@ export default function Admin() {
                       <div className="text-sm text-blue-700 font-medium">
                         Zaznaczona odpowiedź: <strong>{selectedAnswer}</strong>
                       </div>
-                      <div className="flex gap-3 justify-center">
+                      <div className="flex flex-col xl:flex-row gap-2 w-full">
                         <Button
                           onClick={handleConfirmAnswer}
-                          className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 text-lg font-semibold"
+                          className="bg-green-600 hover:bg-green-700 text-white flex-1 px-4 py-3 text-lg font-semibold"
                           size="lg"
                         >
                           ✅ Potwierdź odpowiedź
@@ -920,7 +935,7 @@ export default function Admin() {
                         <Button
                           onClick={() => setSelectedAnswer(null)}
                           variant="outline"
-                          className="px-6 py-3 text-lg"
+                          className="flex-1 px-4 py-3 text-lg"
                           size="lg"
                         >
                           ❌ Anuluj
@@ -938,7 +953,7 @@ export default function Admin() {
                   )}
 
                   {isAnswerRevealed && !gameLoading && lastAnswerResult && (
-                    <div className="text-center text-sm text-gray-600">
+                    <div className="text-center text-sm text-gray-600 break-words">
                       {lastAnswerResult.correct ? (
                         lastAnswerResult.gameWon ? (
                           <span className="text-green-600 font-semibold">
