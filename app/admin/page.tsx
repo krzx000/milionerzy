@@ -554,10 +554,18 @@ export default function Admin() {
         cell: ({ row }: { row: { original: QuestionType } }) => (
           <Badge
             variant="outline"
-            className={`truncate max-w-[200px] ${isGameActive ? 'blur-sm select-none pointer-events-none' : ''}`}
-            title={isGameActive ? "Ukryte podczas gry" : `${row.original.correctAnswer}: ${
-              row.original.answers[row.original.correctAnswer]
+            className={`truncate max-w-[200px] ${
+              isGameActive
+                ? "pixelated-text select-none pointer-events-none"
+                : ""
             }`}
+            title={
+              isGameActive
+                ? "Ukryte podczas gry"
+                : `${row.original.correctAnswer}: ${
+                    row.original.answers[row.original.correctAnswer]
+                  }`
+            }
           >
             <span className="truncate">
               {row.original.correctAnswer}:{" "}
