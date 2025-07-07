@@ -469,26 +469,6 @@ export default function Admin() {
     AUTO_PROGRESS_TIME,
   ]);
 
-  // Handler do manualnego przejścia do kolejnego pytania (do testów)
-  const handleManualNextQuestion = React.useCallback(async () => {
-    try {
-      const nextResponse = await GameAPI.nextQuestion();
-      if (nextResponse.success && nextResponse.data) {
-        setGameSession(nextResponse.data);
-      } else {
-        showErrorMessage(
-          nextResponse.error || "Błąd przejścia do kolejnego pytania"
-        );
-      }
-      setSelectedAnswer(null);
-      setIsAnswerRevealed(false);
-      setLastAnswerResult(null);
-    } catch (error) {
-      console.error("Error in manual nextQuestion:", error);
-      showErrorMessage("Błąd przejścia do kolejnego pytania");
-    }
-  }, [showErrorMessage]);
-
   const getCurrentPrize = () => {
     const prizes = [
       "500 zł",
@@ -729,7 +709,7 @@ export default function Admin() {
               {isGameActive && (
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Pytanie:</div>
-                  <div className="text-center bg-blue-100 text-blue-800 py-2 rounded">
+                  <div className="text-center bg-blue-100 text-blue-800 py-2 rounded-md">
                     {currentQuestionIndex + 1} z {questions.length}
                   </div>
                 </div>
@@ -739,7 +719,7 @@ export default function Admin() {
               {isGameActive && (
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Aktualna nagroda:</div>
-                  <div className="text-lg font-bold text-center bg-yellow-100 text-yellow-800 py-2 rounded">
+                  <div className="text-lg font-bold text-center bg-yellow-100 text-yellow-800 py-2 rounded-md">
                     {getCurrentPrize()}
                   </div>
                 </div>
@@ -819,19 +799,7 @@ export default function Admin() {
                     >
                       {gameLoading ? "⏳ Kończenie..." : "🛑 Zakończ grę"}
                     </Button>
-                    {/* Przycisk do manualnego przejścia do kolejnego pytania - tylko do testów */}
-                    {isAnswerRevealed &&
-                      lastAnswerResult?.correct &&
-                      !lastAnswerResult?.gameWon && (
-                        <Button
-                          onClick={handleManualNextQuestion}
-                          variant="outline"
-                          disabled={gameLoading}
-                          className="w-full text-xs"
-                        >
-                          🔧 Następne pytanie (test)
-                        </Button>
-                      )}
+
                     <div className="text-xs text-gray-500 text-center">
                       Gracz wygrywa: {getWinningPrize()}
                     </div>
