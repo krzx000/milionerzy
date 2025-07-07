@@ -18,6 +18,7 @@ import { QuestionViewDialog } from "@/components/question-view-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { QuestionsAPI } from "@/lib/api/questions";
 import { GameSession } from "@/lib/db/game-session";
+import { toast } from "sonner";
 
 const sampleQuestions: QuestionType[] = [
   {
@@ -59,7 +60,6 @@ const sampleQuestions: QuestionType[] = [
 export default function Admin() {
   const [questions, setQuestions] = React.useState<QuestionType[]>([]);
   const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
   const [isQuestionDialogOpen, setIsQuestionDialogOpen] = React.useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = React.useState(false);
   const [editingQuestion, setEditingQuestion] = React.useState<
@@ -82,9 +82,6 @@ export default function Admin() {
   const [isAnswerRevealed, setIsAnswerRevealed] = React.useState(false);
   const [autoProgressTimeout, setAutoProgressTimeout] =
     React.useState<NodeJS.Timeout | null>(null);
-  const [gameStatusMessage, setGameStatusMessage] = React.useState<
-    string | null
-  >(null);
 
   // Computed values from game session
   const isGameActive = gameSession?.status === "active";
@@ -108,37 +105,38 @@ export default function Admin() {
   // Konfiguracja czasu na automatyczne przejście (w sekundach)
   const AUTO_PROGRESS_TIME = 5;
 
-  // Ładowanie pytań z API przy inicjalizacji
-  React.useEffect(() => {
-    loadQuestions();
+  const showGameStatusMessage = React.useCallback((message: string) => {
+    toast.info(message);
   }, []);
 
-  const loadQuestions = async () => {
+  const showSuccessMessage = React.useCallback((message: string) => {
+    toast.success(message);
+  }, []);
+
+  const showErrorMessage = React.useCallback((message: string) => {
+    toast.error(message);
+  }, []);
+
+  const loadQuestions = React.useCallback(async () => {
     setLoading(true);
-    setError(null);
 
     const response = await QuestionsAPI.getAll();
 
     if (response.success && response.data) {
       setQuestions(response.data);
     } else {
-      setError(response.error || "Błąd ładowania pytań");
+      showErrorMessage(response.error || "Błąd ładowania pytań");
       // Fallback do przykładowych pytań
       setQuestions(sampleQuestions);
     }
 
     setLoading(false);
-  };
+  }, [showErrorMessage]);
 
-  const showGameStatusMessage = React.useCallback((message: string) => {
-    setGameStatusMessage(message);
-    setTimeout(() => setGameStatusMessage(null), 5000);
-  }, []);
-
-  const showErrorMessage = React.useCallback((message: string) => {
-    setError(message);
-    setTimeout(() => setError(null), 5000);
-  }, []);
+  // Ładowanie pytań z API przy inicjalizacji
+  React.useEffect(() => {
+    loadQuestions();
+  }, [loadQuestions]);
 
   const handleAddQuestion = React.useCallback(() => {
     setEditingQuestion(undefined);
@@ -285,18 +283,17 @@ export default function Admin() {
     // Reset stanu pytania
     setSelectedAnswer(null);
     setIsAnswerRevealed(false);
-    setGameStatusMessage(null);
     if (autoProgressTimeout) {
       clearTimeout(autoProgressTimeout);
       setAutoProgressTimeout(null);
     }
 
     setGameLoading(false);
-    showGameStatusMessage("🎮 Gra rozpoczęta!");
+    showSuccessMessage("🎮 Gra rozpoczęta!");
   }, [
     questions.length,
     showErrorMessage,
-    showGameStatusMessage,
+    showSuccessMessage,
     autoProgressTimeout,
   ]);
 
@@ -317,7 +314,6 @@ export default function Admin() {
       // Wyczyść stan
       setSelectedAnswer(null);
       setIsAnswerRevealed(false);
-      setGameStatusMessage(null);
       if (autoProgressTimeout) {
         clearTimeout(autoProgressTimeout);
         setAutoProgressTimeout(null);
@@ -383,7 +379,7 @@ export default function Admin() {
           const isLastQuestion = currentQuestionIndex >= questions.length - 1;
 
           if (isLastQuestion) {
-            showGameStatusMessage(
+            showSuccessMessage(
               "🎉 Gratulacje! Gracz wygrał wszystkie pytania!"
             );
             // Zakończ grę po wygranej
@@ -395,7 +391,7 @@ export default function Admin() {
               setIsAnswerRevealed(false);
             }, 3000);
           } else {
-            showGameStatusMessage("✅ Poprawna odpowiedź!");
+            showSuccessMessage("✅ Poprawna odpowiedź!");
             // Przejście do następnego pytania
             const timeout = setTimeout(() => {
               setGameSession((prev) =>
@@ -412,7 +408,7 @@ export default function Admin() {
             setAutoProgressTimeout(timeout);
           }
         } else {
-          showGameStatusMessage(
+          showErrorMessage(
             `❌ Niepoprawna odpowiedź! Poprawna odpowiedź to: ${currentQuestion.correctAnswer}. Gra zakończona.`
           );
           // Zakończ grę po błędnej odpowiedzi
@@ -434,6 +430,8 @@ export default function Admin() {
     gameLoading,
     isAnswerRevealed,
     showGameStatusMessage,
+    showSuccessMessage,
+    showErrorMessage,
     AUTO_PROGRESS_TIME,
     currentQuestionIndex,
     questions.length,
@@ -561,20 +559,6 @@ export default function Admin() {
       </div>
 
       <div className="grid min-h-screen grid-cols-12 gap-4 p-4">
-        {/* Powiadomienie o błędach */}
-        {error && (
-          <div className="col-span-12 p-4 mb-4 text-red-800 bg-red-100 border border-red-300 rounded">
-            <strong>Błąd:</strong> {error}
-          </div>
-        )}
-
-        {/* Status gry */}
-        {gameStatusMessage && (
-          <div className="col-span-12 p-4 mb-4 text-blue-800 bg-blue-100 border border-blue-300 rounded">
-            <strong>Status:</strong> {gameStatusMessage}
-          </div>
-        )}
-
         {/* Lista pytań + edycja i wgrywanie (duży panel po lewej) */}
         <section className="col-span-5 row-span-3">
           <Card>
