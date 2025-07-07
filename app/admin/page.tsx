@@ -326,8 +326,6 @@ export default function Admin() {
 
   const handleEndGame = React.useCallback(async () => {
     try {
-      console.log("handleEndGame: Starting");
-
       const confirmed = await confirm({
         title: "Zakończyć grę?",
         description:
@@ -337,17 +335,12 @@ export default function Admin() {
         variant: "destructive",
       });
 
-      console.log("handleEndGame: Dialog result:", confirmed);
-
       if (confirmed) {
-        console.log("handleEndGame: User confirmed, starting API call");
         setGameLoading(true);
 
         const response = await GameAPI.endGame();
-        console.log("handleEndGame: API response:", response);
 
         if (response.success && response.data) {
-          console.log("handleEndGame: Success, setting gameSession to null");
           // Po pomyślnym zamknięciu sesji, ustaw gameSession na null
           // żeby UI wróciło do stanu "brak aktywnej gry"
           setGameSession(null);
@@ -359,13 +352,10 @@ export default function Admin() {
 
           showGameStatusMessage("🛑 Sesja gry zamknięta!");
         } else {
-          console.log("handleEndGame: API error:", response.error);
           showErrorMessage(response.error || "Błąd kończenia gry");
         }
 
         setGameLoading(false);
-      } else {
-        console.log("handleEndGame: User cancelled");
       }
     } catch (error) {
       console.error("handleEndGame: Exception:", error);
