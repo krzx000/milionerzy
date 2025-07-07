@@ -17,6 +17,7 @@ import { QuestionDialog } from "@/components/question-dialog";
 import { QuestionViewDialog } from "@/components/question-view-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { QuestionsAPI } from "@/lib/api/questions";
+import { GameAPI } from "@/lib/api/game";
 import { GameSession } from "@/lib/db/game-session";
 import { toast } from "sonner";
 
@@ -71,7 +72,7 @@ export default function Admin() {
     QuestionType[]
   >([]);
 
-  // Stan gry - lokalny (nie w bazie danych)
+  // Stan gry - przywrócona obsługa przez API
   const [gameSession, setGameSession] = React.useState<GameSession | null>(
     null
   );
@@ -133,10 +134,29 @@ export default function Admin() {
     setLoading(false);
   }, [showErrorMessage]);
 
-  // Ładowanie pytań z API przy inicjalizacji
+  const loadGameSession = React.useCallback(async () => {
+    const response = await GameAPI.getCurrentSession();
+
+    if (response.success && response.data) {
+      setGameSession(response.data);
+      // Reset UI state when loading session
+      setSelectedAnswer(null);
+      setIsAnswerRevealed(false);
+      if (autoProgressTimeout) {
+        clearTimeout(autoProgressTimeout);
+        setAutoProgressTimeout(null);
+      }
+    } else if (response.error) {
+      showErrorMessage(response.error);
+    }
+    // Jeśli nie ma aktywnej sesji, po prostu zostaw gameSession jako null
+  }, [showErrorMessage, autoProgressTimeout]);
+
+  // Ładowanie pytań i sesji gry z API przy inicjalizacji
   React.useEffect(() => {
     loadQuestions();
-  }, [loadQuestions]);
+    loadGameSession();
+  }, [loadQuestions, loadGameSession]);
 
   const handleAddQuestion = React.useCallback(() => {
     setEditingQuestion(undefined);
@@ -252,8 +272,8 @@ export default function Admin() {
     []
   );
 
-  // Funkcje zarządzania grą - lokalnie
-  const handleStartGame = React.useCallback(() => {
+  // Funkcje zarządzania grą - przez API
+  const handleStartGame = React.useCallback(async () => {
     if (questions.length === 0) {
       showErrorMessage("Nie można rozpocząć gry bez pytań!");
       return;
@@ -261,57 +281,12 @@ export default function Admin() {
 
     setGameLoading(true);
 
-    // Tworz nową sesję lokalnie
-    const newSession: GameSession = {
-      id: `local-${Date.now()}`,
-      status: "active",
-      currentQuestionIndex: 0,
-      startTime: new Date(),
-      gameTime: 0,
-      usedLifelines: {
-        fiftyFifty: false,
-        phoneAFriend: false,
-        askAudience: false,
-      },
-      totalQuestions: questions.length,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    const response = await GameAPI.startGame();
 
-    setGameSession(newSession);
+    if (response.success && response.data) {
+      setGameSession(response.data);
 
-    // Reset stanu pytania
-    setSelectedAnswer(null);
-    setIsAnswerRevealed(false);
-    if (autoProgressTimeout) {
-      clearTimeout(autoProgressTimeout);
-      setAutoProgressTimeout(null);
-    }
-
-    setGameLoading(false);
-    showSuccessMessage("🎮 Gra rozpoczęta!");
-  }, [
-    questions.length,
-    showErrorMessage,
-    showSuccessMessage,
-    autoProgressTimeout,
-  ]);
-
-  const handleEndGame = React.useCallback(() => {
-    if (confirm("Czy na pewno chcesz zakończyć grę?")) {
-      setGameLoading(true);
-
-      setGameSession((prev) =>
-        prev
-          ? {
-              ...prev,
-              status: "finished",
-              endTime: new Date(),
-            }
-          : null
-      );
-
-      // Wyczyść stan
+      // Reset stanu pytania
       setSelectedAnswer(null);
       setIsAnswerRevealed(false);
       if (autoProgressTimeout) {
@@ -319,34 +294,63 @@ export default function Admin() {
         setAutoProgressTimeout(null);
       }
 
-      setGameLoading(false);
-      showGameStatusMessage("🛑 Gra zakończona!");
+      showSuccessMessage("🎮 Gra rozpoczęta!");
+    } else {
+      showErrorMessage(response.error || "Błąd rozpoczynania gry");
     }
-  }, [showGameStatusMessage, autoProgressTimeout]);
+
+    setGameLoading(false);
+  }, [
+    questions.length,
+    showErrorMessage,
+    showSuccessMessage,
+    autoProgressTimeout,
+  ]);
+
+  const handleEndGame = React.useCallback(async () => {
+    if (confirm("Czy na pewno chcesz zakończyć grę?")) {
+      setGameLoading(true);
+
+      const response = await GameAPI.endGame();
+
+      if (response.success && response.data) {
+        setGameSession(response.data);
+
+        // Wyczyść stan
+        setSelectedAnswer(null);
+        setIsAnswerRevealed(false);
+        if (autoProgressTimeout) {
+          clearTimeout(autoProgressTimeout);
+          setAutoProgressTimeout(null);
+        }
+
+        showGameStatusMessage("🛑 Gra zakończona!");
+      } else {
+        showErrorMessage(response.error || "Błąd kończenia gry");
+      }
+
+      setGameLoading(false);
+    }
+  }, [showGameStatusMessage, showErrorMessage, autoProgressTimeout]);
 
   const handleUseLifeline = React.useCallback(
-    (lifelineType: keyof typeof usedLifelines) => {
+    async (lifelineType: keyof typeof usedLifelines) => {
       if (!gameSession || usedLifelines[lifelineType]) return;
 
       setGameLoading(true);
 
-      // Aktualizuj lokalnie
-      setGameSession((prev) =>
-        prev
-          ? {
-              ...prev,
-              usedLifelines: {
-                ...prev.usedLifelines,
-                [lifelineType]: true,
-              },
-            }
-          : null
-      );
+      const response = await GameAPI.activateLifeline(lifelineType);
 
-      showGameStatusMessage(`Użyto koła ratunkowego: ${lifelineType}`);
+      if (response.success && response.data) {
+        setGameSession(response.data);
+        showGameStatusMessage(`Użyto koła ratunkowego: ${lifelineType}`);
+      } else {
+        showErrorMessage(response.error || "Błąd użycia koła ratunkowego");
+      }
+
       setGameLoading(false);
     },
-    [gameSession, usedLifelines, showGameStatusMessage]
+    [gameSession, usedLifelines, showGameStatusMessage, showErrorMessage]
   );
 
   const handleSelectAnswer = React.useCallback(
@@ -368,59 +372,51 @@ export default function Admin() {
     // Pierwszy delay - czas na muzykę/efekty przed sprawdzeniem
     showGameStatusMessage("🎵 Sprawdzanie odpowiedzi...");
 
-    setTimeout(() => {
-      // Sprawdź poprawność odpowiedzi lokalnie
-      const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
-      setIsAnswerRevealed(true);
+    setTimeout(async () => {
+      // Wyślij odpowiedź do API
+      const response = await GameAPI.submitAnswer(selectedAnswer);
 
-      // Drugi delay - pokazanie poprawnej odpowiedzi
-      setTimeout(() => {
-        if (isCorrect) {
-          const isLastQuestion = currentQuestionIndex >= questions.length - 1;
+      if (response.success && response.data) {
+        const { correct, correctAnswer, gameWon, ...sessionData } =
+          response.data;
+        setGameSession(sessionData);
+        setIsAnswerRevealed(true);
 
-          if (isLastQuestion) {
-            showSuccessMessage(
-              "🎉 Gratulacje! Gracz wygrał wszystkie pytania!"
-            );
-            // Zakończ grę po wygranej
-            setTimeout(() => {
-              setGameSession((prev) =>
-                prev ? { ...prev, status: "finished" as const } : null
+        // Drugi delay - pokazanie poprawnej odpowiedzi
+        setTimeout(() => {
+          if (correct) {
+            if (gameWon) {
+              showSuccessMessage(
+                "🎉 Gratulacje! Gracz wygrał wszystkie pytania!"
               );
+              // Zakończ grę po wygranej
+              setTimeout(() => {
+                setSelectedAnswer(null);
+                setIsAnswerRevealed(false);
+              }, 3000);
+            } else {
+              showSuccessMessage("✅ Poprawna odpowiedź!");
+              // Przejście do następnego pytania
+              const timeout = setTimeout(() => {
+                setSelectedAnswer(null);
+                setIsAnswerRevealed(false);
+              }, AUTO_PROGRESS_TIME * 1000);
+              setAutoProgressTimeout(timeout);
+            }
+          } else {
+            showErrorMessage(
+              `❌ Niepoprawna odpowiedź! Poprawna odpowiedź to: ${correctAnswer}. Gra zakończona.`
+            );
+            // Zakończ grę po błędnej odpowiedzi
+            setTimeout(() => {
               setSelectedAnswer(null);
               setIsAnswerRevealed(false);
             }, 3000);
-          } else {
-            showSuccessMessage("✅ Poprawna odpowiedź!");
-            // Przejście do następnego pytania
-            const timeout = setTimeout(() => {
-              setGameSession((prev) =>
-                prev
-                  ? {
-                      ...prev,
-                      currentQuestionIndex: currentQuestionIndex + 1,
-                    }
-                  : null
-              );
-              setSelectedAnswer(null);
-              setIsAnswerRevealed(false);
-            }, AUTO_PROGRESS_TIME * 1000);
-            setAutoProgressTimeout(timeout);
           }
-        } else {
-          showErrorMessage(
-            `❌ Niepoprawna odpowiedź! Poprawna odpowiedź to: ${currentQuestion.correctAnswer}. Gra zakończona.`
-          );
-          // Zakończ grę po błędnej odpowiedzi
-          setTimeout(() => {
-            setGameSession((prev) =>
-              prev ? { ...prev, status: "finished" as const } : null
-            );
-            setSelectedAnswer(null);
-            setIsAnswerRevealed(false);
-          }, 3000);
-        }
-      }, 2000); // 2 sekundy delay po sprawdzeniu
+        }, 2000); // 2 sekundy delay po sprawdzeniu
+      } else {
+        showErrorMessage(response.error || "Błąd wysyłania odpowiedzi");
+      }
 
       setGameLoading(false);
     }, 3000); // 3 sekundy delay na muzykę przed sprawdzeniem
@@ -433,8 +429,6 @@ export default function Admin() {
     showSuccessMessage,
     showErrorMessage,
     AUTO_PROGRESS_TIME,
-    currentQuestionIndex,
-    questions.length,
   ]);
 
   // Cleanup timeout przy unmount
