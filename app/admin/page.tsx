@@ -297,11 +297,7 @@ export default function Admin() {
     }
 
     setGameLoading(false);
-  }, [
-    questions.length,
-    showErrorMessage,
-    showSuccessMessage,
-  ]);
+  }, [questions.length, showErrorMessage, showSuccessMessage]);
 
   const handleEndGame = React.useCallback(async () => {
     if (confirm("Czy na pewno chcesz zakończyć grę?")) {
@@ -374,12 +370,8 @@ export default function Admin() {
         const correct = responseData.correct;
         const correctAnswer = responseData.correctAnswer;
         const gameWon = responseData.gameWon;
-        
-        // Usuń dodatkowe pola z sessionData
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { correct: _, correctAnswer: __, gameWon: ___, ...sessionData } = responseData;
-        
-        setGameSession(sessionData as GameSession);
+
+        setGameSession(responseData as GameSession);
         setIsAnswerRevealed(true);
         setLastAnswerResult({
           correct: correct || false,
@@ -435,9 +427,9 @@ export default function Admin() {
   React.useEffect(() => {
     // Sprawdź czy powinniśmy automatycznie przejść do następnego pytania
     if (
-      isAnswerRevealed && 
-      lastAnswerResult?.correct && 
-      !lastAnswerResult?.gameWon && 
+      isAnswerRevealed &&
+      lastAnswerResult?.correct &&
+      !lastAnswerResult?.gameWon &&
       isGameActive &&
       !gameLoading
     ) {
@@ -454,12 +446,18 @@ export default function Admin() {
           console.error("Error in auto-progress nextQuestion:", error);
         }
       }, AUTO_PROGRESS_TIME * 1000);
-      
+
       return () => {
         clearTimeout(timeoutId);
       };
     }
-  }, [isAnswerRevealed, lastAnswerResult, isGameActive, gameLoading, AUTO_PROGRESS_TIME]);
+  }, [
+    isAnswerRevealed,
+    lastAnswerResult,
+    isGameActive,
+    gameLoading,
+    AUTO_PROGRESS_TIME,
+  ]);
 
   // Handler do manualnego przejścia do kolejnego pytania (do testów)
   const handleManualNextQuestion = React.useCallback(async () => {
@@ -468,7 +466,9 @@ export default function Admin() {
       if (nextResponse.success && nextResponse.data) {
         setGameSession(nextResponse.data);
       } else {
-        showErrorMessage(nextResponse.error || "Błąd przejścia do kolejnego pytania");
+        showErrorMessage(
+          nextResponse.error || "Błąd przejścia do kolejnego pytania"
+        );
       }
       setSelectedAnswer(null);
       setIsAnswerRevealed(false);
@@ -566,7 +566,11 @@ export default function Admin() {
               size="sm"
               onClick={() => handleEditQuestion(row.original)}
               disabled={isGameActive}
-              title={isGameActive ? "Edycja zablokowana podczas gry" : "Edytuj pytanie"}
+              title={
+                isGameActive
+                  ? "Edycja zablokowana podczas gry"
+                  : "Edytuj pytanie"
+              }
             >
               <EditIcon className="w-4 h-4" />
             </Button>
@@ -575,7 +579,11 @@ export default function Admin() {
               size="sm"
               onClick={() => handleDeleteQuestion(row.original.id)}
               disabled={isGameActive}
-              title={isGameActive ? "Usuwanie zablokowane podczas gry" : "Usuń pytanie"}
+              title={
+                isGameActive
+                  ? "Usuwanie zablokowane podczas gry"
+                  : "Usuń pytanie"
+              }
             >
               <TrashIcon className="w-4 h-4" />
             </Button>
@@ -601,26 +609,27 @@ export default function Admin() {
         <section className="col-span-5 row-span-3">
           <Card>
             <CardHeader>
-              <CardTitle>
-                Pytania {isGameActive && "🔒"}
-              </CardTitle>
+              <CardTitle>Pytania {isGameActive && "🔒"}</CardTitle>
               <CardDescription>
-                {isGameActive 
+                {isGameActive
                   ? "Przeglądaj pytania (zarządzanie zablokowane podczas gry)"
-                  : "Zarządzaj pytaniami w grze"
-                }
+                  : "Zarządzaj pytaniami w grze"}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {isGameActive && (
                 <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <p className="text-sm text-yellow-800">
-                    ⚠️ Gra jest aktywna. Zarządzanie pytaniami jest zablokowane. Można tylko przeglądać.
+                    ⚠️ Gra jest aktywna. Zarządzanie pytaniami jest zablokowane.
+                    Można tylko przeglądać.
                   </p>
                 </div>
               )}
               <div className="mb-4 flex flex-wrap gap-2">
-                <Button onClick={handleAddQuestion} disabled={loading || isGameActive}>
+                <Button
+                  onClick={handleAddQuestion}
+                  disabled={loading || isGameActive}
+                >
                   <PlusIcon className="w-4 h-4 mr-2" />
                   Dodaj pytanie
                 </Button>
@@ -722,7 +731,11 @@ export default function Admin() {
                       onClick={() => handleUseLifeline("fiftyFifty")}
                       className="text-xs"
                     >
-                      {usedLifelines.fiftyFifty ? "✓" : "50:50"}
+                      {usedLifelines.fiftyFifty ? (
+                        <span className="line-through">⚖️ 50:50</span>
+                      ) : (
+                        "⚖️ 50:50"
+                      )}
                     </Button>
                     <Button
                       variant={
@@ -733,7 +746,11 @@ export default function Admin() {
                       onClick={() => handleUseLifeline("phoneAFriend")}
                       className="text-xs"
                     >
-                      {usedLifelines.phoneAFriend ? "✓" : "📞 Przyjaciel"}
+                      {usedLifelines.phoneAFriend ? (
+                        <span className="line-through">📞 Przyjaciel</span>
+                      ) : (
+                        "📞 Przyjaciel"
+                      )}
                     </Button>
                     <Button
                       variant={
@@ -744,7 +761,11 @@ export default function Admin() {
                       onClick={() => handleUseLifeline("askAudience")}
                       className="text-xs"
                     >
-                      {usedLifelines.askAudience ? "✓" : "👥 Publiczność"}
+                      {usedLifelines.askAudience ? (
+                        <span className="line-through">👥 Publiczność</span>
+                      ) : (
+                        "👥 Publiczność"
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -771,16 +792,18 @@ export default function Admin() {
                       {gameLoading ? "⏳ Kończenie..." : "🛑 Zakończ grę"}
                     </Button>
                     {/* Przycisk do manualnego przejścia do kolejnego pytania - tylko do testów */}
-                    {isAnswerRevealed && lastAnswerResult?.correct && !lastAnswerResult?.gameWon && (
-                      <Button
-                        onClick={handleManualNextQuestion}
-                        variant="outline"
-                        disabled={gameLoading}
-                        className="w-full text-xs"
-                      >
-                        🔧 Następne pytanie (test)
-                      </Button>
-                    )}
+                    {isAnswerRevealed &&
+                      lastAnswerResult?.correct &&
+                      !lastAnswerResult?.gameWon && (
+                        <Button
+                          onClick={handleManualNextQuestion}
+                          variant="outline"
+                          disabled={gameLoading}
+                          className="w-full text-xs"
+                        >
+                          🔧 Następne pytanie (test)
+                        </Button>
+                      )}
                     <div className="text-xs text-gray-500 text-center">
                       Gracz wygrywa: {getWinningPrize()}
                     </div>
