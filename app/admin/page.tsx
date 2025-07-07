@@ -332,7 +332,17 @@ export default function Admin() {
 
       if (response.success && response.data) {
         setGameSession(response.data);
-        showGameStatusMessage(`Użyto koła ratunkowego: ${lifelineType}`);
+
+        // Mapowanie nazw kół ratunkowych na przyjazne nazwy
+        const lifelineNames = {
+          fiftyFifty: "50:50",
+          phoneAFriend: "Telefon do przyjaciela",
+          askAudience: "Pytanie do publiczności",
+        };
+
+        showGameStatusMessage(
+          `Użyto koła ratunkowego: ${lifelineNames[lifelineType]}`
+        );
       } else {
         showErrorMessage(response.error || "Błąd użycia koła ratunkowego");
       }
@@ -532,10 +542,7 @@ export default function Admin() {
         accessorKey: "content" as keyof QuestionType,
         header: "Pytanie",
         cell: ({ row }: { row: { original: QuestionType } }) => (
-          <div
-            className="w-80 break-words leading-relaxed"
-            title={row.original.content}
-          >
+          <div className="w-80 truncate" title={row.original.content}>
             {row.original.content}
           </div>
         ),
@@ -545,8 +552,14 @@ export default function Admin() {
         accessorKey: "correctAnswer" as keyof QuestionType,
         header: "Poprawna odpowiedź",
         cell: ({ row }: { row: { original: QuestionType } }) => (
-          <Badge variant="outline" className="break-words max-w-full">
-            <span className="break-all">
+          <Badge
+            variant="outline"
+            className="truncate max-w-[200px]"
+            title={`${row.original.correctAnswer}: ${
+              row.original.answers[row.original.correctAnswer]
+            }`}
+          >
+            <span className="truncate">
               {row.original.correctAnswer}:{" "}
               {row.original.answers[row.original.correctAnswer]}
             </span>

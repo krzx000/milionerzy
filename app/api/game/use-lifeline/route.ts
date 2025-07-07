@@ -50,10 +50,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Mapowanie nazw kół ratunkowych na przyjazne nazwy
+    const lifelineNames = {
+      fiftyFifty: "50:50",
+      phoneAFriend: "Telefon do przyjaciela",
+      askAudience: "Pytanie do publiczności",
+    } as const;
+
     return NextResponse.json({
       success: true,
       data: session,
-      message: `Użyto koła ratunkowego: ${lifeline}`,
+      message: `Użyto koła ratunkowego: ${lifelineNames[lifeline] || lifeline}`,
     });
   } catch (error) {
     console.error("Błąd użycia koła ratunkowego:", error);
