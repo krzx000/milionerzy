@@ -20,6 +20,7 @@ import { QuestionsAPI } from "@/lib/api/questions";
 import { GameAPI } from "@/lib/api/game";
 import { GameSession } from "@/lib/db/game-session";
 import { toast } from "sonner";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 
 const sampleQuestions: QuestionType[] = [
   {
@@ -59,6 +60,7 @@ const sampleQuestions: QuestionType[] = [
 ];
 
 export default function Admin() {
+  const { confirm, dialog } = useConfirmDialog();
   const [questions, setQuestions] = React.useState<QuestionType[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [isQuestionDialogOpen, setIsQuestionDialogOpen] = React.useState(false);
@@ -89,6 +91,7 @@ export default function Admin() {
 
   // Computed values from game session
   const isGameActive = gameSession?.status === "active";
+  const isGameEnded = gameSession?.status === "finished";
   const currentQuestionIndex = gameSession?.currentQuestionIndex || 0;
   const usedLifelines = React.useMemo(
     () =>
@@ -102,7 +105,7 @@ export default function Admin() {
 
   // Pobierz aktualne pytanie
   const currentQuestion =
-    isGameActive && questions.length > currentQuestionIndex
+    (isGameActive || isGameEnded) && questions.length > currentQuestionIndex
       ? questions[currentQuestionIndex]
       : null;
 
@@ -141,6 +144,7 @@ export default function Admin() {
     const response = await GameAPI.getCurrentSession();
 
     if (response.success && response.data) {
+      // API zwraca tylko aktywne sesje
       setGameSession(response.data);
       // Reset UI state when loading session
       setSelectedAnswer(null);
@@ -149,7 +153,7 @@ export default function Admin() {
     } else if (response.error) {
       showErrorMessage(response.error);
     }
-    // Jeśli nie ma aktywnej sesji, po prostu zostaw gameSession jako null
+    // Jeśli nie ma aktywnej sesji, zostaw gameSession jako null
   }, [showErrorMessage]);
 
   // Ładowanie pytań i sesji gry z API przy inicjalizacji
@@ -175,7 +179,16 @@ export default function Admin() {
 
   const handleDeleteQuestion = React.useCallback(
     async (id: string) => {
-      if (confirm("Czy na pewno chcesz usunąć to pytanie?")) {
+      const confirmed = await confirm({
+        title: "Usunąć pytanie?",
+        description:
+          "Czy na pewno chcesz usunąć to pytanie? Ta akcja jest nieodwracalna.",
+        confirmText: "Usuń",
+        cancelText: "Anuluj",
+        variant: "destructive",
+      });
+
+      if (confirmed) {
         const response = await QuestionsAPI.delete(id);
 
         if (response.success) {
@@ -187,7 +200,7 @@ export default function Admin() {
         }
       }
     },
-    [showErrorMessage]
+    [showErrorMessage, confirm]
   );
 
   const handleSaveQuestion = React.useCallback(
@@ -233,7 +246,15 @@ export default function Admin() {
         ? "Czy na pewno chcesz usunąć wybrane pytanie?"
         : `Czy na pewno chcesz usunąć ${selectedQuestions.length} wybranych pytań?`;
 
-    if (confirm(message)) {
+    const confirmed = await confirm({
+      title: "Usunąć wybrane pytania?",
+      description: message + " Ta akcja jest nieodwracalna.",
+      confirmText: "Usuń",
+      cancelText: "Anuluj",
+      variant: "destructive",
+    });
+
+    if (confirmed) {
       const selectedIds = selectedQuestions.map((q) => q.id);
       const response = await QuestionsAPI.deleteMany(selectedIds);
 
@@ -244,16 +265,20 @@ export default function Admin() {
         showErrorMessage(response.error || "Błąd usuwania pytań");
       }
     }
-  }, [selectedQuestions, showErrorMessage]);
+  }, [selectedQuestions, showErrorMessage, confirm]);
 
   const handleDeleteAllQuestions = React.useCallback(async () => {
     if (questions.length === 0) return;
 
-    if (
-      confirm(
-        `Czy na pewno chcesz usunąć wszystkie ${questions.length} pytań? Ta akcja jest nieodwracalna!`
-      )
-    ) {
+    const confirmed = await confirm({
+      title: "Usunąć wszystkie pytania?",
+      description: `Czy na pewno chcesz usunąć wszystkie ${questions.length} pytań? Ta akcja jest nieodwracalna!`,
+      confirmText: "Usuń wszystkie",
+      cancelText: "Anuluj",
+      variant: "destructive",
+    });
+
+    if (confirmed) {
       const response = await QuestionsAPI.deleteAll();
 
       if (response.success) {
@@ -263,7 +288,7 @@ export default function Admin() {
         showErrorMessage(response.error || "Błąd usuwania wszystkich pytań");
       }
     }
-  }, [questions.length, showErrorMessage]);
+  }, [questions.length, showErrorMessage, confirm]);
 
   const handleRowSelectionChange = React.useCallback(
     (selectedRows: QuestionType[]) => {
@@ -300,27 +325,53 @@ export default function Admin() {
   }, [questions.length, showErrorMessage, showSuccessMessage]);
 
   const handleEndGame = React.useCallback(async () => {
-    if (confirm("Czy na pewno chcesz zakończyć grę?")) {
-      setGameLoading(true);
+    try {
+      console.log("handleEndGame: Starting");
 
-      const response = await GameAPI.endGame();
+      const confirmed = await confirm({
+        title: "Zakończyć grę?",
+        description:
+          "Czy na pewno chcesz zakończyć grę? Sesja zostanie zamknięta.",
+        confirmText: isGameEnded ? "Zamknij sesję" : "Zakończ grę",
+        cancelText: "Anuluj",
+        variant: "destructive",
+      });
 
-      if (response.success && response.data) {
-        setGameSession(response.data);
+      console.log("handleEndGame: Dialog result:", confirmed);
 
-        // Wyczyść stan
-        setSelectedAnswer(null);
-        setIsAnswerRevealed(false);
-        setLastAnswerResult(null);
+      if (confirmed) {
+        console.log("handleEndGame: User confirmed, starting API call");
+        setGameLoading(true);
 
-        showGameStatusMessage("🛑 Gra zakończona!");
+        const response = await GameAPI.endGame();
+        console.log("handleEndGame: API response:", response);
+
+        if (response.success && response.data) {
+          console.log("handleEndGame: Success, setting gameSession to null");
+          // Po pomyślnym zamknięciu sesji, ustaw gameSession na null
+          // żeby UI wróciło do stanu "brak aktywnej gry"
+          setGameSession(null);
+
+          // Wyczyść stan
+          setSelectedAnswer(null);
+          setIsAnswerRevealed(false);
+          setLastAnswerResult(null);
+
+          showGameStatusMessage("🛑 Sesja gry zamknięta!");
+        } else {
+          console.log("handleEndGame: API error:", response.error);
+          showErrorMessage(response.error || "Błąd kończenia gry");
+        }
+
+        setGameLoading(false);
       } else {
-        showErrorMessage(response.error || "Błąd kończenia gry");
+        console.log("handleEndGame: User cancelled");
       }
-
+    } catch (error) {
+      console.error("handleEndGame: Exception:", error);
       setGameLoading(false);
     }
-  }, [showGameStatusMessage, showErrorMessage]);
+  }, [showGameStatusMessage, showErrorMessage, confirm, isGameEnded]);
 
   const handleUseLifeline = React.useCallback(
     async (lifelineType: keyof typeof usedLifelines) => {
@@ -354,16 +405,23 @@ export default function Admin() {
 
   const handleSelectAnswer = React.useCallback(
     (answer: string) => {
-      if (!currentQuestion || gameLoading || isAnswerRevealed) return;
+      if (!currentQuestion || gameLoading || isAnswerRevealed || isGameEnded)
+        return;
 
       // Tylko zaznacz odpowiedź, nie wysyłaj jeszcze do API
       setSelectedAnswer(answer);
     },
-    [currentQuestion, gameLoading, isAnswerRevealed]
+    [currentQuestion, gameLoading, isAnswerRevealed, isGameEnded]
   );
 
   const handleConfirmAnswer = React.useCallback(async () => {
-    if (!currentQuestion || !selectedAnswer || gameLoading || isAnswerRevealed)
+    if (
+      !currentQuestion ||
+      !selectedAnswer ||
+      gameLoading ||
+      isAnswerRevealed ||
+      isGameEnded
+    )
       return;
 
     setGameLoading(true);
@@ -394,9 +452,7 @@ export default function Admin() {
 
         if (correct) {
           if (gameWon) {
-            showSuccessMessage(
-              "🎉 Gratulacje! Gracz wygrał wszystkie pytania!"
-            );
+            showSuccessMessage("Gratulacje! Gracz wygrał wszystkie pytania!");
             // Zakończ grę po wygranej
             setTimeout(() => {
               setSelectedAnswer(null);
@@ -404,19 +460,15 @@ export default function Admin() {
               setLastAnswerResult(null);
             }, 3000);
           } else {
-            showSuccessMessage("✅ Poprawna odpowiedź!");
+            showSuccessMessage("Poprawna odpowiedź!");
             // Auto-progress jest teraz obsługiwany przez useEffect
           }
         } else {
           showErrorMessage(
-            `❌ Niepoprawna odpowiedź! Poprawna odpowiedź to: ${correctAnswer}. Gra zakończona.`
+            `Niepoprawna odpowiedź! Poprawna odpowiedź to: ${correctAnswer}.`
           );
-          // Zakończ grę po błędnej odpowiedzi
-          setTimeout(() => {
-            setSelectedAnswer(null);
-            setIsAnswerRevealed(false);
-            setLastAnswerResult(null);
-          }, 3000);
+          // API już zakończyło grę po błędnej odpowiedzi
+          // Nie czyścimy UI - pozostawiamy widoczne dla prowadzącego
         }
       } else {
         showErrorMessage(response.error || "Błąd wysyłania odpowiedzi");
@@ -428,6 +480,7 @@ export default function Admin() {
     selectedAnswer,
     gameLoading,
     isAnswerRevealed,
+    isGameEnded,
     showGameStatusMessage,
     showSuccessMessage,
     showErrorMessage,
@@ -687,7 +740,11 @@ export default function Admin() {
             <CardHeader>
               <CardTitle>Zarządzanie grą</CardTitle>
               <CardDescription>
-                {isGameActive ? "Gra w toku" : "Gotowy do rozpoczęcia"}
+                {isGameActive
+                  ? "Gra w toku"
+                  : isGameEnded
+                  ? "Gra zakończona - oczekuje na prowadzącego"
+                  : "Gotowy do rozpoczęcia"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -698,15 +755,21 @@ export default function Admin() {
                   className={`px-3 py-2 rounded-md text-center ${
                     isGameActive
                       ? "bg-green-100 text-green-800"
+                      : isGameEnded
+                      ? "bg-red-100 text-red-800"
                       : "bg-gray-100 text-gray-800"
                   }`}
                 >
-                  {isGameActive ? "AKTYWNA" : "NIEAKTYWNA"}
+                  {isGameActive
+                    ? "AKTYWNA"
+                    : isGameEnded
+                    ? "ZAKOŃCZONA"
+                    : "NIEAKTYWNA"}
                 </div>
               </div>
 
               {/* Aktualne pytanie */}
-              {isGameActive && (
+              {(isGameActive || isGameEnded) && (
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Pytanie:</div>
                   <div className="text-center bg-blue-100 text-blue-800 py-2 rounded-md">
@@ -716,11 +779,13 @@ export default function Admin() {
               )}
 
               {/* Aktualna nagroda */}
-              {isGameActive && (
+              {(isGameActive || isGameEnded) && (
                 <div className="space-y-2">
-                  <div className="text-sm font-medium">Aktualna nagroda:</div>
+                  <div className="text-sm font-medium">
+                    {isGameEnded ? "Gracz wygrywa:" : "Aktualna nagroda:"}
+                  </div>
                   <div className="text-lg font-bold text-center bg-yellow-100 text-yellow-800 py-2 rounded-md">
-                    {getCurrentPrize()}
+                    {isGameEnded ? getWinningPrize() : getCurrentPrize()}
                   </div>
                 </div>
               )}
@@ -781,7 +846,7 @@ export default function Admin() {
 
               {/* Przyciski sterowania */}
               <div className="space-y-2 pt-4 border-t">
-                {!isGameActive ? (
+                {!isGameActive && !isGameEnded ? (
                   <Button
                     onClick={handleStartGame}
                     disabled={questions.length === 0 || gameLoading}
@@ -797,12 +862,25 @@ export default function Admin() {
                       disabled={gameLoading}
                       className="w-full"
                     >
-                      {gameLoading ? "⏳ Kończenie..." : "🛑 Zakończ grę"}
+                      {gameLoading
+                        ? "⏳ Kończenie..."
+                        : isGameEnded
+                        ? "🛑 Zamknij sesję"
+                        : "🛑 Zakończ grę"}
                     </Button>
 
-                    <div className="text-xs text-gray-500 text-center">
-                      Gracz wygrywa: {getWinningPrize()}
-                    </div>
+                    {isGameEnded && (
+                      <div className="text-xs text-center p-2 bg-red-50 text-red-700 rounded border">
+                        Gra zakończona po niepoprawnej odpowiedzi. Kliknij
+                        &quot;Zamknij sesję&quot; aby zakończyć sesję.
+                      </div>
+                    )}
+
+                    {!isGameEnded && (
+                      <div className="text-xs text-gray-500 text-center">
+                        Gracz wygrywa: {getWinningPrize()}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -828,11 +906,13 @@ export default function Admin() {
               <CardDescription>
                 {isGameActive
                   ? `Pytanie ${currentQuestionIndex + 1} z ${questions.length}`
+                  : isGameEnded
+                  ? "Gra zakończona"
                   : "Brak aktywnej gry"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {isGameActive && currentQuestion ? (
+              {(isGameActive || isGameEnded) && currentQuestion ? (
                 <>
                   {/* Treść pytania */}
                   <div className="p-4 bg-blue-50 rounded-lg border">
@@ -886,7 +966,9 @@ export default function Admin() {
                             key={key}
                             variant={variant}
                             className={className}
-                            disabled={gameLoading || isAnswerRevealed}
+                            disabled={
+                              gameLoading || isAnswerRevealed || isGameEnded
+                            }
                             onClick={() => handleSelectAnswer(key)}
                           >
                             <span className="font-bold mr-3 flex-shrink-0">
@@ -908,30 +990,34 @@ export default function Admin() {
                   </div>
 
                   {/* Przycisk potwierdzający odpowiedź */}
-                  {selectedAnswer && !isAnswerRevealed && !gameLoading && (
-                    <div className="text-center space-y-3">
-                      <div className="text-sm text-blue-700 font-medium">
-                        Zaznaczona odpowiedź: <strong>{selectedAnswer}</strong>
+                  {selectedAnswer &&
+                    !isAnswerRevealed &&
+                    !gameLoading &&
+                    !isGameEnded && (
+                      <div className="text-center space-y-3">
+                        <div className="text-sm text-blue-700 font-medium">
+                          Zaznaczona odpowiedź:{" "}
+                          <strong>{selectedAnswer}</strong>
+                        </div>
+                        <div className="flex flex-col xl:flex-row gap-2 w-full">
+                          <Button
+                            onClick={handleConfirmAnswer}
+                            className="bg-green-600 hover:bg-green-700 text-white flex-1 px-4 py-3 text-lg font-semibold"
+                            size="lg"
+                          >
+                            ✅ Potwierdź odpowiedź
+                          </Button>
+                          <Button
+                            onClick={() => setSelectedAnswer(null)}
+                            variant="outline"
+                            className="flex-1 px-4 py-3 text-lg"
+                            size="lg"
+                          >
+                            ❌ Anuluj
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex flex-col xl:flex-row gap-2 w-full">
-                        <Button
-                          onClick={handleConfirmAnswer}
-                          className="bg-green-600 hover:bg-green-700 text-white flex-1 px-4 py-3 text-lg font-semibold"
-                          size="lg"
-                        >
-                          ✅ Potwierdź odpowiedź
-                        </Button>
-                        <Button
-                          onClick={() => setSelectedAnswer(null)}
-                          variant="outline"
-                          className="flex-1 px-4 py-3 text-lg"
-                          size="lg"
-                        >
-                          ❌ Anuluj
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                    )}
 
                   {/* Status */}
                   {gameLoading && (
@@ -946,17 +1032,18 @@ export default function Admin() {
                       {lastAnswerResult.correct ? (
                         lastAnswerResult.gameWon ? (
                           <span className="text-green-600 font-semibold">
-                            🎉 Gracz wygrał całą grę!
+                            Gracz wygrał całą grę!
                           </span>
                         ) : (
                           <span className="text-green-600">
-                            ✅ Poprawnie! Przejście do następnego pytania za{" "}
+                            Poprawnie! Przejście do następnego pytania za{" "}
                             {AUTO_PROGRESS_TIME}s...
                           </span>
                         )
                       ) : (
                         <span className="text-red-600">
-                          ❌ Gra zakończona - niepoprawna odpowiedź
+                          Niepoprawna odpowiedź! Gra zakończona. Prowadzący może
+                          zamknąć sesję.
                         </span>
                       )}
                     </div>
@@ -964,7 +1051,9 @@ export default function Admin() {
                 </>
               ) : (
                 <div className="text-center text-gray-500 py-8">
-                  {isGameActive
+                  {isGameEnded
+                    ? "Gra zakończona - wyświetlane jest ostatnie pytanie"
+                    : isGameActive
                     ? "Ładowanie pytania..."
                     : "Rozpocznij grę aby zobaczyć pytania"}
                 </div>
@@ -987,6 +1076,9 @@ export default function Admin() {
         onOpenChange={setIsViewDialogOpen}
         question={viewingQuestion}
       />
+
+      {/* Confirm Dialog */}
+      {dialog}
     </div>
   );
 }

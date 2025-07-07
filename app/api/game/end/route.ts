@@ -8,7 +8,7 @@ export async function POST() {
       return NextResponse.json(
         {
           success: false,
-          error: "Nie znaleziono aktywnej sesji do zakończenia",
+          error: "Nie znaleziono sesji do zakończenia",
         },
         { status: 404 }
       );
@@ -17,7 +17,7 @@ export async function POST() {
     return NextResponse.json({
       success: true,
       data: session,
-      message: "Gra została zakończona",
+      message: "Sesja gry została zamknięta",
     });
   } catch (error) {
     console.error("Błąd zakończenia gry:", error);
