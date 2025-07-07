@@ -58,6 +58,21 @@ export const gameSessionDb = {
     }
   },
 
+  // Pobierz historię wszystkich sesji
+  getHistory: async (limit: number = 20): Promise<GameSession[]> => {
+    try {
+      const sessions = await prisma.gameSession.findMany({
+        orderBy: { createdAt: "desc" },
+        take: limit,
+      });
+
+      return sessions.map(mapPrismaToGameSession);
+    } catch (error) {
+      console.error("Error getting game session history:", error);
+      return [];
+    }
+  },
+
   // Rozpocznij nową grę
   start: async (totalQuestions: number): Promise<GameSession> => {
     try {

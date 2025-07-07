@@ -21,6 +21,7 @@ import { GameAPI } from "@/lib/api/game";
 import { GameSession } from "@/lib/db/game-session";
 import { toast } from "sonner";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
+import type { GameSessionHistory } from "@/lib/api/game";
 
 const sampleQuestions: QuestionType[] = [
   {
@@ -73,6 +74,13 @@ export default function Admin() {
   const [selectedQuestions, setSelectedQuestions] = React.useState<
     QuestionType[]
   >([]);
+
+  // Historia sesji gry
+  const [gameHistory, setGameHistory] = React.useState<GameSessionHistory[]>(
+    []
+  );
+  const [historyLoading, setHistoryLoading] = React.useState(false);
+  const [isHistoryVisible, setIsHistoryVisible] = React.useState(false);
 
   // Stan gry - przywrócona obsługa przez API
   const [gameSession, setGameSession] = React.useState<GameSession | null>(
@@ -156,11 +164,26 @@ export default function Admin() {
     // Jeśli nie ma aktywnej sesji, zostaw gameSession jako null
   }, [showErrorMessage]);
 
+  const loadGameHistory = React.useCallback(async () => {
+    setHistoryLoading(true);
+
+    const response = await GameAPI.getHistory(20);
+
+    if (response.success && response.data) {
+      setGameHistory(response.data);
+    } else {
+      showErrorMessage(response.error || "Błąd ładowania historii sesji");
+    }
+
+    setHistoryLoading(false);
+  }, [showErrorMessage]);
+
   // Ładowanie pytań i sesji gry z API przy inicjalizacji
   React.useEffect(() => {
     loadQuestions();
     loadGameSession();
-  }, [loadQuestions, loadGameSession]);
+    loadGameHistory();
+  }, [loadQuestions, loadGameSession, loadGameHistory]);
 
   const handleAddQuestion = React.useCallback(() => {
     setEditingQuestion(undefined);
@@ -316,13 +339,16 @@ export default function Admin() {
       setIsAnswerRevealed(false);
       setLastAnswerResult(null);
 
+      // Odśwież historię sesji
+      loadGameHistory();
+
       showSuccessMessage("🎮 Gra rozpoczęta!");
     } else {
       showErrorMessage(response.error || "Błąd rozpoczynania gry");
     }
 
     setGameLoading(false);
-  }, [questions.length, showErrorMessage, showSuccessMessage]);
+  }, [questions.length, showErrorMessage, showSuccessMessage, loadGameHistory]);
 
   const handleEndGame = React.useCallback(async () => {
     try {
@@ -350,6 +376,9 @@ export default function Admin() {
           setIsAnswerRevealed(false);
           setLastAnswerResult(null);
 
+          // Odśwież historię sesji
+          loadGameHistory();
+
           showGameStatusMessage("🛑 Sesja gry zamknięta!");
         } else {
           showErrorMessage(response.error || "Błąd kończenia gry");
@@ -361,7 +390,13 @@ export default function Admin() {
       console.error("handleEndGame: Exception:", error);
       setGameLoading(false);
     }
-  }, [showGameStatusMessage, showErrorMessage, confirm, isGameEnded]);
+  }, [
+    showGameStatusMessage,
+    showErrorMessage,
+    confirm,
+    isGameEnded,
+    loadGameHistory,
+  ]);
 
   const handleUseLifeline = React.useCallback(
     async (lifelineType: keyof typeof usedLifelines) => {
@@ -1048,6 +1083,190 @@ export default function Admin() {
             </CardContent>
           </Card>
         </section>
+      </div>
+
+      {/* Historia sesji gry */}
+      <div className="w-full p-4">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Historia sesji gry</CardTitle>
+                <CardDescription>
+                  Poprzednie sesje gry z wynikami i statystykami
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsHistoryVisible(!isHistoryVisible)}
+                className="flex items-center gap-2"
+              >
+                {isHistoryVisible ? "Ukryj historię" : "Pokaż historię"}
+                <svg
+                  className={`w-4 h-4 transition-transform ${
+                    isHistoryVisible ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </Button>
+            </div>
+          </CardHeader>
+          {isHistoryVisible && (
+            <CardContent>
+            {historyLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-2">Ładowanie historii...</span>
+              </div>
+            ) : gameHistory.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                Brak poprzednich sesji gry
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <div className="space-y-0">
+                  {/* Nagłówek tabeli */}
+                  <div className="grid grid-cols-7 gap-0 border-b border-gray-200 dark:border-gray-700 pb-2 mb-3">
+                    <div className="text-left p-3 whitespace-nowrap font-medium text-sm">
+                      Data rozpoczęcia
+                    </div>
+                    <div className="text-left p-3 whitespace-nowrap font-medium text-sm">
+                      Czas trwania
+                    </div>
+                    <div className="text-left p-3 whitespace-nowrap font-medium text-sm">
+                      Status
+                    </div>
+                    <div className="text-left p-3 whitespace-nowrap font-medium text-sm">
+                      Wynik
+                    </div>
+                    <div className="text-left p-3 whitespace-nowrap font-medium text-sm">
+                      Pytania
+                    </div>
+                    <div className="text-left p-3 whitespace-nowrap font-medium text-sm">
+                      Wygrana
+                    </div>
+                    <div className="text-left p-3 whitespace-nowrap font-medium text-sm">
+                      Koła ratunkowe
+                    </div>
+                  </div>
+
+                  {/* Wiersze danych */}
+                  {gameHistory.map((session) => (
+                    <div
+                      key={session.id}
+                      className="grid grid-cols-7 gap-0 border-b border-gray-200 dark:border-gray-700 group transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <div className="p-3 transition-colors duration-150">
+                        {session.startTime ? (
+                          <div>
+                            <div className="font-medium">
+                              {new Date(session.startTime).toLocaleDateString(
+                                "pl-PL"
+                              )}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {new Date(session.startTime).toLocaleTimeString(
+                                "pl-PL"
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          "—"
+                        )}
+                      </div>
+                      <div className="p-3 transition-colors duration-150">
+                        {session.duration > 0 ? (
+                          <span>
+                            {Math.floor(session.duration / 60)}:
+                            {(session.duration % 60)
+                              .toString()
+                              .padStart(2, "0")}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </div>
+                      <div className="p-3 transition-colors duration-150">
+                        <Badge
+                          variant={
+                            session.status === "finished"
+                              ? "destructive"
+                              : session.status === "active"
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
+                          {session.status === "finished"
+                            ? "Zakończona"
+                            : session.status === "active"
+                            ? "Aktywna"
+                            : "Nieaktywna"}
+                        </Badge>
+                      </div>
+                      <div className="p-3 transition-colors duration-150">
+                        <div
+                          className={`font-medium ${
+                            session.gameWon
+                              ? "text-green-600"
+                              : session.currentQuestionIndex > 0
+                              ? "text-orange-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {session.result}
+                        </div>
+                      </div>
+                      <div className="p-3 transition-colors duration-150">
+                        <span className="text-sm">
+                          {session.currentQuestionIndex} /{" "}
+                          {session.totalQuestions}
+                        </span>
+                      </div>
+                      <div className="p-3 transition-colors duration-150">
+                        <span className="font-medium text-green-600">
+                          {session.winnings}
+                        </span>
+                      </div>
+                      <div className="p-3 transition-colors duration-150">
+                        <div className="flex gap-1">
+                          {session.usedLifelines.fiftyFifty && (
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                              50:50
+                            </span>
+                          )}
+                          {session.usedLifelines.phoneAFriend && (
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                              📞
+                            </span>
+                          )}
+                          {session.usedLifelines.askAudience && (
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                              👥
+                            </span>
+                          )}
+                          {session.usedLifelinesCount === 0 && (
+                            <span className="text-xs text-gray-500">Brak</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+          )}
+        </Card>
       </div>
 
       {/* Dialogs */}

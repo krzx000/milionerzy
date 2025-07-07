@@ -7,6 +7,27 @@ export interface ApiResponse<T = unknown> {
   message?: string;
 }
 
+export interface GameSessionHistory {
+  id: string;
+  status: string;
+  startTime?: Date;
+  endTime?: Date;
+  duration: number;
+  currentQuestionIndex: number;
+  totalQuestions: number;
+  result: string;
+  winnings: string;
+  gameWon: boolean;
+  usedLifelines: {
+    fiftyFifty: boolean;
+    phoneAFriend: boolean;
+    askAudience: boolean;
+  };
+  usedLifelinesCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export class GameAPI {
   private static baseUrl = "/api/game";
 
@@ -120,6 +141,20 @@ export class GameAPI {
       return {
         success: false,
         error: "Błąd wysyłania odpowiedzi",
+      };
+    }
+  }
+
+  static async getHistory(
+    limit: number = 20
+  ): Promise<ApiResponse<GameSessionHistory[]>> {
+    try {
+      const response = await fetch(`${this.baseUrl}/history?limit=${limit}`);
+      return await response.json();
+    } catch {
+      return {
+        success: false,
+        error: "Błąd pobierania historii sesji",
       };
     }
   }
