@@ -54,7 +54,11 @@ export async function POST(request: NextRequest) {
       const endedSession = await gameSessionDb.end();
       return NextResponse.json({
         success: true,
-        data: endedSession,
+        data: {
+          ...endedSession,
+          correct: false,
+          correctAnswer: currentQuestion.correctAnswer,
+        },
         message: "Niepoprawna odpowiedź. Gra zakończona.",
         correct: false,
         correctAnswer: currentQuestion.correctAnswer,
@@ -67,21 +71,33 @@ export async function POST(request: NextRequest) {
       const endedSession = await gameSessionDb.end();
       return NextResponse.json({
         success: true,
-        data: endedSession,
+        data: {
+          ...endedSession,
+          correct: true,
+          gameWon: true,
+          correctAnswer: currentQuestion.correctAnswer,
+        },
         message:
           "Gratulacje! Gracz odpowiedział poprawnie na wszystkie pytania!",
         correct: true,
         gameWon: true,
+        correctAnswer: currentQuestion.correctAnswer,
       });
     } else {
-      // Przejdź do następnego pytania
-      const updatedSession = await gameSessionDb.nextQuestion();
+      // Poprawna odpowiedź - NIE przechodź automatycznie do następnego pytania
+      // UI będzie wywołać osobny endpoint do przejścia dalej po opóźnieniu
       return NextResponse.json({
         success: true,
-        data: updatedSession,
+        data: {
+          ...session,
+          correct: true,
+          gameWon: false,
+          correctAnswer: currentQuestion.correctAnswer,
+        },
         message: "Poprawna odpowiedź!",
         correct: true,
         gameWon: false,
+        correctAnswer: currentQuestion.correctAnswer,
       });
     }
   } catch (error) {

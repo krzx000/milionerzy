@@ -81,8 +81,11 @@ export default function Admin() {
     null
   );
   const [isAnswerRevealed, setIsAnswerRevealed] = React.useState(false);
-  const [autoProgressTimeout, setAutoProgressTimeout] =
-    React.useState<NodeJS.Timeout | null>(null);
+  const [lastAnswerResult, setLastAnswerResult] = React.useState<{
+    correct: boolean;
+    gameWon: boolean;
+    correctAnswer?: string;
+  } | null>(null);
 
   // Computed values from game session
   const isGameActive = gameSession?.status === "active";
@@ -104,7 +107,7 @@ export default function Admin() {
       : null;
 
   // Konfiguracja czasu na automatyczne przejście (w sekundach)
-  const AUTO_PROGRESS_TIME = 5;
+  const AUTO_PROGRESS_TIME = 2;
 
   const showGameStatusMessage = React.useCallback((message: string) => {
     toast.info(message);
@@ -142,15 +145,12 @@ export default function Admin() {
       // Reset UI state when loading session
       setSelectedAnswer(null);
       setIsAnswerRevealed(false);
-      if (autoProgressTimeout) {
-        clearTimeout(autoProgressTimeout);
-        setAutoProgressTimeout(null);
-      }
+      setLastAnswerResult(null);
     } else if (response.error) {
       showErrorMessage(response.error);
     }
     // Jeśli nie ma aktywnej sesji, po prostu zostaw gameSession jako null
-  }, [showErrorMessage, autoProgressTimeout]);
+  }, [showErrorMessage]);
 
   // Ładowanie pytań i sesji gry z API przy inicjalizacji
   React.useEffect(() => {
@@ -289,10 +289,7 @@ export default function Admin() {
       // Reset stanu pytania
       setSelectedAnswer(null);
       setIsAnswerRevealed(false);
-      if (autoProgressTimeout) {
-        clearTimeout(autoProgressTimeout);
-        setAutoProgressTimeout(null);
-      }
+      setLastAnswerResult(null);
 
       showSuccessMessage("🎮 Gra rozpoczęta!");
     } else {
@@ -304,7 +301,6 @@ export default function Admin() {
     questions.length,
     showErrorMessage,
     showSuccessMessage,
-    autoProgressTimeout,
   ]);
 
   const handleEndGame = React.useCallback(async () => {
@@ -319,10 +315,7 @@ export default function Admin() {
         // Wyczyść stan
         setSelectedAnswer(null);
         setIsAnswerRevealed(false);
-        if (autoProgressTimeout) {
-          clearTimeout(autoProgressTimeout);
-          setAutoProgressTimeout(null);
-        }
+        setLastAnswerResult(null);
 
         showGameStatusMessage("🛑 Gra zakończona!");
       } else {
@@ -331,7 +324,7 @@ export default function Admin() {
 
       setGameLoading(false);
     }
-  }, [showGameStatusMessage, showErrorMessage, autoProgressTimeout]);
+  }, [showGameStatusMessage, showErrorMessage]);
 
   const handleUseLifeline = React.useCallback(
     async (lifelineType: keyof typeof usedLifelines) => {
@@ -377,48 +370,63 @@ export default function Admin() {
       const response = await GameAPI.submitAnswer(selectedAnswer);
 
       if (response.success && response.data) {
-        const { correct, correctAnswer, gameWon, ...sessionData } =
-          response.data;
-        setGameSession(sessionData);
+        const responseData = response.data;
+        const correct = responseData.correct;
+        const correctAnswer = responseData.correctAnswer;
+        const gameWon = responseData.gameWon;
+        
+        console.log("API Response:", { correct, correctAnswer, gameWon, responseData });
+        
+        // Usuń dodatkowe pola z sessionData
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { correct: _, correctAnswer: __, gameWon: ___, ...sessionData } = responseData;
+        
+        setGameSession(sessionData as GameSession);
         setIsAnswerRevealed(true);
+        setLastAnswerResult({
+          correct: correct || false,
+          gameWon: gameWon || false,
+          correctAnswer: correctAnswer,
+        });
 
-        // Drugi delay - pokazanie poprawnej odpowiedzi
-        setTimeout(() => {
-          if (correct) {
-            if (gameWon) {
-              showSuccessMessage(
-                "🎉 Gratulacje! Gracz wygrał wszystkie pytania!"
-              );
-              // Zakończ grę po wygranej
-              setTimeout(() => {
-                setSelectedAnswer(null);
-                setIsAnswerRevealed(false);
-              }, 3000);
-            } else {
-              showSuccessMessage("✅ Poprawna odpowiedź!");
-              // Przejście do następnego pytania
-              const timeout = setTimeout(() => {
-                setSelectedAnswer(null);
-                setIsAnswerRevealed(false);
-              }, AUTO_PROGRESS_TIME * 1000);
-              setAutoProgressTimeout(timeout);
-            }
-          } else {
-            showErrorMessage(
-              `❌ Niepoprawna odpowiedź! Poprawna odpowiedź to: ${correctAnswer}. Gra zakończona.`
+        // Zatrzymaj loading tutaj, żeby UI pokazało wynik
+        setGameLoading(false);
+
+        console.log("Checking conditions:", { correct, gameWon });
+        if (correct) {
+          if (gameWon) {
+            console.log("Game won path");
+            showSuccessMessage(
+              "🎉 Gratulacje! Gracz wygrał wszystkie pytania!"
             );
-            // Zakończ grę po błędnej odpowiedzi
+            // Zakończ grę po wygranej
             setTimeout(() => {
               setSelectedAnswer(null);
               setIsAnswerRevealed(false);
+              setLastAnswerResult(null);
             }, 3000);
+          } else {
+            console.log("Next question path");
+            showSuccessMessage("✅ Poprawna odpowiedź!");
+            console.log("🎯 Setting state for auto-progress...");
+            // Auto-progress jest teraz obsługiwany przez useEffect
           }
-        }, 2000); // 2 sekundy delay po sprawdzeniu
+        } else {
+          console.log("Incorrect answer path, values:", { correct, gameWon, correctAnswer });
+          showErrorMessage(
+            `❌ Niepoprawna odpowiedź! Poprawna odpowiedź to: ${correctAnswer}. Gra zakończona.`
+          );
+          // Zakończ grę po błędnej odpowiedzi
+          setTimeout(() => {
+            setSelectedAnswer(null);
+            setIsAnswerRevealed(false);
+            setLastAnswerResult(null);
+          }, 3000);
+        }
       } else {
         showErrorMessage(response.error || "Błąd wysyłania odpowiedzi");
+        setGameLoading(false);
       }
-
-      setGameLoading(false);
     }, 3000); // 3 sekundy delay na muzykę przed sprawdzeniem
   }, [
     currentQuestion,
@@ -428,17 +436,69 @@ export default function Admin() {
     showGameStatusMessage,
     showSuccessMessage,
     showErrorMessage,
-    AUTO_PROGRESS_TIME,
   ]);
 
-  // Cleanup timeout przy unmount
+  // Effect do automatycznego przejścia do kolejnego pytania
   React.useEffect(() => {
-    return () => {
-      if (autoProgressTimeout) {
-        clearTimeout(autoProgressTimeout);
+    // Sprawdź czy powinniśmy automatycznie przejść do następnego pytania
+    if (
+      isAnswerRevealed && 
+      lastAnswerResult?.correct && 
+      !lastAnswerResult?.gameWon && 
+      isGameActive &&
+      !gameLoading
+    ) {
+      console.log("🎯 Auto-progress conditions met, setting up auto progress...");
+      
+      const timeoutId = setTimeout(async () => {
+        console.log("🔥 Auto-progress TIMEOUT FIRED! - calling nextQuestion API");
+        try {
+          const nextResponse = await GameAPI.nextQuestion();
+          console.log("Auto-progress NextQuestion response:", nextResponse);
+          if (nextResponse.success && nextResponse.data) {
+            console.log("Auto-progress updating game session with:", nextResponse.data);
+            setGameSession(nextResponse.data);
+          } else {
+            console.log("Auto-progress NextQuestion failed:", nextResponse.error);
+          }
+          setSelectedAnswer(null);
+          setIsAnswerRevealed(false);
+          setLastAnswerResult(null);
+        } catch (error) {
+          console.error("Error in auto-progress nextQuestion:", error);
+        }
+      }, AUTO_PROGRESS_TIME * 1000);
+      
+      console.log("🎯 Auto-progress timeout set with ID:", timeoutId);
+      
+      return () => {
+        console.log("🎯 Auto-progress cleanup, clearing timeout:", timeoutId);
+        clearTimeout(timeoutId);
+      };
+    }
+  }, [isAnswerRevealed, lastAnswerResult, isGameActive, gameLoading, AUTO_PROGRESS_TIME]);
+
+  // Handler do manualnego przejścia do kolejnego pytania (do testów)
+  const handleManualNextQuestion = React.useCallback(async () => {
+    console.log("🔧 Manual next question triggered");
+    try {
+      const nextResponse = await GameAPI.nextQuestion();
+      console.log("Manual NextQuestion response:", nextResponse);
+      if (nextResponse.success && nextResponse.data) {
+        console.log("Updating game session with:", nextResponse.data);
+        setGameSession(nextResponse.data);
+      } else {
+        console.log("Manual NextQuestion failed:", nextResponse.error);
+        showErrorMessage(nextResponse.error || "Błąd przejścia do kolejnego pytania");
       }
-    };
-  }, [autoProgressTimeout]);
+      setSelectedAnswer(null);
+      setIsAnswerRevealed(false);
+      setLastAnswerResult(null);
+    } catch (error) {
+      console.error("Error in manual nextQuestion:", error);
+      showErrorMessage("Błąd przejścia do kolejnego pytania");
+    }
+  }, [showErrorMessage]);
 
   const getCurrentPrize = () => {
     const prizes = [
@@ -712,6 +772,17 @@ export default function Admin() {
                     >
                       {gameLoading ? "⏳ Kończenie..." : "🛑 Zakończ grę"}
                     </Button>
+                    {/* Przycisk do manualnego przejścia do kolejnego pytania - tylko do testów */}
+                    {isAnswerRevealed && lastAnswerResult?.correct && !lastAnswerResult?.gameWon && (
+                      <Button
+                        onClick={handleManualNextQuestion}
+                        variant="outline"
+                        disabled={gameLoading}
+                        className="w-full text-xs"
+                      >
+                        🔧 Następne pytanie (test)
+                      </Button>
+                    )}
                     <div className="text-xs text-gray-500 text-center">
                       Gracz wygrywa: {getWinningPrize()}
                     </div>
@@ -763,11 +834,13 @@ export default function Admin() {
                         const isSelected = selectedAnswer === key;
                         const isCorrect =
                           isAnswerRevealed &&
-                          key === currentQuestion.correctAnswer;
+                          lastAnswerResult &&
+                          key === lastAnswerResult.correctAnswer;
                         const isWrong =
                           isAnswerRevealed &&
                           isSelected &&
-                          key !== currentQuestion.correctAnswer;
+                          lastAnswerResult &&
+                          key !== lastAnswerResult.correctAnswer;
 
                         let variant:
                           | "default"
@@ -843,10 +916,10 @@ export default function Admin() {
                     </div>
                   )}
 
-                  {isAnswerRevealed && !gameLoading && (
+                  {isAnswerRevealed && !gameLoading && lastAnswerResult && (
                     <div className="text-center text-sm text-gray-600">
-                      {selectedAnswer === currentQuestion.correctAnswer ? (
-                        currentQuestionIndex >= questions.length - 1 ? (
+                      {lastAnswerResult.correct ? (
+                        lastAnswerResult.gameWon ? (
                           <span className="text-green-600 font-semibold">
                             🎉 Gracz wygrał całą grę!
                           </span>
