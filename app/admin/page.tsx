@@ -645,18 +645,15 @@ export default function Admin() {
   );
   return (
     <div className="flex flex-col items-center justify-center">
-      {/* Header z przełącznikiem motywu */}
-      <div className="w-full p-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Panel Prowadzącego - Milionerzy</h1>
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-        </div>
+      {/* Fixed theme toggle */}
+      <div className="fixed top-6 right-6 z-50">
+        <ThemeToggle />
       </div>
 
       <div className="grid min-h-screen grid-cols-12 gap-4 p-4">
         {/* Lista pytań + edycja i wgrywanie (duży panel po lewej) */}
         <section className="col-span-5 row-span-3">
-          <Card>
+          <Card className="h-full">
             <CardHeader>
               <CardTitle>Pytania {isGameActive && "🔒"}</CardTitle>
               <CardDescription>
@@ -726,7 +723,7 @@ export default function Admin() {
 
         {/* Ustawienia gry (obok listy pytań) */}
         <section className="col-span-3 row-span-3">
-          <Card>
+          <Card className="h-full">
             <CardHeader>
               <CardTitle>Zarządzanie grą</CardTitle>
               <CardDescription>
@@ -889,7 +886,7 @@ export default function Admin() {
         </section>
 
         {/* Podgląd aktualnego pytania + opcje odpowiedzi (prawa kolumna, góra) */}
-        <section className="col-span-4 row-span-2">
+        <section className="col-span-4 row-span-3">
           <Card className="h-full">
             <CardHeader>
               <CardTitle>Aktualne pytanie</CardTitle>
