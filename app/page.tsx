@@ -13,7 +13,7 @@ export default function Home() {
         className="w-1/4 animate-pulse"
       />
       <Link className="absolute bottom-16" href={"/admin"}>
-        <Button variant={"teitary"}>Widok prowadzącego</Button>
+        <Button variant={"teritary"}>Widok prowadzącego</Button>
       </Link>
     </div>
   );

@@ -15,8 +15,9 @@ import { EditIcon, TrashIcon, PlusIcon, EyeIcon } from "lucide-react";
 import { Question as QuestionType } from "@/types/question";
 import { QuestionDialog } from "@/components/question-dialog";
 import { QuestionViewDialog } from "@/components/question-view-dialog";
-import { ThemeButton, ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { QuestionsAPI } from "@/lib/api/questions";
+import { GameSession } from "@/lib/db/game-session";
 
 const sampleQuestions: QuestionType[] = [
   {
@@ -70,6 +71,43 @@ export default function Admin() {
     QuestionType[]
   >([]);
 
+  // Stan gry - lokalny (nie w bazie danych)
+  const [gameSession, setGameSession] = React.useState<GameSession | null>(
+    null
+  );
+  const [gameLoading, setGameLoading] = React.useState(false);
+  const [selectedAnswer, setSelectedAnswer] = React.useState<string | null>(
+    null
+  );
+  const [isAnswerRevealed, setIsAnswerRevealed] = React.useState(false);
+  const [autoProgressTimeout, setAutoProgressTimeout] =
+    React.useState<NodeJS.Timeout | null>(null);
+  const [gameStatusMessage, setGameStatusMessage] = React.useState<
+    string | null
+  >(null);
+
+  // Computed values from game session
+  const isGameActive = gameSession?.status === "active";
+  const currentQuestionIndex = gameSession?.currentQuestionIndex || 0;
+  const usedLifelines = React.useMemo(
+    () =>
+      gameSession?.usedLifelines || {
+        fiftyFifty: false,
+        phoneAFriend: false,
+        askAudience: false,
+      },
+    [gameSession?.usedLifelines]
+  );
+
+  // Pobierz aktualne pytanie
+  const currentQuestion =
+    isGameActive && questions.length > currentQuestionIndex
+      ? questions[currentQuestionIndex]
+      : null;
+
+  // Konfiguracja czasu na automatyczne przejście (w sekundach)
+  const AUTO_PROGRESS_TIME = 5;
+
   // Ładowanie pytań z API przy inicjalizacji
   React.useEffect(() => {
     loadQuestions();
@@ -91,6 +129,11 @@ export default function Admin() {
 
     setLoading(false);
   };
+
+  const showGameStatusMessage = React.useCallback((message: string) => {
+    setGameStatusMessage(message);
+    setTimeout(() => setGameStatusMessage(null), 5000);
+  }, []);
 
   const showErrorMessage = React.useCallback((message: string) => {
     setError(message);
@@ -211,6 +254,247 @@ export default function Admin() {
     []
   );
 
+  // Funkcje zarządzania grą - lokalnie
+  const handleStartGame = React.useCallback(() => {
+    if (questions.length === 0) {
+      showErrorMessage("Nie można rozpocząć gry bez pytań!");
+      return;
+    }
+
+    setGameLoading(true);
+
+    // Tworz nową sesję lokalnie
+    const newSession: GameSession = {
+      id: `local-${Date.now()}`,
+      status: "active",
+      currentQuestionIndex: 0,
+      startTime: new Date(),
+      gameTime: 0,
+      usedLifelines: {
+        fiftyFifty: false,
+        phoneAFriend: false,
+        askAudience: false,
+      },
+      totalQuestions: questions.length,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    setGameSession(newSession);
+
+    // Reset stanu pytania
+    setSelectedAnswer(null);
+    setIsAnswerRevealed(false);
+    setGameStatusMessage(null);
+    if (autoProgressTimeout) {
+      clearTimeout(autoProgressTimeout);
+      setAutoProgressTimeout(null);
+    }
+
+    setGameLoading(false);
+    showGameStatusMessage("🎮 Gra rozpoczęta!");
+  }, [
+    questions.length,
+    showErrorMessage,
+    showGameStatusMessage,
+    autoProgressTimeout,
+  ]);
+
+  const handleEndGame = React.useCallback(() => {
+    if (confirm("Czy na pewno chcesz zakończyć grę?")) {
+      setGameLoading(true);
+
+      setGameSession((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: "finished",
+              endTime: new Date(),
+            }
+          : null
+      );
+
+      // Wyczyść stan
+      setSelectedAnswer(null);
+      setIsAnswerRevealed(false);
+      setGameStatusMessage(null);
+      if (autoProgressTimeout) {
+        clearTimeout(autoProgressTimeout);
+        setAutoProgressTimeout(null);
+      }
+
+      setGameLoading(false);
+      showGameStatusMessage("🛑 Gra zakończona!");
+    }
+  }, [showGameStatusMessage, autoProgressTimeout]);
+
+  const handleUseLifeline = React.useCallback(
+    (lifelineType: keyof typeof usedLifelines) => {
+      if (!gameSession || usedLifelines[lifelineType]) return;
+
+      setGameLoading(true);
+
+      // Aktualizuj lokalnie
+      setGameSession((prev) =>
+        prev
+          ? {
+              ...prev,
+              usedLifelines: {
+                ...prev.usedLifelines,
+                [lifelineType]: true,
+              },
+            }
+          : null
+      );
+
+      showGameStatusMessage(`Użyto koła ratunkowego: ${lifelineType}`);
+      setGameLoading(false);
+    },
+    [gameSession, usedLifelines, showGameStatusMessage]
+  );
+
+  const handleSelectAnswer = React.useCallback(
+    (answer: string) => {
+      if (!currentQuestion || gameLoading || isAnswerRevealed) return;
+
+      // Tylko zaznacz odpowiedź, nie wysyłaj jeszcze do API
+      setSelectedAnswer(answer);
+    },
+    [currentQuestion, gameLoading, isAnswerRevealed]
+  );
+
+  const handleConfirmAnswer = React.useCallback(async () => {
+    if (!currentQuestion || !selectedAnswer || gameLoading || isAnswerRevealed)
+      return;
+
+    setGameLoading(true);
+
+    // Pierwszy delay - czas na muzykę/efekty przed sprawdzeniem
+    showGameStatusMessage("🎵 Sprawdzanie odpowiedzi...");
+
+    setTimeout(() => {
+      // Sprawdź poprawność odpowiedzi lokalnie
+      const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
+      setIsAnswerRevealed(true);
+
+      // Drugi delay - pokazanie poprawnej odpowiedzi
+      setTimeout(() => {
+        if (isCorrect) {
+          const isLastQuestion = currentQuestionIndex >= questions.length - 1;
+
+          if (isLastQuestion) {
+            showGameStatusMessage(
+              "🎉 Gratulacje! Gracz wygrał wszystkie pytania!"
+            );
+            // Zakończ grę po wygranej
+            setTimeout(() => {
+              setGameSession((prev) =>
+                prev ? { ...prev, status: "finished" as const } : null
+              );
+              setSelectedAnswer(null);
+              setIsAnswerRevealed(false);
+            }, 3000);
+          } else {
+            showGameStatusMessage("✅ Poprawna odpowiedź!");
+            // Przejście do następnego pytania
+            const timeout = setTimeout(() => {
+              setGameSession((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      currentQuestionIndex: currentQuestionIndex + 1,
+                    }
+                  : null
+              );
+              setSelectedAnswer(null);
+              setIsAnswerRevealed(false);
+            }, AUTO_PROGRESS_TIME * 1000);
+            setAutoProgressTimeout(timeout);
+          }
+        } else {
+          showGameStatusMessage(
+            `❌ Niepoprawna odpowiedź! Poprawna odpowiedź to: ${currentQuestion.correctAnswer}. Gra zakończona.`
+          );
+          // Zakończ grę po błędnej odpowiedzi
+          setTimeout(() => {
+            setGameSession((prev) =>
+              prev ? { ...prev, status: "finished" as const } : null
+            );
+            setSelectedAnswer(null);
+            setIsAnswerRevealed(false);
+          }, 3000);
+        }
+      }, 2000); // 2 sekundy delay po sprawdzeniu
+
+      setGameLoading(false);
+    }, 3000); // 3 sekundy delay na muzykę przed sprawdzeniem
+  }, [
+    currentQuestion,
+    selectedAnswer,
+    gameLoading,
+    isAnswerRevealed,
+    showGameStatusMessage,
+    AUTO_PROGRESS_TIME,
+    currentQuestionIndex,
+    questions.length,
+  ]);
+
+  // Cleanup timeout przy unmount
+  React.useEffect(() => {
+    return () => {
+      if (autoProgressTimeout) {
+        clearTimeout(autoProgressTimeout);
+      }
+    };
+  }, [autoProgressTimeout]);
+
+  const getCurrentPrize = () => {
+    const prizes = [
+      "500 zł",
+      "1 000 zł",
+      "2 000 zł",
+      "5 000 zł",
+      "10 000 zł",
+      "20 000 zł",
+      "40 000 zł",
+      "75 000 zł",
+      "125 000 zł",
+      "250 000 zł",
+      "500 000 zł",
+      "1 000 000 zł",
+    ];
+    return prizes[Math.min(currentQuestionIndex, prizes.length - 1)] || "0 zł";
+  };
+
+  const getWinningPrize = () => {
+    const prizes = [
+      "500 zł",
+      "1 000 zł",
+      "2 000 zł",
+      "5 000 zł",
+      "10 000 zł",
+      "20 000 zł",
+      "40 000 zł",
+      "75 000 zł",
+      "125 000 zł",
+      "250 000 zł",
+      "500 000 zł",
+      "1 000 000 zł",
+    ];
+
+    // Gracz wygrywa nagrodę za ostatnie poprawnie odpowiedziane pytanie
+    // Jeśli currentQuestionIndex = 0, gracz jeszcze nie odpowiedział na żadne pytanie
+    // Jeśli currentQuestionIndex = 1, gracz odpowiedział poprawnie na pytanie 1, więc wygrywa prizes[0] = 500 zł
+    // Jeśli currentQuestionIndex = 5, gracz odpowiedział poprawnie na pytania 1-5, więc wygrywa prizes[4] = 10 000 zł
+
+    if (currentQuestionIndex === 0) {
+      return "0 zł"; // Gracz jeszcze nie odpowiedział na żadne pytanie
+    }
+
+    const winningIndex = currentQuestionIndex - 1;
+    return prizes[winningIndex] || "0 zł";
+  };
+
   const columns = React.useMemo(
     () => [
       {
@@ -284,6 +568,13 @@ export default function Admin() {
           </div>
         )}
 
+        {/* Status gry */}
+        {gameStatusMessage && (
+          <div className="col-span-12 p-4 mb-4 text-blue-800 bg-blue-100 border border-blue-300 rounded">
+            <strong>Status:</strong> {gameStatusMessage}
+          </div>
+        )}
+
         {/* Lista pytań + edycja i wgrywanie (duży panel po lewej) */}
         <section className="col-span-5 row-span-3">
           <Card>
@@ -338,91 +629,276 @@ export default function Admin() {
         </section>
 
         {/* Ustawienia gry (obok listy pytań) */}
-        <section className="col-span-3 row-span-3 p-4 space-y-4 border rounded">
-          <h2 className="mb-2 text-lg font-semibold">Ustawienia gry</h2>
+        <section className="col-span-3 row-span-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Zarządzanie grą</CardTitle>
+              <CardDescription>
+                {isGameActive ? "Gra w toku" : "Gotowy do rozpoczęcia"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Status gry */}
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Status gry:</div>
+                <div
+                  className={`px-3 py-2 rounded-md text-center ${
+                    isGameActive
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {isGameActive ? "AKTYWNA" : "NIEAKTYWNA"}
+                </div>
+              </div>
 
-          <div>
-            <label className="block mb-1 font-medium">
-              Liczba rund (max 12)
-            </label>
-            <input
-              type="number"
-              max={12}
-              className="w-full px-2 py-1 border rounded"
-            />
-          </div>
+              {/* Aktualne pytanie */}
+              {isGameActive && (
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Pytanie:</div>
+                  <div className="text-center bg-blue-100 text-blue-800 py-2 rounded">
+                    {currentQuestionIndex + 1} z {questions.length}
+                  </div>
+                </div>
+              )}
 
-          <div>
-            <label className="block mb-1 font-medium">
-              Kwoty gwarantowane (do 2)
-            </label>
-            {/* np. dwa inputy */}
-            <input
-              type="text"
-              placeholder="Kwota 1"
-              className="w-full px-2 py-1 mb-1 border rounded"
-            />
-            <input
-              type="text"
-              placeholder="Kwota 2"
-              className="w-full px-2 py-1 border rounded"
-            />
-          </div>
+              {/* Aktualna nagroda */}
+              {isGameActive && (
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Aktualna nagroda:</div>
+                  <div className="text-lg font-bold text-center bg-yellow-100 text-yellow-800 py-2 rounded">
+                    {getCurrentPrize()}
+                  </div>
+                </div>
+              )}
 
-          <div>
-            <label className="block mb-1 font-medium">Nagrody za pytania</label>
-            {/* Można dodać textarea lub inny kontroler */}
-            <textarea rows={3} className="w-full px-2 py-1 border rounded" />
-          </div>
+              {/* Koła ratunkowe */}
+              {isGameActive && (
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Koła ratunkowe:</div>
+                  <div className="grid grid-cols-1 gap-2">
+                    <Button
+                      variant={
+                        usedLifelines.fiftyFifty ? "secondary" : "default"
+                      }
+                      size="sm"
+                      disabled={usedLifelines.fiftyFifty || gameLoading}
+                      onClick={() => handleUseLifeline("fiftyFifty")}
+                      className="text-xs"
+                    >
+                      {usedLifelines.fiftyFifty ? "✓" : "50:50"}
+                    </Button>
+                    <Button
+                      variant={
+                        usedLifelines.phoneAFriend ? "secondary" : "default"
+                      }
+                      size="sm"
+                      disabled={usedLifelines.phoneAFriend || gameLoading}
+                      onClick={() => handleUseLifeline("phoneAFriend")}
+                      className="text-xs"
+                    >
+                      {usedLifelines.phoneAFriend ? "✓" : "📞 Przyjaciel"}
+                    </Button>
+                    <Button
+                      variant={
+                        usedLifelines.askAudience ? "secondary" : "default"
+                      }
+                      size="sm"
+                      disabled={usedLifelines.askAudience || gameLoading}
+                      onClick={() => handleUseLifeline("askAudience")}
+                      className="text-xs"
+                    >
+                      {usedLifelines.askAudience ? "✓" : "👥 Publiczność"}
+                    </Button>
+                  </div>
+                </div>
+              )}
 
-          <div className="flex items-center space-x-2">
-            <label className="font-medium">Koła ratunkowe</label>
-            <input type="checkbox" />
-          </div>
+              {/* Przyciski sterowania */}
+              <div className="space-y-2 pt-4 border-t">
+                {!isGameActive ? (
+                  <Button
+                    onClick={handleStartGame}
+                    disabled={questions.length === 0 || gameLoading}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    {gameLoading ? "⏳ Rozpoczynanie..." : "🎮 Rozpocznij grę"}
+                  </Button>
+                ) : (
+                  <div className="space-y-2">
+                    <Button
+                      onClick={handleEndGame}
+                      variant="destructive"
+                      disabled={gameLoading}
+                      className="w-full"
+                    >
+                      {gameLoading ? "⏳ Kończenie..." : "🛑 Zakończ grę"}
+                    </Button>
+                    <div className="text-xs text-gray-500 text-center">
+                      Gracz wygrywa: {getWinningPrize()}
+                    </div>
+                  </div>
+                )}
+              </div>
 
-          {/* Przełącznik motywu */}
-          <div className="space-y-2">
-            <label className="block font-medium">Motyw interfejsu</label>
-            <div className="flex gap-2">
-              <ThemeButton targetTheme="dark" className="flex-1">
-                🌙 Ciemny
-              </ThemeButton>
-              <ThemeToggle />
-            </div>
-          </div>
-
-          <button className="w-full py-2 mt-4 text-white transition bg-blue-600 rounded hover:bg-blue-700">
-            Start gry
-          </button>
+              {/* Informacje */}
+              <div className="text-xs text-gray-500 space-y-1 pt-2 border-t">
+                <div>💡 Dostępne pytania: {questions.length}</div>
+                {!isGameActive && questions.length === 0 && (
+                  <div className="text-red-500">
+                    ⚠️ Dodaj pytania przed rozpoczęciem gry
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </section>
 
         {/* Podgląd aktualnego pytania + opcje odpowiedzi (prawa kolumna, góra) */}
-        <section className="col-span-4 row-span-2 p-4 border rounded">
-          {/*  */}
+        <section className="col-span-4 row-span-2">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle>Aktualne pytanie</CardTitle>
+              <CardDescription>
+                {isGameActive
+                  ? `Pytanie ${currentQuestionIndex + 1} z ${questions.length}`
+                  : "Brak aktywnej gry"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {isGameActive && currentQuestion ? (
+                <>
+                  {/* Treść pytania */}
+                  <div className="p-4 bg-blue-50 rounded-lg border">
+                    <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                      Pytanie za {getCurrentPrize()}
+                    </h3>
+                    <p className="text-blue-800 leading-relaxed">
+                      {currentQuestion.content}
+                    </p>
+                  </div>
+
+                  {/* Odpowiedzi */}
+                  <div className="grid grid-cols-1 gap-2">
+                    {Object.entries(currentQuestion.answers).map(
+                      ([key, value]) => {
+                        const isSelected = selectedAnswer === key;
+                        const isCorrect =
+                          isAnswerRevealed &&
+                          key === currentQuestion.correctAnswer;
+                        const isWrong =
+                          isAnswerRevealed &&
+                          isSelected &&
+                          key !== currentQuestion.correctAnswer;
+
+                        let variant:
+                          | "default"
+                          | "secondary"
+                          | "destructive"
+                          | "outline" = "outline";
+                        let className =
+                          "justify-start text-left h-auto py-3 px-4";
+
+                        if (isCorrect) {
+                          variant = "default";
+                          className +=
+                            " bg-green-100 border-green-500 text-green-800 hover:bg-green-100";
+                        } else if (isWrong) {
+                          variant = "destructive";
+                          className +=
+                            " bg-red-100 border-red-500 text-red-800";
+                        } else if (isSelected) {
+                          variant = "secondary";
+                          className +=
+                            " bg-blue-100 border-blue-500 text-blue-800";
+                        }
+
+                        return (
+                          <Button
+                            key={key}
+                            variant={variant}
+                            className={className}
+                            disabled={gameLoading || isAnswerRevealed}
+                            onClick={() => handleSelectAnswer(key)}
+                          >
+                            <span className="font-bold mr-3">{key}:</span>
+                            <span className="flex-1">{value}</span>
+                            {isCorrect && <span className="ml-2">✓</span>}
+                            {isWrong && <span className="ml-2">✗</span>}
+                          </Button>
+                        );
+                      }
+                    )}
+                  </div>
+
+                  {/* Przycisk potwierdzający odpowiedź */}
+                  {selectedAnswer && !isAnswerRevealed && !gameLoading && (
+                    <div className="text-center space-y-3">
+                      <div className="text-sm text-blue-700 font-medium">
+                        Zaznaczona odpowiedź: <strong>{selectedAnswer}</strong>
+                      </div>
+                      <div className="flex gap-3 justify-center">
+                        <Button
+                          onClick={handleConfirmAnswer}
+                          className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 text-lg font-semibold"
+                          size="lg"
+                        >
+                          ✅ Potwierdź odpowiedź
+                        </Button>
+                        <Button
+                          onClick={() => setSelectedAnswer(null)}
+                          variant="outline"
+                          className="px-6 py-3 text-lg"
+                          size="lg"
+                        >
+                          ❌ Anuluj
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Status */}
+                  {gameLoading && (
+                    <div className="text-center text-sm text-gray-600">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 inline-block mr-2"></div>
+                      Przetwarzanie odpowiedzi...
+                    </div>
+                  )}
+
+                  {isAnswerRevealed && !gameLoading && (
+                    <div className="text-center text-sm text-gray-600">
+                      {selectedAnswer === currentQuestion.correctAnswer ? (
+                        currentQuestionIndex >= questions.length - 1 ? (
+                          <span className="text-green-600 font-semibold">
+                            🎉 Gracz wygrał całą grę!
+                          </span>
+                        ) : (
+                          <span className="text-green-600">
+                            ✅ Poprawnie! Przejście do następnego pytania za{" "}
+                            {AUTO_PROGRESS_TIME}s...
+                          </span>
+                        )
+                      ) : (
+                        <span className="text-red-600">
+                          ❌ Gra zakończona - niepoprawna odpowiedź
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  {isGameActive
+                    ? "Ładowanie pytania..."
+                    : "Rozpocznij grę aby zobaczyć pytania"}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </section>
 
         {/* Sterowanie kołami ratunkowymi (pod aktualnym pytaniem) */}
-        <section className="col-span-4 row-span-1 p-4 mt-2 border rounded">
-          <h2 className="mb-2 text-lg font-semibold">Koła ratunkowe</h2>
-          <div className="flex space-x-4">
-            <button className="flex-1 py-2 text-black transition bg-yellow-400 rounded hover:bg-yellow-500">
-              50:50
-            </button>
-            <button className="flex-1 py-2 text-black transition bg-green-400 rounded hover:bg-green-500">
-              Telefg-gre przyjaciela
-            </button>
-            <button className="flex-1 py-2 text-black transition bg-purple-400 rounded hover:bg-purple-500">
-              Pytanie do publiczności
-            </button>
-          </div>
-        </section>
-
-        {/* Zakończenie gry (dolna część prawej kolumny) */}
-        <section className="flex justify-center col-span-12 pt-4 mt-4 border-t">
-          <button className="px-6 py-2 text-white transition bg-red-600 rounded hover:bg-red-700">
-            Zakończ grę
-          </button>
-        </section>
+        <section className="col-span-4 row-span-1 p-4 mt-2 border rounded"></section>
       </div>
 
       {/* Dialogs */}

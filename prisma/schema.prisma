@@ -23,3 +23,20 @@ model Question {
 
   @@map("questions")
 }
+
+model GameSession {
+  id                    String   @id @default(cuid())
+  status                String   @default("inactive") // "inactive", "active", "paused", "finished"
+  currentQuestionIndex  Int      @default(0)
+  startTime             DateTime?
+  endTime               DateTime?
+  gameTime              Int      @default(0) // czas w sekundach
+  usedFiftyFifty        Boolean  @default(false)
+  usedPhoneAFriend      Boolean  @default(false)
+  usedAskAudience       Boolean  @default(false)
+  totalQuestions        Int      @default(0)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("game_sessions")
+}
