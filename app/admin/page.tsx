@@ -557,6 +557,7 @@ export default function Admin() {
               variant="outline"
               size="sm"
               onClick={() => handleViewQuestion(row.original)}
+              title="Podgląd pytania"
             >
               <EyeIcon className="w-4 h-4" />
             </Button>
@@ -564,6 +565,8 @@ export default function Admin() {
               variant="outline"
               size="sm"
               onClick={() => handleEditQuestion(row.original)}
+              disabled={isGameActive}
+              title={isGameActive ? "Edycja zablokowana podczas gry" : "Edytuj pytanie"}
             >
               <EditIcon className="w-4 h-4" />
             </Button>
@@ -571,6 +574,8 @@ export default function Admin() {
               variant="destructive"
               size="sm"
               onClick={() => handleDeleteQuestion(row.original.id)}
+              disabled={isGameActive}
+              title={isGameActive ? "Usuwanie zablokowane podczas gry" : "Usuń pytanie"}
             >
               <TrashIcon className="w-4 h-4" />
             </Button>
@@ -579,7 +584,7 @@ export default function Admin() {
         enableSorting: false,
       },
     ],
-    [handleViewQuestion, handleEditQuestion, handleDeleteQuestion]
+    [handleViewQuestion, handleEditQuestion, handleDeleteQuestion, isGameActive]
   );
   return (
     <div className="flex flex-col items-center justify-center">
@@ -596,12 +601,26 @@ export default function Admin() {
         <section className="col-span-5 row-span-3">
           <Card>
             <CardHeader>
-              <CardTitle>Pytania</CardTitle>
-              <CardDescription>Zarządzaj pytaniami w grze</CardDescription>
+              <CardTitle>
+                Pytania {isGameActive && "🔒"}
+              </CardTitle>
+              <CardDescription>
+                {isGameActive 
+                  ? "Przeglądaj pytania (zarządzanie zablokowane podczas gry)"
+                  : "Zarządzaj pytaniami w grze"
+                }
+              </CardDescription>
             </CardHeader>
             <CardContent>
+              {isGameActive && (
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    ⚠️ Gra jest aktywna. Zarządzanie pytaniami jest zablokowane. Można tylko przeglądać.
+                  </p>
+                </div>
+              )}
               <div className="mb-4 flex flex-wrap gap-2">
-                <Button onClick={handleAddQuestion} disabled={loading}>
+                <Button onClick={handleAddQuestion} disabled={loading || isGameActive}>
                   <PlusIcon className="w-4 h-4 mr-2" />
                   Dodaj pytanie
                 </Button>
@@ -609,7 +628,7 @@ export default function Admin() {
                   <Button
                     variant="destructive"
                     onClick={handleDeleteSelectedQuestions}
-                    disabled={loading}
+                    disabled={loading || isGameActive}
                   >
                     <TrashIcon className="w-4 h-4 mr-2" />
                     Usuń wybrane ({selectedQuestions.length})
@@ -619,7 +638,7 @@ export default function Admin() {
                   <Button
                     variant="outline"
                     onClick={handleDeleteAllQuestions}
-                    disabled={loading}
+                    disabled={loading || isGameActive}
                     className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
                   >
                     <TrashIcon className="w-4 h-4 mr-2" />
@@ -637,7 +656,7 @@ export default function Admin() {
                 <DataTable
                   columns={columns}
                   data={questions}
-                  enableRowSelection={true}
+                  enableRowSelection={!isGameActive}
                   onRowSelectionChange={handleRowSelectionChange}
                 />
               )}
