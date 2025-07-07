@@ -1004,9 +1004,6 @@ export default function Admin() {
             </CardContent>
           </Card>
         </section>
-
-        {/* Sterowanie kołami ratunkowymi (pod aktualnym pytaniem) */}
-        <section className="col-span-4 row-span-1 p-4 mt-2 border rounded"></section>
       </div>
 
       {/* Dialogs */}
