@@ -375,8 +375,6 @@ export default function Admin() {
         const correctAnswer = responseData.correctAnswer;
         const gameWon = responseData.gameWon;
         
-        console.log("API Response:", { correct, correctAnswer, gameWon, responseData });
-        
         // Usuń dodatkowe pola z sessionData
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { correct: _, correctAnswer: __, gameWon: ___, ...sessionData } = responseData;
@@ -392,10 +390,8 @@ export default function Admin() {
         // Zatrzymaj loading tutaj, żeby UI pokazało wynik
         setGameLoading(false);
 
-        console.log("Checking conditions:", { correct, gameWon });
         if (correct) {
           if (gameWon) {
-            console.log("Game won path");
             showSuccessMessage(
               "🎉 Gratulacje! Gracz wygrał wszystkie pytania!"
             );
@@ -406,13 +402,10 @@ export default function Admin() {
               setLastAnswerResult(null);
             }, 3000);
           } else {
-            console.log("Next question path");
             showSuccessMessage("✅ Poprawna odpowiedź!");
-            console.log("🎯 Setting state for auto-progress...");
             // Auto-progress jest teraz obsługiwany przez useEffect
           }
         } else {
-          console.log("Incorrect answer path, values:", { correct, gameWon, correctAnswer });
           showErrorMessage(
             `❌ Niepoprawna odpowiedź! Poprawna odpowiedź to: ${correctAnswer}. Gra zakończona.`
           );
@@ -448,18 +441,11 @@ export default function Admin() {
       isGameActive &&
       !gameLoading
     ) {
-      console.log("🎯 Auto-progress conditions met, setting up auto progress...");
-      
       const timeoutId = setTimeout(async () => {
-        console.log("🔥 Auto-progress TIMEOUT FIRED! - calling nextQuestion API");
         try {
           const nextResponse = await GameAPI.nextQuestion();
-          console.log("Auto-progress NextQuestion response:", nextResponse);
           if (nextResponse.success && nextResponse.data) {
-            console.log("Auto-progress updating game session with:", nextResponse.data);
             setGameSession(nextResponse.data);
-          } else {
-            console.log("Auto-progress NextQuestion failed:", nextResponse.error);
           }
           setSelectedAnswer(null);
           setIsAnswerRevealed(false);
@@ -469,10 +455,7 @@ export default function Admin() {
         }
       }, AUTO_PROGRESS_TIME * 1000);
       
-      console.log("🎯 Auto-progress timeout set with ID:", timeoutId);
-      
       return () => {
-        console.log("🎯 Auto-progress cleanup, clearing timeout:", timeoutId);
         clearTimeout(timeoutId);
       };
     }
@@ -480,15 +463,11 @@ export default function Admin() {
 
   // Handler do manualnego przejścia do kolejnego pytania (do testów)
   const handleManualNextQuestion = React.useCallback(async () => {
-    console.log("🔧 Manual next question triggered");
     try {
       const nextResponse = await GameAPI.nextQuestion();
-      console.log("Manual NextQuestion response:", nextResponse);
       if (nextResponse.success && nextResponse.data) {
-        console.log("Updating game session with:", nextResponse.data);
         setGameSession(nextResponse.data);
       } else {
-        console.log("Manual NextQuestion failed:", nextResponse.error);
         showErrorMessage(nextResponse.error || "Błąd przejścia do kolejnego pytania");
       }
       setSelectedAnswer(null);
