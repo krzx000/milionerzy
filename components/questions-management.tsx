@@ -160,6 +160,41 @@ export function QuestionsManagement({
     }
   };
 
+  const handleImportFromFile = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setLoading(true);
+    try {
+      const text = await file.text();
+      const importedQuestions = JSON.parse(text);
+      if (!Array.isArray(importedQuestions))
+        throw new Error(
+          "Nieprawidłowy format pliku (oczekiwano tablicy pytań)"
+        );
+      let importedCount = 0;
+      for (const q of importedQuestions) {
+        if (q.content && q.answers && q.correctAnswer) {
+          await QuestionsAPI.create({
+            content: q.content,
+            answers: q.answers,
+            correctAnswer: q.correctAnswer,
+          });
+          importedCount++;
+        }
+      }
+      await loadQuestions();
+      toast.success(`Zaimportowano ${importedCount} pytań z pliku`);
+    } catch (error) {
+      console.error("Error importing questions from file:", error);
+      toast.error("Błąd podczas importowania pytań z pliku");
+    } finally {
+      setLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const handleQuestionSaved = () => {
     setIsQuestionDialogOpen(false);
     setEditingQuestion(undefined);
@@ -237,6 +272,8 @@ export function QuestionsManagement({
     [isGameActive, handleViewQuestion, handleEditQuestion, handleDeleteQuestion]
   );
 
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
   return (
     <>
       <Card className="h-full">
@@ -285,6 +322,22 @@ export function QuestionsManagement({
             >
               Importuj przykładowe pytania
             </Button>
+            <Button
+              variant="outline"
+              disabled={loading || isGameActive}
+              className="flex-1 xl:flex-none"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Importuj z pliku
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json"
+              className="hidden"
+              onChange={handleImportFromFile}
+              disabled={loading || isGameActive}
+            />
           </div>
           {loading ? (
             <div className="flex items-center justify-center p-8">
