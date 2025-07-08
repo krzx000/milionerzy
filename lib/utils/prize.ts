@@ -12,18 +12,10 @@ export function getCurrentPrize(questionIndex: number): string {
 }
 
 /**
- * Zwraca nagrodę, którą gracz wygrywa na podstawie odpowiedzianych pytań
+ * Zwraca nagrodę, którą gracz wygrywa po zatrzymaniu gry
  */
 export function getWinningPrize(questionIndex: number): string {
-  // Gracz wygrywa nagrodę za ostatnie poprawnie odpowiedziane pytanie
-  // Jeśli currentQuestionIndex = 0, gracz jeszcze nie odpowiedział na żadne pytanie
-  // Jeśli currentQuestionIndex = 1, gracz odpowiedział poprawnie na pytanie 1, więc wygrywa prizes[0] = 500 zł
-  // Jeśli currentQuestionIndex = 5, gracz odpowiedział poprawnie na pytania 1-5, więc wygrywa prizes[4] = 10 000 zł
-
-  if (questionIndex === 0) {
-    return "0 zł"; // Gracz jeszcze nie odpowiedział na żadne pytanie
-  }
-
-  const winningIndex = questionIndex - 1;
-  return GAME_CONSTANTS.PRIZE_AMOUNTS[winningIndex] || "0 zł";
+  // Po zatrzymaniu gry, gracz wygrywa kwotę za aktualne pytanie (na którym się zatrzymał)
+  // nie za ostatnie poprawnie odpowiedziane pytanie
+  return getCurrentPrize(questionIndex);
 }

@@ -60,6 +60,21 @@ export class GameAPI {
     }
   }
 
+  static async stopGame(): Promise<ApiResponse<GameSession>> {
+    try {
+      const response = await fetch(`${this.baseUrl}/stop`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      return await response.json();
+    } catch {
+      return {
+        success: false,
+        error: "Błąd zatrzymania gry",
+      };
+    }
+  }
+
   static async endGame(): Promise<ApiResponse<GameSession>> {
     try {
       const response = await fetch(`${this.baseUrl}/end`, {

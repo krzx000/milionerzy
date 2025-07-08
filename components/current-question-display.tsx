@@ -50,17 +50,24 @@ export function CurrentQuestionDisplay({
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>Aktualne pytanie</CardTitle>
+        <CardTitle>
+          {isGameActive
+            ? "Aktualne pytanie"
+            : isGameEnded
+            ? "Status gry"
+            : "Aktualne pytanie"}
+        </CardTitle>
         <CardDescription>
           {isGameActive
             ? `Pytanie ${currentQuestionIndex + 1} z ${questionsCount}`
             : isGameEnded
-            ? "Gra zakończona"
+            ? `Pytanie ${currentQuestionIndex + 1} z ${questionsCount}`
             : "Brak aktywnej gry"}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {(isGameActive || isGameEnded) && currentQuestion ? (
+        {/* Pokazuj pytanie tylko gdy gra jest aktywna */}
+        {isGameActive && currentQuestion ? (
           <>
             {/* Treść pytania */}
             <div className="p-4 bg-blue-500/20  border-blue-500/40  rounded-lg border">
@@ -190,11 +197,81 @@ export function CurrentQuestionDisplay({
           </>
         ) : (
           <div className="text-center text-gray-500 py-8">
-            {isGameEnded
-              ? "Gra zakończona - wyświetlane jest ostatnie pytanie"
-              : isGameActive
-              ? "Ładowanie pytania..."
-              : "Rozpocznij grę aby zobaczyć pytania"}
+            {isGameEnded ? (
+              <div className="space-y-4">
+                {/* Sprawdź typ zakończenia gry */}
+                {lastAnswerResult?.correct === false ? (
+                  // Przegrana gra
+                  <>
+                    <div className="text-red-600 font-semibold text-lg">
+                      Gra zakończona
+                    </div>
+                    <div className="text-gray-700">Niepoprawna odpowiedź!</div>
+                    <div className="p-4 bg-yellow-500/10 border border-yellow-300/80 rounded-lg">
+                      <div className="text-sm text-yellow-700 mb-1">
+                        Wygrana kwota:
+                      </div>
+                      <div className="text-2xl font-bold text-yellow-600">
+                        {currentQuestionIndex === 0
+                          ? "0 zł"
+                          : getCurrentPrize(currentQuestionIndex - 1)}
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Prowadzący może zamknąć sesję.
+                    </div>
+                  </>
+                ) : lastAnswerResult?.gameWon ? (
+                  // Wygrana gra
+                  <>
+                    <div className="text-green-600 font-semibold text-lg">
+                      Gratulacje!
+                    </div>
+                    <div className="text-gray-700">
+                      Gracz wygrał wszystkie 12 pytań!
+                    </div>
+                    <div className="p-4 bg-yellow-500/10 border border-yellow-300/80 rounded-lg">
+                      <div className="text-sm text-yellow-700 mb-1">
+                        Wygrana kwota:
+                      </div>
+                      <div className="text-2xl font-bold text-yellow-600">
+                        1 000 000 zł
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Prowadzący może zamknąć sesję.
+                    </div>
+                  </>
+                ) : (
+                  // Zatrzymanie gry przez admina
+                  <>
+                    <div className="text-blue-600 font-semibold text-lg">
+                      Gra zatrzymana
+                    </div>
+                    <div className="text-gray-700">
+                      Gra została zatrzymana przez prowadzącego.
+                    </div>
+                    <div className="p-4 bg-yellow-500/10 border border-yellow-300/80 rounded-lg">
+                      <div className="text-sm text-yellow-700 mb-1">
+                        Wygrana kwota:
+                      </div>
+                      <div className="text-2xl font-bold text-yellow-600">
+                        {getCurrentPrize(currentQuestionIndex)}
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Prowadzący może zamknąć sesję.
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div>
+                {isGameActive
+                  ? "Ładowanie pytania..."
+                  : "Rozpocznij grę aby zobaczyć pytania"}
+              </div>
+            )}
           </div>
         )}
       </CardContent>

@@ -98,8 +98,8 @@ export function GameManagement({
           </div>
         )}
 
-        {/* Koła ratunkowe */}
-        {isGameActive && (
+        {/* Koła ratunkowe - pokazuj tylko gdy gra jest aktywna i nie jest zakończona */}
+        {isGameActive && !isGameEnded && (
           <div className="space-y-2">
             <div className="text-sm font-medium">Koła ratunkowe:</div>
             <div className="grid grid-cols-1 gap-2">
@@ -156,16 +156,18 @@ export function GameManagement({
                 className="w-full"
               >
                 {gameLoading
-                  ? "⏳ Kończenie..."
+                  ? isGameEnded
+                    ? "⏳ Zamykanie sesji..."
+                    : "⏳ Zatrzymywanie gry..."
                   : isGameEnded
                   ? "🛑 Zamknij sesję"
-                  : "🛑 Zakończ grę"}
+                  : "🛑 Zatrzymaj grę"}
               </Button>
 
               {isGameEnded && (
-                <div className="text-xs text-center p-2 bg-red-50 text-red-700 rounded border">
-                  Gra zakończona po niepoprawnej odpowiedzi. Kliknij
-                  &quot;Zamknij sesję&quot; aby zakończyć sesję.
+                <div className="text-xs text-center p-2 bg-blue-50 text-blue-700 rounded border">
+                  Gra zakończona. Kliknij &quot;Zamknij sesję&quot; aby
+                  zakończyć sesję.
                 </div>
               )}
 

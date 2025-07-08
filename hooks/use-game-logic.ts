@@ -73,30 +73,73 @@ export function useGameLogic(
 
   const handleEndGame = React.useCallback(async () => {
     try {
-      const confirmed = await confirm({
-        title: "Zakończyć grę?",
-        description:
-          "Czy na pewno chcesz zakończyć grę? Sesja zostanie zamknięta.",
-        confirmText: isGameEnded ? "Zamknij sesję" : "Zakończ grę",
-        cancelText: "Anuluj",
-        variant: "destructive",
-      });
+      if (isGameEnded) {
+        // Jeśli gra jest już zakończona, to wykonujemy zamknięcie sesji
+        const confirmed = await confirm({
+          title: "Zamknąć sesję?",
+          description:
+            "Czy na pewno chcesz zamknąć tę sesję? Nie będzie już można jej przywrócić.",
+          confirmText: "Zamknij sesję",
+          cancelText: "Anuluj",
+          variant: "destructive",
+        });
 
-      if (confirmed) {
-        setGameLoading(true);
+        if (confirmed) {
+          setGameLoading(true);
 
-        const response = await GameAPI.endGame();
+          const response = await GameAPI.endGame();
 
-        if (response.success && response.data) {
-          setGameSession(null);
-          resetGameState();
-          loadGameHistory();
-          showGameStatusMessage("🛑 Sesja gry zamknięta!");
-        } else {
-          showErrorMessage(response.error || "Błąd kończenia gry");
+          if (response.success && response.data) {
+            setGameSession(null);
+            resetGameState();
+            loadGameHistory();
+            showGameStatusMessage("🛑 Sesja gry zamknięta!");
+          } else {
+            showErrorMessage(response.error || "Błąd kończenia gry");
+          }
+
+          setGameLoading(false);
         }
+      } else {
+        // Jeśli gra jest aktywna, najpierw ją zatrzymujemy
+        const confirmed = await confirm({
+          title: "Zatrzymać grę?",
+          description:
+            "Czy na pewno chcesz zatrzymać grę? Gracz zachowa aktualną wygraną.",
+          confirmText: "Zatrzymaj grę",
+          cancelText: "Anuluj",
+          variant: "destructive",
+        });
 
-        setGameLoading(false);
+        if (confirmed) {
+          setGameLoading(true);
+
+          const response = await GameAPI.stopGame();
+
+          if (response.success && response.data) {
+            // Ręcznie aktualizujemy status sesji
+            if (gameSession) {
+              setGameSession({
+                ...gameSession,
+                status: "finished",
+              });
+            }
+
+            // Odświeżamy sesję, aby pobrać wszystkie aktualizacje
+            setTimeout(async () => {
+              await loadGameSession();
+              console.log("Status gry po zatrzymaniu:", gameSession?.status);
+            }, 500);
+
+            showGameStatusMessage(
+              "🛑 Gra zatrzymana! Gracz zachowa aktualną wygraną."
+            );
+          } else {
+            showErrorMessage(response.error || "Błąd zatrzymania gry");
+          }
+
+          setGameLoading(false);
+        }
       }
     } catch (error) {
       console.error("handleEndGame: Exception:", error);
@@ -109,8 +152,10 @@ export function useGameLogic(
     setGameSession,
     resetGameState,
     loadGameHistory,
+    loadGameSession,
     showGameStatusMessage,
     showErrorMessage,
+    gameSession,
   ]);
 
   const handleUseLifeline = React.useCallback(
@@ -176,9 +221,24 @@ export function useGameLogic(
           const correctAnswer = responseData.correctAnswer;
           const gameWon = responseData.gameWon;
 
+          // WAŻNE: Natychmiast ustaw isAnswerRevealed, aby zablokować możliwość klikania
+          setIsAnswerRevealed(true);
+
+          // Jeśli odpowiedź kończy grę (wygrana lub przegrana), natychmiast zmień status
+          if (gameWon || !correct) {
+            // Ręcznie ustawiamy status na "finished", aby natychmiast wyłączyć przyciski
+            if (gameSession) {
+              setGameSession({
+                ...gameSession,
+                status: "finished",
+              });
+            }
+          }
+
           // Odśwież sesję, aby pobrać aktualne dane z pytaniami
           await loadGameSession();
-          setIsAnswerRevealed(true);
+
+          // Ustaw wynik ostatniej odpowiedzi
           setLastAnswerResult({
             correct: correct || false,
             gameWon: gameWon || false,
@@ -190,9 +250,22 @@ export function useGameLogic(
           if (correct) {
             if (gameWon) {
               showSuccessMessage("Gratulacje! Gracz wygrał wszystkie pytania!");
-              setTimeout(() => {
-                resetGameState();
-              }, 3000);
+              showGameStatusMessage(
+                "Gra zakończona! Gracz wygrał główną nagrodę!"
+              );
+
+              // Oficjalnie zatrzymaj grę w bazie danych
+              try {
+                const stopResponse = await GameAPI.stopGame();
+                if (stopResponse.success) {
+                  // Odśwież sesję, aby mieć aktualne dane
+                  await loadGameSession();
+                }
+                // Zresetuj stan wyboru odpowiedzi, ale zachowaj wynik
+                setSelectedAnswer(null);
+              } catch (error) {
+                console.error("Error stopping game after win:", error);
+              }
             } else {
               showSuccessMessage("Poprawna odpowiedź!");
             }
@@ -200,6 +273,20 @@ export function useGameLogic(
             showErrorMessage(
               `Niepoprawna odpowiedź! Poprawna odpowiedź to: ${correctAnswer}.`
             );
+            showGameStatusMessage("Gra zakończona! Gracz przegrał.");
+
+            // Oficjalnie zatrzymaj grę w bazie danych
+            try {
+              const stopResponse = await GameAPI.stopGame();
+              if (stopResponse.success) {
+                // Odśwież sesję, aby mieć aktualne dane
+                await loadGameSession();
+              }
+              // Zresetuj stan wyboru odpowiedzi, ale zachowaj wynik
+              setSelectedAnswer(null);
+            } catch (error) {
+              console.error("Error stopping game after wrong answer:", error);
+            }
           }
         } else {
           showErrorMessage(response.error || "Błąd wysyłania odpowiedzi");
@@ -220,6 +307,8 @@ export function useGameLogic(
       showGameStatusMessage,
       showSuccessMessage,
       showErrorMessage,
+      gameSession,
+      setGameSession,
     ]
   );
 

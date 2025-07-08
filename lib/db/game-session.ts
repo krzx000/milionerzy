@@ -50,14 +50,22 @@ function mapPrismaToGameSession(prismaSession: PrismaGameSession): GameSession {
 
 // Helper do zarządzania sesją gry
 export const gameSessionDb = {
-  // Pobierz aktualną sesję (tylko aktywną)
+  // Pobierz aktualną sesję (aktywną lub ostatnią zakończoną)
   getCurrent: async (): Promise<GameSession | null> => {
     try {
-      // Zwróć tylko aktywną sesję
-      const session = await prisma.gameSession.findFirst({
+      // Najpierw próbujemy znaleźć aktywną sesję
+      let session = await prisma.gameSession.findFirst({
         where: { status: "active" },
         orderBy: { updatedAt: "desc" },
       });
+
+      // Jeśli nie ma aktywnej sesji, spróbuj znaleźć ostatnią zakończoną
+      if (!session) {
+        session = await prisma.gameSession.findFirst({
+          where: { status: "finished" },
+          orderBy: { updatedAt: "desc" },
+        });
+      }
 
       return session ? mapPrismaToGameSession(session) : null;
     } catch (error) {
@@ -152,17 +160,17 @@ export const gameSessionDb = {
     }
   },
 
-  // Zakończ grę
-  end: async (): Promise<GameSession | null> => {
+  // Zatrzymaj grę (zmień status na "finished")
+  stopGame: async (): Promise<GameSession | null> => {
     try {
       // Szukaj aktywnej sesji
-      let session = await prisma.gameSession.findFirst({
+      const session = await prisma.gameSession.findFirst({
         where: { status: "active" },
         orderBy: { updatedAt: "desc" },
       });
 
       if (session) {
-        // Zakończ aktywną sesję
+        // Zatrzymaj aktywną sesję (zmień status na "finished")
         const updatedSession = await prisma.gameSession.update({
           where: { id: session.id },
           data: {
@@ -173,14 +181,25 @@ export const gameSessionDb = {
         return mapPrismaToGameSession(updatedSession);
       }
 
-      // Jeśli nie ma aktywnej sesji, sprawdź czy jest już zakończona sesja
-      session = await prisma.gameSession.findFirst({
+      return null;
+    } catch (error) {
+      console.error("Error stopping game session:", error);
+      return null;
+    }
+  },
+
+  // Zakończ grę (zamknij sesję)
+  end: async (): Promise<GameSession | null> => {
+    try {
+      // Znajdź ostatnią zakończoną sesję
+      const session = await prisma.gameSession.findFirst({
         where: { status: "finished" },
         orderBy: { updatedAt: "desc" },
       });
 
       if (session) {
-        // Zwróć już zakończoną sesję (pozwala na "zakończenie" już zakończonej gry)
+        // Zwróć sesję aby mieć jej ID w API response, ale nie modyfikuj jej
+        // Faktyczne usunięcie odbędzie się w UI (setGameSession(null))
         return mapPrismaToGameSession(session);
       }
 
@@ -255,7 +274,7 @@ export const gameSessionDb = {
   ): Promise<GameSession | null> => {
     try {
       const activeSession = await prisma.gameSession.findFirst({
-        where: { status: "active" },
+        where: { status: "active" }, // Koła ratunkowe są dostępne tylko dla aktywnej sesji
         orderBy: { updatedAt: "desc" },
       });
 

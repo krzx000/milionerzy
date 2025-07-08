@@ -210,15 +210,33 @@ export default function Admin() {
 
   const handleSelectAnswer = React.useCallback(
     (answer: string) => {
-      if (!isGameActive || gameLoading || isAnswerRevealed || isGameEnded)
+      if (
+        !isGameActive ||
+        gameLoading ||
+        isAnswerRevealed ||
+        isGameEnded ||
+        lastAnswerResult?.gameWon
+      )
         return;
       setSelectedAnswer(answer);
     },
-    [isGameActive, gameLoading, isAnswerRevealed, isGameEnded]
+    [
+      isGameActive,
+      gameLoading,
+      isAnswerRevealed,
+      isGameEnded,
+      lastAnswerResult?.gameWon,
+    ]
   );
 
   const handleConfirmAnswer = React.useCallback(async () => {
-    if (!selectedAnswer || gameLoading || isAnswerRevealed || isGameEnded)
+    if (
+      !selectedAnswer ||
+      gameLoading ||
+      isAnswerRevealed ||
+      isGameEnded ||
+      lastAnswerResult?.gameWon
+    )
       return;
 
     setGameLoading(true);
@@ -269,6 +287,7 @@ export default function Admin() {
     gameLoading,
     isAnswerRevealed,
     isGameEnded,
+    lastAnswerResult?.gameWon,
     loadGameSession,
     showGameStatusMessage,
     showSuccessMessage,
