@@ -78,7 +78,7 @@ export function GameManagement({
         {(isGameActive || isGameEnded) && (
           <div className="space-y-2">
             <div className="text-sm font-medium">Pytanie:</div>
-            <div className="text-center bg-blue-100 text-blue-800 py-2 rounded-md">
+            <div className="text-center bg-blue-500/20 border border-blue-500/40 dark:text-blue-200 text-blue-600 py-2 rounded-md">
               {currentQuestionIndex + 1} z {questionsCount}
             </div>
           </div>
@@ -90,7 +90,7 @@ export function GameManagement({
             <div className="text-sm font-medium">
               {isGameEnded ? "Gracz wygrywa:" : "Aktualna nagroda:"}
             </div>
-            <div className="text-lg font-bold text-center bg-yellow-100 text-yellow-800 py-2 rounded-md">
+            <div className=" text-center bg-yellow-500/10 border border-yellow-300/80 dark:border-yellow-200/30 text-yellow-600 dark:text-yellow-200 py-2 rounded-md">
               {isGameEnded
                 ? getWinningPrize(currentQuestionIndex)
                 : getCurrentPrize(currentQuestionIndex)}
@@ -170,16 +170,6 @@ export function GameManagement({
                   Gracz wygrywa: {getWinningPrize(currentQuestionIndex)}
                 </div>
               )}
-            </div>
-          )}
-        </div>
-
-        {/* Informacje */}
-        <div className="text-xs text-gray-500 space-y-1 pt-2 border-t">
-          <div>💡 Dostępne pytania: {questionsCount}</div>
-          {!isGameActive && questionsCount === 0 && (
-            <div className="text-red-500">
-              ⚠️ Dodaj pytania przed rozpoczęciem gry
             </div>
           )}
         </div>

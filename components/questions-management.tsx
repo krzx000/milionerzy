@@ -250,8 +250,8 @@ export function QuestionsManagement({
         </CardHeader>
         <CardContent>
           {isGameActive && (
-            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800">
+            <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-300/80 dark:border-yellow-200/40 rounded-lg">
+              <p className="text-sm  text-yellow-600 dark:text-yellow-200">
                 ⚠️ Gra jest aktywna. Zarządzanie pytaniami jest zablokowane.
                 Można tylko przeglądać.
               </p>

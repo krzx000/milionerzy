@@ -63,11 +63,11 @@ export function CurrentQuestionDisplay({
         {(isGameActive || isGameEnded) && currentQuestion ? (
           <>
             {/* Treść pytania */}
-            <div className="p-4 bg-blue-50 rounded-lg border">
-              <h3 className="text-lg font-semibold text-blue-900 mb-2">
+            <div className="p-4 bg-blue-500/20  border-blue-500/40  rounded-lg border">
+              <h3 className="text-lg font-semibold dark:text-blue-200 text-blue-700 mb-2">
                 Pytanie za {getCurrentPrize(currentQuestionIndex)}
               </h3>
-              <p className="text-blue-800 leading-relaxed break-words">
+              <p className="dark:text-blue-400 text-blue-600 leading-relaxed break-words">
                 {currentQuestion.content}
               </p>
             </div>
@@ -103,7 +103,8 @@ export function CurrentQuestionDisplay({
                   className += " bg-red-100 border-red-500 text-red-800";
                 } else if (isSelected) {
                   variant = "secondary";
-                  className += " bg-blue-100 border-blue-500 text-blue-800";
+                  className +=
+                    "bg-blue-600/20 dark:bg-blue-500/20 border border-blue-500/40 dark:text-blue-200 text-blue-600";
                 }
 
                 return (
@@ -131,9 +132,6 @@ export function CurrentQuestionDisplay({
               !gameLoading &&
               !isGameEnded && (
                 <div className="text-center space-y-3">
-                  <div className="text-sm text-blue-700 font-medium">
-                    Zaznaczona odpowiedź: <strong>{selectedAnswer}</strong>
-                  </div>
                   <div className="flex flex-col xl:flex-row gap-2 w-full">
                     <Button
                       onClick={onConfirmAnswer}
