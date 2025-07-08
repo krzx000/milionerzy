@@ -14,6 +14,7 @@ import { EditIcon, TrashIcon, PlusIcon, EyeIcon } from "lucide-react";
 import { Question as QuestionType } from "@/types/question";
 import { QuestionDialog } from "@/components/question-dialog";
 import { QuestionViewDialog } from "@/components/question-view-dialog";
+import { QuestionImportDialog } from "@/components/question-import-dialog";
 import { toast } from "sonner";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { QuestionsAPI } from "@/lib/api/questions";
@@ -50,6 +51,7 @@ export function QuestionsManagement({
   >();
   const [viewingQuestion, setViewingQuestion] =
     React.useState<QuestionType | null>(null);
+  const [isImportDialogOpen, setIsImportDialogOpen] = React.useState(false);
 
   const loadQuestions = React.useCallback(async () => {
     setLoading(true);
@@ -160,41 +162,6 @@ export function QuestionsManagement({
     }
   };
 
-  const handleImportFromFile = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setLoading(true);
-    try {
-      const text = await file.text();
-      const importedQuestions = JSON.parse(text);
-      if (!Array.isArray(importedQuestions))
-        throw new Error(
-          "Nieprawidłowy format pliku (oczekiwano tablicy pytań)"
-        );
-      let importedCount = 0;
-      for (const q of importedQuestions) {
-        if (q.content && q.answers && q.correctAnswer) {
-          await QuestionsAPI.create({
-            content: q.content,
-            answers: q.answers,
-            correctAnswer: q.correctAnswer,
-          });
-          importedCount++;
-        }
-      }
-      await loadQuestions();
-      toast.success(`Zaimportowano ${importedCount} pytań z pliku`);
-    } catch (error) {
-      console.error("Error importing questions from file:", error);
-      toast.error("Błąd podczas importowania pytań z pliku");
-    } finally {
-      setLoading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-
   const handleQuestionSaved = () => {
     setIsQuestionDialogOpen(false);
     setEditingQuestion(undefined);
@@ -272,8 +239,6 @@ export function QuestionsManagement({
     [isGameActive, handleViewQuestion, handleEditQuestion, handleDeleteQuestion]
   );
 
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
-
   return (
     <>
       <Card className="h-full">
@@ -326,18 +291,10 @@ export function QuestionsManagement({
               variant="outline"
               disabled={loading || isGameActive}
               className="flex-1 xl:flex-none"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => setIsImportDialogOpen(true)}
             >
               Importuj z pliku
             </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="application/json"
-              className="hidden"
-              onChange={handleImportFromFile}
-              disabled={loading || isGameActive}
-            />
           </div>
           {loading ? (
             <div className="flex items-center justify-center p-8">
@@ -361,6 +318,12 @@ export function QuestionsManagement({
         open={isViewDialogOpen}
         onOpenChange={setIsViewDialogOpen}
         question={viewingQuestion}
+      />
+
+      <QuestionImportDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        onImportSuccess={loadQuestions}
       />
 
       {dialog}
