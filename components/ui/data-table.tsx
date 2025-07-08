@@ -156,6 +156,11 @@ export function DataTable<TData>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.rowSelection, sortedData, enableRowSelection]);
 
+  // Reset zaznaczenie jeśli data się zmieniła (np. po usunięciu)
+  React.useEffect(() => {
+    setState((prev) => ({ ...prev, rowSelection: {} }));
+  }, [data]);
+
   // Toggle all rows selection
   const toggleAllRows = (checked: boolean) => {
     if (checked) {

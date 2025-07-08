@@ -18,7 +18,6 @@ import { QuestionImportDialog } from "@/components/question-import-dialog";
 import { toast } from "sonner";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { QuestionsAPI } from "@/lib/api/questions";
-import { SAMPLE_QUESTIONS } from "@/lib/constants/game";
 import { Badge } from "./ui/badge";
 
 interface QuestionsManagementProps {
@@ -126,39 +125,11 @@ export function QuestionsManagement({
       setQuestions((prev) =>
         prev.filter((q) => !selectedQuestions.some((sq) => sq.id === q.id))
       );
-      setSelectedQuestions([]);
+      setSelectedQuestions([]); // ZAWSZE czyść zaznaczenie po usunięciu
       toast.success(`Usunięto ${selectedQuestions.length} pytań`);
     } catch (error) {
       console.error("Error deleting questions:", error);
       toast.error("Błąd podczas usuwania pytań");
-    }
-  };
-
-  const handleImportSampleQuestions = async () => {
-    const confirmed = await confirm({
-      title: "Importuj przykładowe pytania",
-      description:
-        "Czy chcesz zaimportować przykładowe pytania? Zostaną dodane 3 przykładowe pytania do bazy danych.",
-    });
-
-    if (!confirmed) return;
-
-    setLoading(true);
-    try {
-      for (const sampleQuestion of SAMPLE_QUESTIONS) {
-        await QuestionsAPI.create({
-          content: sampleQuestion.content,
-          answers: sampleQuestion.answers,
-          correctAnswer: sampleQuestion.correctAnswer,
-        });
-      }
-      await loadQuestions();
-      toast.success("Przykładowe pytania zostały zaimportowane");
-    } catch (error) {
-      console.error("Error importing sample questions:", error);
-      toast.error("Błąd podczas importowania pytań");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -281,14 +252,6 @@ export function QuestionsManagement({
             )}
             <Button
               variant="outline"
-              onClick={handleImportSampleQuestions}
-              disabled={loading || isGameActive}
-              className="flex-1 xl:flex-none"
-            >
-              Importuj przykładowe pytania
-            </Button>
-            <Button
-              variant="outline"
               disabled={loading || isGameActive}
               className="flex-1 xl:flex-none"
               onClick={() => setIsImportDialogOpen(true)}
@@ -302,7 +265,12 @@ export function QuestionsManagement({
               <span className="ml-2">Ładowanie pytań...</span>
             </div>
           ) : (
-            <DataTable columns={columns} data={questions} />
+            <DataTable
+              columns={columns}
+              data={questions}
+              enableRowSelection={!isGameActive}
+              onRowSelectionChange={setSelectedQuestions}
+            />
           )}
         </CardContent>
       </Card>
