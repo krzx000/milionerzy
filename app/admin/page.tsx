@@ -685,9 +685,9 @@ export default function Admin() {
         <ThemeToggle />
       </div>
 
-      <div className="grid min-h-screen grid-cols-12 gap-4 p-4">
+      <div className="w-full flex min-h-screen gap-4 p-4">
         {/* Lista pytań + edycja i wgrywanie (duży panel po lewej) */}
-        <section className="col-span-5 row-span-3">
+        <section className="w-full">
           <Card className="h-full">
             <CardHeader>
               <CardTitle>Pytania {isGameActive && "🔒"}</CardTitle>
@@ -757,7 +757,7 @@ export default function Admin() {
         </section>
 
         {/* Ustawienia gry (obok listy pytań) */}
-        <section className="col-span-3 row-span-3">
+        <section className="w-1/2">
           <Card className="h-full">
             <CardHeader>
               <CardTitle>Zarządzanie grą</CardTitle>
@@ -921,7 +921,7 @@ export default function Admin() {
         </section>
 
         {/* Podgląd aktualnego pytania + opcje odpowiedzi (prawa kolumna, góra) */}
-        <section className="col-span-4 row-span-3">
+        <section className="w-1/2">
           <Card className="h-full">
             <CardHeader>
               <CardTitle>Aktualne pytanie</CardTitle>
