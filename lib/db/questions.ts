@@ -27,9 +27,7 @@ const mapQuestionToPrisma = (question: Omit<Question, "id">) => ({
 // Funkcje helper do zarządzania pytaniami z użyciem Prisma
 export const questionsDb = {
   getAll: async () => {
-    const prismaQuestions = await prisma.question.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+    const prismaQuestions = await prisma.question.findMany();
     return prismaQuestions.map(mapPrismaToQuestion);
   },
 

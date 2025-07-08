@@ -4,7 +4,6 @@ import { GAME_CONSTANTS } from "@/lib/constants/game";
 import { useGameManagement } from "./use-game-management";
 import { useConfirmDialog } from "./use-confirm-dialog";
 import { Question as QuestionType } from "@/types/question";
-import { GameSession } from "@/lib/db/game-session";
 
 export function useGameLogic(
   questionsCount: number,
@@ -40,12 +39,20 @@ export function useGameLogic(
       return;
     }
 
+    if (questionsCount < 12) {
+      showErrorMessage(
+        `Potrzeba minimum 12 pytań do rozpoczęcia gry. Masz tylko ${questionsCount} pytań.`
+      );
+      return;
+    }
+
     setGameLoading(true);
 
     const response = await GameAPI.startGame();
 
     if (response.success && response.data) {
-      setGameSession(response.data);
+      // Po uruchomieniu gry, pobierz pełną sesję z pytaniami
+      await loadGameSession();
       resetGameState();
       loadGameHistory();
       showSuccessMessage("🎮 Gra rozpoczęta!");
@@ -59,8 +66,8 @@ export function useGameLogic(
     showErrorMessage,
     showSuccessMessage,
     loadGameHistory,
+    loadGameSession,
     setGameLoading,
-    setGameSession,
     resetGameState,
   ]);
 
@@ -115,7 +122,8 @@ export function useGameLogic(
       const response = await GameAPI.activateLifeline(lifelineType);
 
       if (response.success && response.data) {
-        setGameSession(response.data);
+        // Odśwież sesję, aby pobrać aktualne dane
+        await loadGameSession();
         showGameStatusMessage(
           `Użyto koła ratunkowego: ${GAME_CONSTANTS.LIFELINE_NAMES[lifelineType]}`
         );
@@ -128,8 +136,8 @@ export function useGameLogic(
     [
       gameSession,
       usedLifelines,
+      loadGameSession,
       setGameLoading,
-      setGameSession,
       showGameStatusMessage,
       showErrorMessage,
     ]
@@ -168,7 +176,8 @@ export function useGameLogic(
           const correctAnswer = responseData.correctAnswer;
           const gameWon = responseData.gameWon;
 
-          setGameSession(responseData as GameSession);
+          // Odśwież sesję, aby pobrać aktualne dane z pytaniami
+          await loadGameSession();
           setIsAnswerRevealed(true);
           setLastAnswerResult({
             correct: correct || false,
@@ -203,8 +212,8 @@ export function useGameLogic(
       gameLoading,
       isAnswerRevealed,
       isGameEnded,
+      loadGameSession,
       setGameLoading,
-      setGameSession,
       setIsAnswerRevealed,
       setLastAnswerResult,
       resetGameState,
@@ -227,7 +236,8 @@ export function useGameLogic(
         try {
           const nextResponse = await GameAPI.nextQuestion();
           if (nextResponse.success && nextResponse.data) {
-            setGameSession(nextResponse.data);
+            // Odśwież sesję, aby pobrać aktualne dane z pytaniami
+            await loadGameSession();
           }
           resetGameState();
         } catch (error) {
@@ -242,7 +252,7 @@ export function useGameLogic(
     lastAnswerResult,
     isGameActive,
     gameLoading,
-    setGameSession,
+    loadGameSession,
     resetGameState,
   ]);
 

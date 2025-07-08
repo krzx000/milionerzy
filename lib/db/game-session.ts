@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import type { GameSession as PrismaGameSession } from "@prisma/client";
+import { Question } from "@/types/question";
 
 export type GameStatus = "inactive" | "active" | "paused" | "finished";
 
@@ -18,6 +19,13 @@ export interface GameSession {
   totalQuestions: number;
   createdAt: Date;
   updatedAt: Date;
+}
+
+// Rozszerzony typ GameSession z pytaniami dla API responses
+export interface GameSessionWithQuestions extends GameSession {
+  questions?: Question[];
+  currentQuestion?: Question | null;
+  currentPrize?: string;
 }
 
 // Helper do konwersji modelu Prisma na interfejs GameSession
@@ -103,6 +111,47 @@ export const gameSessionDb = {
     }
   },
 
+  // Rozpocznij nową grę z wybranymi pytaniami (relacja GameSessionQuestion)
+  startWithQuestions: async (questionIds: string[]): Promise<GameSession> => {
+    try {
+      await prisma.gameSession.updateMany({
+        where: { status: "active" },
+        data: { status: "finished", endTime: new Date() },
+      });
+
+      const session = await prisma.gameSession.create({
+        data: {
+          status: "active",
+          currentQuestionIndex: 0,
+          startTime: new Date(),
+          gameTime: 0,
+          totalQuestions: questionIds.length,
+          usedFiftyFifty: false,
+          usedPhoneAFriend: false,
+          usedAskAudience: false,
+        },
+      });
+
+      // Zapisz powiązania pytań z sesją (z zachowaniem kolejności)
+      await prisma.$transaction(
+        questionIds.map((questionId, idx) =>
+          prisma.gameSessionQuestion.create({
+            data: {
+              gameSessionId: session.id,
+              questionId,
+              order: idx,
+            },
+          })
+        )
+      );
+
+      return mapPrismaToGameSession(session);
+    } catch (error) {
+      console.error("Error starting game session:", error);
+      throw new Error("Failed to start game session");
+    }
+  },
+
   // Zakończ grę
   end: async (): Promise<GameSession | null> => {
     try {
@@ -152,10 +201,13 @@ export const gameSessionDb = {
 
       if (!activeSession) return null;
 
-      const newIndex = Math.min(
-        activeSession.currentQuestionIndex + 1,
-        activeSession.totalQuestions - 1
-      );
+      // Sprawdź czy nie osiągnęliśmy już końca gry (12 pytań = indeksy 0-11)
+      if (activeSession.currentQuestionIndex >= 11) {
+        console.log("Już osiągnięto ostatnie pytanie, nie można przejść dalej");
+        return null;
+      }
+
+      const newIndex = activeSession.currentQuestionIndex + 1;
 
       const updatedSession = await prisma.gameSession.update({
         where: { id: activeSession.id },

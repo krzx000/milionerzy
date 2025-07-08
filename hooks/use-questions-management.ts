@@ -1,7 +1,6 @@
 import * as React from "react";
 import { QuestionsAPI } from "@/lib/api/questions";
 import { Question as QuestionType } from "@/types/question";
-import { SAMPLE_QUESTIONS } from "@/lib/constants/game";
 import { toast } from "sonner";
 
 export function useQuestionsManagement() {
@@ -24,7 +23,6 @@ export function useQuestionsManagement() {
       setQuestions(response.data);
     } else {
       showErrorMessage(response.error || "Błąd ładowania pytań");
-      setQuestions([...SAMPLE_QUESTIONS] as QuestionType[]);
     }
 
     setLoading(false);

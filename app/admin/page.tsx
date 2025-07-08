@@ -9,7 +9,7 @@ import { CurrentQuestionDisplay } from "@/components/current-question-display";
 import { GameHistory } from "@/components/game-history";
 import { GameAPI } from "@/lib/api/game";
 import type { GameSessionHistory } from "@/lib/api/game";
-import { GameSession } from "@/lib/db/game-session";
+import { GameSessionWithQuestions } from "@/lib/db/game-session";
 import { toast } from "sonner";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { GAME_CONSTANTS } from "@/lib/constants/game";
@@ -30,9 +30,8 @@ export default function Admin() {
   const [historyLoading, setHistoryLoading] = React.useState(false);
 
   // Stan gry
-  const [gameSession, setGameSession] = React.useState<GameSession | null>(
-    null
-  );
+  const [gameSession, setGameSession] =
+    React.useState<GameSessionWithQuestions | null>(null);
   const [gameLoading, setGameLoading] = React.useState(false);
   const [selectedAnswer, setSelectedAnswer] = React.useState<string | null>(
     null
@@ -58,11 +57,26 @@ export default function Admin() {
     [gameSession?.usedLifelines]
   );
 
-  // Pobierz aktualne pytanie
-  const currentQuestion =
-    (isGameActive || isGameEnded) && questions.length > currentQuestionIndex
-      ? questions[currentQuestionIndex]
-      : null;
+  // Pobierz aktualne pytanie - używaj pytań z sesji jeśli dostępne, inaczej z globalnej listy
+  const currentQuestion = React.useMemo(() => {
+    if ((isGameActive || isGameEnded) && gameSession?.questions) {
+      // Użyj pytań z sesji (w losowej kolejności)
+      return gameSession.questions[currentQuestionIndex] || null;
+    } else if (
+      (isGameActive || isGameEnded) &&
+      questions.length > currentQuestionIndex
+    ) {
+      // Fallback na globalną listę pytań
+      return questions[currentQuestionIndex];
+    }
+    return null;
+  }, [
+    isGameActive,
+    isGameEnded,
+    gameSession?.questions,
+    currentQuestionIndex,
+    questions,
+  ]);
 
   const showGameStatusMessage = React.useCallback((message: string) => {
     toast.info(message);
@@ -105,11 +119,19 @@ export default function Admin() {
       return;
     }
 
+    if (questions.length < 12) {
+      showErrorMessage(
+        `Potrzeba minimum 12 pytań do rozpoczęcia gry. Masz tylko ${questions.length} pytań.`
+      );
+      return;
+    }
+
     setGameLoading(true);
     const response = await GameAPI.startGame();
 
     if (response.success && response.data) {
-      setGameSession(response.data);
+      // Po uruchomieniu gry, pobierz pełną sesję z pytaniami
+      await loadGameSession();
       setSelectedAnswer(null);
       setIsAnswerRevealed(false);
       setLastAnswerResult(null);
@@ -119,7 +141,13 @@ export default function Admin() {
       showErrorMessage(response.error || "Błąd rozpoczynania gry");
     }
     setGameLoading(false);
-  }, [questions.length, showErrorMessage, showSuccessMessage, loadGameHistory]);
+  }, [
+    questions.length,
+    showErrorMessage,
+    showSuccessMessage,
+    loadGameHistory,
+    loadGameSession,
+  ]);
 
   const handleEndGame = React.useCallback(async () => {
     try {
@@ -205,7 +233,8 @@ export default function Admin() {
         const correctAnswer = responseData.correctAnswer;
         const gameWon = responseData.gameWon;
 
-        setGameSession(responseData as GameSession);
+        // Odśwież sesję, aby pobrać aktualne dane z pytaniami
+        await loadGameSession();
         setIsAnswerRevealed(true);
         setLastAnswerResult({
           correct: correct || false,
@@ -240,6 +269,7 @@ export default function Admin() {
     gameLoading,
     isAnswerRevealed,
     isGameEnded,
+    loadGameSession,
     showGameStatusMessage,
     showSuccessMessage,
     showErrorMessage,
@@ -266,7 +296,8 @@ export default function Admin() {
         try {
           const nextResponse = await GameAPI.nextQuestion();
           if (nextResponse.success && nextResponse.data) {
-            setGameSession(nextResponse.data);
+            // Odśwież sesję, aby pobrać aktualne dane z pytaniami
+            await loadGameSession();
           }
           setSelectedAnswer(null);
           setIsAnswerRevealed(false);
@@ -280,7 +311,13 @@ export default function Admin() {
         clearTimeout(timeoutId);
       };
     }
-  }, [isAnswerRevealed, lastAnswerResult, isGameActive, gameLoading]);
+  }, [
+    isAnswerRevealed,
+    lastAnswerResult,
+    isGameActive,
+    gameLoading,
+    loadGameSession,
+  ]);
 
   // Ładowanie danych przy inicjalizacji
   React.useEffect(() => {
@@ -316,7 +353,7 @@ export default function Admin() {
           <GameManagement
             gameSession={gameSession}
             gameLoading={gameLoading}
-            questionsCount={questions.length}
+            questionsCount={gameSession?.totalQuestions || questions.length}
             onStartGame={handleStartGame}
             onEndGame={handleEndGame}
             onUseLifeline={handleUseLifeline}
@@ -328,7 +365,7 @@ export default function Admin() {
           <CurrentQuestionDisplay
             gameSession={gameSession}
             currentQuestion={currentQuestion}
-            questionsCount={questions.length}
+            questionsCount={gameSession?.totalQuestions || questions.length}
             selectedAnswer={selectedAnswer}
             isAnswerRevealed={isAnswerRevealed}
             gameLoading={gameLoading}

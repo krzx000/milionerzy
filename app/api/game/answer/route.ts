@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { gameSessionDb } from "@/lib/db/game-session";
-import { questionsDb } from "@/lib/db/questions";
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,9 +32,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Pobierz aktualne pytanie
-    const questions = await questionsDb.getAll();
-    const currentQuestion = questions[session.currentQuestionIndex];
+    // Pobierz aktualne pytanie z sesji, a nie z globalnej listy
+    const { prisma } = await import("@/lib/db/prisma");
+    const sessionQuestions = await prisma.gameSessionQuestion.findMany({
+      where: { gameSessionId: session.id },
+      orderBy: { order: "asc" },
+      include: { question: true },
+    });
+
+    const currentQuestion =
+      sessionQuestions[session.currentQuestionIndex]?.question;
 
     if (!currentQuestion) {
       return NextResponse.json(
@@ -66,7 +72,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Poprawna odpowiedź
-    if (session.currentQuestionIndex >= questions.length - 1) {
+    // Sprawdź czy to było ostatnie pytanie (12 pytań = indeksy 0-11, więc ostatnie to indeks 11)
+    if (session.currentQuestionIndex >= 11) {
       // To było ostatnie pytanie - gracz wygrał!
       const endedSession = await gameSessionDb.end();
       return NextResponse.json({
@@ -78,7 +85,7 @@ export async function POST(request: NextRequest) {
           correctAnswer: currentQuestion.correctAnswer,
         },
         message:
-          "Gratulacje! Gracz odpowiedział poprawnie na wszystkie pytania!",
+          "Gratulacje! Gracz odpowiedział poprawnie na wszystkie 12 pytań!",
         correct: true,
         gameWon: true,
         correctAnswer: currentQuestion.correctAnswer,

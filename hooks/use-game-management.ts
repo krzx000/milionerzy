@@ -1,13 +1,12 @@
 import * as React from "react";
 import { GameAPI } from "@/lib/api/game";
-import { GameSession } from "@/lib/db/game-session";
+import { GameSessionWithQuestions } from "@/lib/db/game-session";
 import { GAME_CONSTANTS } from "@/lib/constants/game";
 import { toast } from "sonner";
 
 export function useGameManagement() {
-  const [gameSession, setGameSession] = React.useState<GameSession | null>(
-    null
-  );
+  const [gameSession, setGameSession] =
+    React.useState<GameSessionWithQuestions | null>(null);
   const [gameLoading, setGameLoading] = React.useState(false);
   const [selectedAnswer, setSelectedAnswer] = React.useState<string | null>(
     null

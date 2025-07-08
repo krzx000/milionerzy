@@ -1,4 +1,4 @@
-import { GameSession } from "@/lib/db/game-session";
+import { GameSession, GameSessionWithQuestions } from "@/lib/db/game-session";
 
 export interface ApiResponse<T = unknown> {
   success: boolean;
@@ -31,7 +31,9 @@ export interface GameSessionHistory {
 export class GameAPI {
   private static baseUrl = "/api/game";
 
-  static async getCurrentSession(): Promise<ApiResponse<GameSession | null>> {
+  static async getCurrentSession(): Promise<
+    ApiResponse<GameSessionWithQuestions | null>
+  > {
     try {
       const response = await fetch(`${this.baseUrl}/session`);
       return await response.json();

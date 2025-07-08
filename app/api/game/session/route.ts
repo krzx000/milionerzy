@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { gameSessionDb } from "@/lib/db/game-session";
-import { questionsDb } from "@/lib/db/questions";
+import { prisma } from "@/lib/db/prisma";
 
 // GET /api/game/session - pobierz aktualną sesję gry
 export async function GET() {
@@ -15,8 +15,23 @@ export async function GET() {
       });
     }
 
-    // Dodaj informacje o aktualnym pytaniu
-    const questions = await questionsDb.getAll();
+    // Pobierz pytania powiązane z sesją
+    const sessionQuestions = await prisma.gameSessionQuestion.findMany({
+      where: { gameSessionId: session.id },
+      orderBy: { order: "asc" },
+      include: { question: true },
+    });
+    const questions = sessionQuestions.map((q) => ({
+      id: q.question.id,
+      content: q.question.content,
+      answers: {
+        A: q.question.answerA,
+        B: q.question.answerB,
+        C: q.question.answerC,
+        D: q.question.answerD,
+      },
+      correctAnswer: q.question.correctAnswer as "A" | "B" | "C" | "D",
+    }));
     const currentQuestion = questions[session.currentQuestionIndex] || null;
 
     const prizes = [
@@ -42,6 +57,7 @@ export async function GET() {
       data: {
         ...session,
         currentQuestion,
+        questions, // cała lista pytań tej sesji
         currentPrize,
         totalQuestions: questions.length,
       },

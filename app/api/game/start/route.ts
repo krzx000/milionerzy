@@ -14,7 +14,32 @@ export async function POST() {
       );
     }
 
-    const session = await gameSessionDb.start(questions.length);
+    if (questions.length < 12) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Potrzeba minimum 12 pytań do rozpoczęcia gry. Masz tylko ${questions.length} pytań.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Losuj 12 pytań z całej bazy używając algorytmu Fisher-Yates
+    const shuffled = [...questions];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const selected = shuffled.slice(0, 12);
+    const questionIds = selected.map((q) => q.id);
+
+    console.log(
+      `Wylosowano 12 pytań z ${questions.length} dostępnych:`,
+      questionIds
+    );
+
+    // Tworzymy sesję i relacje GameSessionQuestion
+    const session = await gameSessionDb.startWithQuestions(questionIds);
 
     return NextResponse.json({
       success: true,

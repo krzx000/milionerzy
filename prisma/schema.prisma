@@ -17,9 +17,11 @@ model Question {
   answerB       String
   answerC       String
   answerD       String
-  correctAnswer String   // "A", "B", "C", lub "D"
+  correctAnswer String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  gameSessionQuestions GameSessionQuestion[] // relacja do powiązań z sesjami
 
   @@map("questions")
 }
@@ -37,6 +39,18 @@ model GameSession {
   totalQuestions        Int      @default(0)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+  questions             GameSessionQuestion[]
 
   @@map("game_sessions")
+}
+
+model GameSessionQuestion {
+  id            String   @id @default(cuid())
+  gameSession   GameSession @relation(fields: [gameSessionId], references: [id])
+  gameSessionId String
+  question      Question @relation(fields: [questionId], references: [id])
+  questionId    String
+  order         Int      // pozycja pytania w sesji
+
+  @@map("game_session_questions")
 }

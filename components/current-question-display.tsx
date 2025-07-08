@@ -10,12 +10,12 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Question as QuestionType } from "@/types/question";
-import { GameSession } from "@/lib/db/game-session";
+import { GameSessionWithQuestions } from "@/lib/db/game-session";
 import { getCurrentPrize } from "@/lib/utils/prize";
 import { GAME_CONSTANTS } from "@/lib/constants/game";
 
 interface CurrentQuestionDisplayProps {
-  gameSession: GameSession | null;
+  gameSession: GameSessionWithQuestions | null;
   currentQuestion: QuestionType | null;
   questionsCount: number;
   selectedAnswer: string | null;
@@ -112,7 +112,12 @@ export function CurrentQuestionDisplay({
                     key={key}
                     variant={variant}
                     className={className}
-                    disabled={gameLoading || isAnswerRevealed || isGameEnded}
+                    disabled={
+                      gameLoading ||
+                      isAnswerRevealed ||
+                      isGameEnded ||
+                      lastAnswerResult?.gameWon
+                    }
                     onClick={() => onSelectAnswer(key)}
                   >
                     <span className="font-bold mr-3 flex-shrink-0">{key}:</span>
@@ -130,7 +135,8 @@ export function CurrentQuestionDisplay({
             {selectedAnswer &&
               !isAnswerRevealed &&
               !gameLoading &&
-              !isGameEnded && (
+              !isGameEnded &&
+              !lastAnswerResult?.gameWon && (
                 <div className="text-center space-y-3">
                   <div className="flex flex-col xl:flex-row gap-2 w-full">
                     <Button

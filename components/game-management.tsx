@@ -9,12 +9,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { GameSession } from "@/lib/db/game-session";
+import { GameSessionWithQuestions } from "@/lib/db/game-session";
 import { GAME_CONSTANTS } from "@/lib/constants/game";
 import { getCurrentPrize, getWinningPrize } from "@/lib/utils/prize";
 
 interface GameManagementProps {
-  gameSession: GameSession | null;
+  gameSession: GameSessionWithQuestions | null;
   gameLoading: boolean;
   questionsCount: number;
   onStartGame: () => void;
@@ -138,10 +138,14 @@ export function GameManagement({
           {!isGameActive && !isGameEnded ? (
             <Button
               onClick={onStartGame}
-              disabled={questionsCount === 0 || gameLoading}
+              disabled={questionsCount < 12 || gameLoading}
               className="w-full bg-green-600 hover:bg-green-700 text-white"
             >
-              {gameLoading ? "⏳ Rozpoczynanie..." : "🎮 Rozpocznij grę"}
+              {gameLoading
+                ? "⏳ Rozpoczynanie..."
+                : questionsCount < 12
+                ? `🚫 Potrzeba min. 12 pytań (masz ${questionsCount})`
+                : "🎮 Rozpocznij grę"}
             </Button>
           ) : (
             <div className="space-y-2">
