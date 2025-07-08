@@ -15,7 +15,7 @@ import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { GAME_CONSTANTS } from "@/lib/constants/game";
 
 export default function Admin() {
-  const { confirm } = useConfirmDialog();
+  const { confirm, dialog } = useConfirmDialog();
   const [questions, setQuestions] = React.useState<QuestionType[]>([]);
   const [questionsLoading, setQuestionsLoading] = React.useState(true);
   const [selectedQuestions, setSelectedQuestions] = React.useState<
@@ -349,6 +349,7 @@ export default function Admin() {
           onToggleHistory={handleToggleHistory}
         />
       </div>
+      {dialog}
     </div>
   );
 }
