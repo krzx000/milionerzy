@@ -1,0 +1,189 @@
+"use client";
+
+import * as React from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { GameSession } from "@/lib/db/game-session";
+import { GAME_CONSTANTS } from "@/lib/constants/game";
+import { getCurrentPrize, getWinningPrize } from "@/lib/utils/prize";
+
+interface GameManagementProps {
+  gameSession: GameSession | null;
+  gameLoading: boolean;
+  questionsCount: number;
+  onStartGame: () => void;
+  onEndGame: () => void;
+  onUseLifeline: (
+    lifelineType: keyof typeof GAME_CONSTANTS.LIFELINE_NAMES
+  ) => void;
+}
+
+export function GameManagement({
+  gameSession,
+  gameLoading,
+  questionsCount,
+  onStartGame,
+  onEndGame,
+  onUseLifeline,
+}: GameManagementProps) {
+  const isGameActive = gameSession?.status === "active";
+  const isGameEnded = gameSession?.status === "finished";
+  const currentQuestionIndex = gameSession?.currentQuestionIndex || 0;
+  const usedLifelines = gameSession?.usedLifelines || {
+    fiftyFifty: false,
+    phoneAFriend: false,
+    askAudience: false,
+  };
+
+  return (
+    <Card className="h-full">
+      <CardHeader>
+        <CardTitle>Zarządzanie grą</CardTitle>
+        <CardDescription>
+          {isGameActive
+            ? "Gra w toku"
+            : isGameEnded
+            ? "Gra zakończona - oczekuje na prowadzącego"
+            : "Gotowy do rozpoczęcia"}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Status gry */}
+        <div className="space-y-2">
+          <div className="text-sm font-medium">Status gry:</div>
+          <div
+            className={`px-3 py-2 rounded-md text-center ${
+              isGameActive
+                ? GAME_CONSTANTS.GAME_STATUS_STYLES.active
+                : isGameEnded
+                ? GAME_CONSTANTS.GAME_STATUS_STYLES.finished
+                : GAME_CONSTANTS.GAME_STATUS_STYLES.inactive
+            }`}
+          >
+            {isGameActive
+              ? "AKTYWNA"
+              : isGameEnded
+              ? "ZAKOŃCZONA"
+              : "NIEAKTYWNA"}
+          </div>
+        </div>
+
+        {/* Aktualne pytanie */}
+        {(isGameActive || isGameEnded) && (
+          <div className="space-y-2">
+            <div className="text-sm font-medium">Pytanie:</div>
+            <div className="text-center bg-blue-100 text-blue-800 py-2 rounded-md">
+              {currentQuestionIndex + 1} z {questionsCount}
+            </div>
+          </div>
+        )}
+
+        {/* Aktualna nagroda */}
+        {(isGameActive || isGameEnded) && (
+          <div className="space-y-2">
+            <div className="text-sm font-medium">
+              {isGameEnded ? "Gracz wygrywa:" : "Aktualna nagroda:"}
+            </div>
+            <div className="text-lg font-bold text-center bg-yellow-100 text-yellow-800 py-2 rounded-md">
+              {isGameEnded
+                ? getWinningPrize(currentQuestionIndex)
+                : getCurrentPrize(currentQuestionIndex)}
+            </div>
+          </div>
+        )}
+
+        {/* Koła ratunkowe */}
+        {isGameActive && (
+          <div className="space-y-2">
+            <div className="text-sm font-medium">Koła ratunkowe:</div>
+            <div className="grid grid-cols-1 gap-2">
+              {Object.entries(GAME_CONSTANTS.LIFELINE_NAMES).map(
+                ([key, name]) => {
+                  const lifelineKey = key as keyof typeof usedLifelines;
+                  const isUsed = usedLifelines[lifelineKey];
+                  const icon = GAME_CONSTANTS.LIFELINE_ICONS[lifelineKey];
+
+                  return (
+                    <Button
+                      key={key}
+                      variant={isUsed ? "secondary" : "default"}
+                      size="sm"
+                      disabled={isUsed || gameLoading}
+                      onClick={() => onUseLifeline(lifelineKey)}
+                      className="text-xs whitespace-normal break-words h-auto py-2"
+                    >
+                      {isUsed ? (
+                        <span className="line-through">
+                          {icon} {name}
+                        </span>
+                      ) : (
+                        `${icon} ${name}`
+                      )}
+                    </Button>
+                  );
+                }
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Przyciski sterowania */}
+        <div className="space-y-2 pt-4 border-t">
+          {!isGameActive && !isGameEnded ? (
+            <Button
+              onClick={onStartGame}
+              disabled={questionsCount === 0 || gameLoading}
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+            >
+              {gameLoading ? "⏳ Rozpoczynanie..." : "🎮 Rozpocznij grę"}
+            </Button>
+          ) : (
+            <div className="space-y-2">
+              <Button
+                onClick={onEndGame}
+                variant="destructive"
+                disabled={gameLoading}
+                className="w-full"
+              >
+                {gameLoading
+                  ? "⏳ Kończenie..."
+                  : isGameEnded
+                  ? "🛑 Zamknij sesję"
+                  : "🛑 Zakończ grę"}
+              </Button>
+
+              {isGameEnded && (
+                <div className="text-xs text-center p-2 bg-red-50 text-red-700 rounded border">
+                  Gra zakończona po niepoprawnej odpowiedzi. Kliknij
+                  &quot;Zamknij sesję&quot; aby zakończyć sesję.
+                </div>
+              )}
+
+              {!isGameEnded && (
+                <div className="text-xs text-gray-500 text-center">
+                  Gracz wygrywa: {getWinningPrize(currentQuestionIndex)}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Informacje */}
+        <div className="text-xs text-gray-500 space-y-1 pt-2 border-t">
+          <div>💡 Dostępne pytania: {questionsCount}</div>
+          {!isGameActive && questionsCount === 0 && (
+            <div className="text-red-500">
+              ⚠️ Dodaj pytania przed rozpoczęciem gry
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

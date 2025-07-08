@@ -1,6 +1,6 @@
 # 🎓 Milionerzy – Teleturniej Webowy
 
-Aplikacja webowa inspirowana teleturniejem "Milionerzy", umożliwiająca prowadzenie gry na żywo z widokiem gracza, widokiem prowadzącego (admina) oraz opcjonalnym widokiem publiczności. Zbudowana w technologii **Next.js App Router**, z wykorzystaniem **WebSocketów** do natychmiastowej synchronizacji.
+Aplikacja webowa inspirowana teleturniejem "Milionerzy", umożliwiająca prowadzenie gry na żywo z widokiem gracza, widokiem prowadzącego (admina) oraz widokiem publiczności. Zbudowana w technologii **Next.js App Router**, z wykorzystaniem **WebSocketów** do natychmiastowej synchronizacji.
 
 ## 🛠 Technologie
 
@@ -9,7 +9,6 @@ Aplikacja webowa inspirowana teleturniejem "Milionerzy", umożliwiająca prowadz
 - [Tailwind CSS](https://tailwindcss.com/)
 - [shadcn/ui](https://ui.shadcn.com/)
 - [Socket.IO (WebSocket)](https://socket.io/)
-- [Zustand](https://zustand-demo.pmnd.rs/)
 - [Prisma](https://www.prisma.io/)
 
 ## 🖥 Widoki
@@ -36,7 +35,7 @@ Aplikacja webowa inspirowana teleturniejem "Milionerzy", umożliwiająca prowadz
 - Podgląd pytania
 - Udział w głosowaniu przy pytaniu do publiczności
 
-## 📡 WebSocket – Eventy
+<!-- ## 📡 WebSocket – Eventy
 
 | Event                 | Kierunek         | Opis                        |
 | --------------------- | ---------------- | --------------------------- |
@@ -45,4 +44,4 @@ Aplikacja webowa inspirowana teleturniejem "Milionerzy", umożliwiająca prowadz
 | `player:answer`       | Player → Server  | Gracz wybrał odpowiedź      |
 | `admin:confirmAnswer` | Admin → Server   | Admin zatwierdził odpowiedź |
 | `admin:useLifeline`   | Admin → Server   | Użyto koła ratunkowego      |
-| `game:end`            | Server → Clients | Gra zakończona              |
+| `game:end`            | Server → Clients | Gra zakończona              | -->
