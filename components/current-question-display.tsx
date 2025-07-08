@@ -135,14 +135,14 @@ export function CurrentQuestionDisplay({
                   <div className="flex flex-col xl:flex-row gap-2 w-full">
                     <Button
                       onClick={onConfirmAnswer}
-                      className="bg-green-600 hover:bg-green-700 text-white flex-1 px-4 py-3 text-lg font-semibold"
+                      className="!bg-green-600 !hover:bg-green-700 text-white flex-1 px-4 py-3 text-lg font-semibold"
                       size="lg"
                     >
                       ✅ Potwierdź odpowiedź
                     </Button>
                     <Button
                       onClick={onCancelAnswer}
-                      variant="outline"
+                      variant="destructive"
                       className="flex-1 px-4 py-3 text-lg"
                       size="lg"
                     >

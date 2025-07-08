@@ -52,10 +52,8 @@ export async function GET(request: Request) {
       if (session.status === "finished") {
         if (gameWon) {
           result = "Wygrana - pełna gra";
-        } else if (session.currentQuestionIndex > 0) {
+        } else if (session.currentQuestionIndex >= 0) {
           result = `Przegrana na pytaniu ${session.currentQuestionIndex + 1}`;
-        } else {
-          result = "Przegrana na pierwszym pytaniu";
         }
       } else if (session.status === "active") {
         result = "W toku";

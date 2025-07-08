@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { GameSessionHistory } from "@/lib/api/game";
+import { GAME_CONSTANTS } from "@/lib/constants/game";
 
 interface GameHistoryProps {
   gameHistory: GameSessionHistory[];
@@ -177,22 +178,24 @@ export function GameHistory({
                     <div className="p-3 transition-colors duration-150">
                       <div className="flex gap-1">
                         {session.usedLifelines.fiftyFifty && (
-                          <span className="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded">
-                            50:50
-                          </span>
+                          <Badge variant="outline">
+                            {GAME_CONSTANTS.LIFELINE_ICONS.fiftyFifty}
+                          </Badge>
                         )}
                         {session.usedLifelines.phoneAFriend && (
-                          <span className="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded">
-                            📞
-                          </span>
+                          <Badge variant="outline">
+                            {GAME_CONSTANTS.LIFELINE_ICONS.phoneAFriend}
+                          </Badge>
                         )}
                         {session.usedLifelines.askAudience && (
-                          <span className="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded">
-                            👥
-                          </span>
+                          <Badge variant="outline">
+                            {GAME_CONSTANTS.LIFELINE_ICONS.askAudience}
+                          </Badge>
                         )}
                         {session.usedLifelinesCount === 0 && (
-                          <span className="text-xs text-gray-500">Brak</span>
+                          <span className="text-xs text-gray-500">
+                            Nie wykorzystano
+                          </span>
                         )}
                       </div>
                     </div>

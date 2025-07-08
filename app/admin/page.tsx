@@ -341,7 +341,7 @@ export default function Admin() {
       </div>
 
       {/* Historia sesji gry */}
-      <div className="w-full p-4">
+      <div className="w-full p-4 pt-0">
         <GameHistory
           gameHistory={gameHistory}
           historyLoading={historyLoading}
