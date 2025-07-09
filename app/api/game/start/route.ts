@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { gameSessionDb } from "@/lib/db/game-session";
 import { questionsDb } from "@/lib/db/questions";
+import { sseManager } from "@/lib/sse/manager";
 
 // POST /api/game/start - rozpocznij nową grę
 export async function POST() {
@@ -40,6 +41,17 @@ export async function POST() {
 
     // Tworzymy sesję i relacje GameSessionQuestion
     const session = await gameSessionDb.startWithQuestions(questionIds);
+
+    // Broadcast SSE event o rozpoczęciu gry
+    sseManager.broadcast(
+      "question-changed",
+      {
+        questionIndex: 0,
+        totalQuestions: 12,
+        gameStarted: true,
+      },
+      "all"
+    );
 
     return NextResponse.json({
       success: true,

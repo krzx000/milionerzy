@@ -3,6 +3,7 @@ import { VoteSession } from "@/types/voting";
 import { gameSessionDb } from "@/lib/db/game-session";
 import { prisma } from "@/lib/db/prisma";
 import { GAME_CONSTANTS } from "@/lib/constants/game";
+import { broadcastEvent, sendToAdmin, sendToVoters } from "@/lib/sse/manager";
 
 // Tymczasowy store w pamięci - w produkcji użyć bazy danych
 export let currentVoteSession: VoteSession | null = null;
@@ -106,13 +107,41 @@ export async function startVotingSession(sessionId: string): Promise<{
       ) {
         currentVoteSession.isActive = false;
         currentVoteSession.endTime = new Date();
+
         console.log(
           `Automatycznie zakończono głosowanie: ${currentVoteSession.id}`
         );
+
+        // 🔥 SSE: Powiadom o automatycznym zakończeniu głosowania
+        broadcastEvent("voting-ended", {
+          voteSessionId: currentVoteSession.id,
+          endTime: currentVoteSession.endTime,
+          totalVotes: Object.keys(votes).length,
+          reason: "timeout",
+        });
       }
     }, GAME_CONSTANTS.VOTING_TIME_LIMIT * 1000);
 
     console.log(`Rozpoczęto głosowanie: ${currentVoteSession.id}`);
+
+    // 🔥 SSE: Powiadom o rozpoczęciu głosowania
+    sendToVoters("voting-started", {
+      voteSessionId: currentVoteSession.id,
+      questionId: currentQuestion.id,
+      question: currentQuestion,
+      timeLimit: GAME_CONSTANTS.VOTING_TIME_LIMIT,
+      hiddenAnswers: hiddenAnswers,
+      startTime: currentVoteSession.startTime,
+      endTime: currentVoteSession.endTime,
+    });
+
+    sendToAdmin("voting-started", {
+      voteSessionId: currentVoteSession.id,
+      questionId: currentQuestion.id,
+      timeLimit: GAME_CONSTANTS.VOTING_TIME_LIMIT,
+      totalClients: 0, // TODO: dodać licznik klientów
+    });
+
     return { success: true, data: currentVoteSession };
   } catch (error) {
     console.error("Błąd rozpoczynania głosowania:", error);

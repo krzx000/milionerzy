@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { gameSessionDb } from "@/lib/db/game-session";
 import { clearVotingSession } from "../../voting/start/route";
+import { sseManager } from "@/lib/sse/manager";
 
 export async function POST() {
   try {
@@ -20,6 +21,16 @@ export async function POST() {
 
     // Wyczyść sesję głosowania gdy zamykamy grę
     clearVotingSession();
+
+    // Broadcast SSE event o zakończeniu gry
+    sseManager.broadcast(
+      "game-ended",
+      {
+        reason: "manual",
+        timestamp: new Date(),
+      },
+      "all"
+    );
 
     console.log("Session closed successfully");
     return NextResponse.json({

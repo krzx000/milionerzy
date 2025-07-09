@@ -123,6 +123,28 @@ export class GameAPI {
     }
   }
 
+  static async selectAnswer(answer: string): Promise<
+    ApiResponse<{
+      selectedAnswer: string;
+      questionIndex: number;
+      questionId: string;
+    }>
+  > {
+    try {
+      const response = await fetch(`${this.baseUrl}/select-answer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answer }),
+      });
+      return await response.json();
+    } catch {
+      return {
+        success: false,
+        error: "Błąd wybierania odpowiedzi",
+      };
+    }
+  }
+
   static async submitAnswer(answer: string): Promise<
     ApiResponse<
       GameSession & {

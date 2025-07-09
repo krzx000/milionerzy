@@ -21,6 +21,10 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Wifi, WifiOff } from "lucide-react";
+import { useServerSentEvents } from "@/hooks/use-sse";
+import type { GameEventType } from "@/types/events";
 
 export default function Admin() {
   const { confirm, dialog } = useConfirmDialog();
@@ -126,6 +130,67 @@ export default function Admin() {
       showErrorMessage(response.error);
     }
   }, [showErrorMessage]);
+
+  // Obsługa eventów SSE
+  const handleSSEEvent = React.useCallback(
+    (eventType: GameEventType, data: Record<string, unknown>) => {
+      console.log("Admin SSE Event received:", eventType, data);
+
+      switch (eventType) {
+        case "voting-started":
+          setIsVotingActive(true);
+          showGameStatusMessage("📊 Głosowanie rozpoczęte!");
+          // Odśwież sesję gry aby zaktualizować stan
+          loadGameSession();
+          break;
+        case "voting-ended":
+          setIsVotingActive(false);
+          const reason = data.reason as string;
+          if (reason === "timeout") {
+            showGameStatusMessage("⏰ Głosowanie zakończone - upłynął czas");
+          } else if (reason === "manual") {
+            showGameStatusMessage("⏹️ Głosowanie zakończone ręcznie");
+          } else {
+            showGameStatusMessage("✅ Głosowanie zakończone");
+          }
+          // Odśwież sesję gry aby zaktualizować stan
+          loadGameSession();
+          break;
+        case "question-changed":
+          // Nowe pytanie - odśwież wszystko
+          setIsVotingActive(false);
+          setVoteResults(null);
+          setShowVoteResults(false);
+          loadGameSession();
+          break;
+        case "game-ended":
+          // Gra się skończyła
+          setIsVotingActive(false);
+          setVoteResults(null);
+          setShowVoteResults(false);
+          loadGameSession();
+          break;
+      }
+    },
+    [showGameStatusMessage, loadGameSession]
+  );
+
+  // Konfiguracja SSE
+  const { isConnected } = useServerSentEvents({
+    clientType: "admin",
+    onEvent: handleSSEEvent,
+    onConnect: () => {
+      console.log("Admin SSE connected");
+    },
+    onDisconnect: () => {
+      console.log("Admin SSE disconnected");
+    },
+    onError: (error) => {
+      console.error("Admin SSE error:", error);
+    },
+    autoReconnect: true,
+    reconnectDelay: 3000,
+  });
 
   const loadGameHistory = React.useCallback(async () => {
     setHistoryLoading(true);
@@ -342,9 +407,21 @@ export default function Admin() {
       return;
 
     setGameLoading(true);
+    showGameStatusMessage("📝 Zatwierdzenie odpowiedzi...");
+
+    // Krok 1: Zatwierdź wybór odpowiedzi (pokaż widowni wybraną odpowiedź)
+    const selectResponse = await GameAPI.selectAnswer(selectedAnswer);
+    if (!selectResponse.success) {
+      showErrorMessage(selectResponse.error || "Błąd zatwierdzania odpowiedzi");
+      setGameLoading(false);
+      return;
+    }
+
+    // Opóźnienie przed ujawnieniem poprawnej odpowiedzi
     showGameStatusMessage("🎵 Sprawdzanie odpowiedzi...");
 
     setTimeout(async () => {
+      // Krok 2: Sprawdź odpowiedź (pokaż wynik)
       const response = await GameAPI.submitAnswer(selectedAnswer);
 
       if (response.success && response.data) {
@@ -451,30 +528,7 @@ export default function Admin() {
     } catch {
       showErrorMessage("Błąd kończenia głosowania");
     }
-  }, [showGameStatusMessage, showErrorMessage, setIsVotingActive]);
-
-  // Funkcja do sprawdzania stanu głosowania
-  const checkVotingStatus = React.useCallback(async () => {
-    try {
-      const response = await fetch("/api/voting/current");
-      if (response.ok) {
-        const result = await response.json();
-        // Sprawdź czy w danych jest aktywna sesja głosowania
-        const hasActiveVoting =
-          result?.data &&
-          typeof result.data === "object" &&
-          "isActive" in result.data &&
-          result.data.isActive === true;
-        setIsVotingActive(hasActiveVoting);
-        console.log("Sprawdzanie stanu głosowania:", hasActiveVoting, result);
-      } else {
-        setIsVotingActive(false);
-      }
-    } catch (error) {
-      console.error("Błąd sprawdzania stanu głosowania:", error);
-      setIsVotingActive(false);
-    }
-  }, [setIsVotingActive]);
+  }, [showGameStatusMessage, showErrorMessage]);
 
   // Effect do automatycznego przejścia do kolejnego pytania
   React.useEffect(() => {
@@ -516,20 +570,25 @@ export default function Admin() {
   React.useEffect(() => {
     loadGameSession();
     loadGameHistory();
-    checkVotingStatus(); // Sprawdź stan głosowania przy inicjalizacji
-  }, [loadGameSession, loadGameHistory, checkVotingStatus]);
-
-  // Regularnie sprawdzaj stan głosowania
-  React.useEffect(() => {
-    const intervalId = setInterval(checkVotingStatus, 2000); // Sprawdzaj co 2 sekundy
-    return () => clearInterval(intervalId);
-  }, [checkVotingStatus]);
+  }, [loadGameSession, loadGameHistory]);
 
   return (
     <div className="flex flex-col items-center justify-center">
       {/* Fixed theme toggle and debug */}
       <div className="fixed top-6 right-6 z-50 flex gap-2">
         <ThemeToggle />
+        {/* Wskaźnik połączenia SSE */}
+        {isConnected ? (
+          <Badge variant="default" className="bg-green-500 text-white">
+            <Wifi className="w-4 h-4 mr-1" />
+            Połączono
+          </Badge>
+        ) : (
+          <Badge variant="destructive" className="bg-red-500 text-white">
+            <WifiOff className="w-4 h-4 mr-1" />
+            Rozłączono
+          </Badge>
+        )}
       </div>
 
       <div className="w-full flex min-h-screen gap-4 p-4">

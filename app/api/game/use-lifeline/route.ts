@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { gameSessionDb } from "@/lib/db/game-session";
 import { startVotingSession } from "../../voting/start/route";
+import { sseManager } from "@/lib/sse/manager";
 
 export async function POST(request: NextRequest) {
   try {
@@ -76,6 +77,18 @@ export async function POST(request: NextRequest) {
       phoneAFriend: "Telefon do przyjaciela",
       askAudience: "Pytanie do publiczności",
     } as const;
+
+    // Broadcast SSE event o użyciu koła ratunkowego
+    sseManager.broadcast(
+      "lifeline-used",
+      {
+        lifeline,
+        lifelineName: lifelineNames[lifeline] || lifeline,
+        questionIndex: session.currentQuestionIndex,
+        usedLifelines: session.usedLifelines,
+      },
+      "all"
+    );
 
     return NextResponse.json({
       success: true,

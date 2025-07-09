@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { gameSessionDb } from "@/lib/db/game-session";
+import { sseManager } from "@/lib/sse/manager";
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,6 +56,20 @@ export async function POST(request: NextRequest) {
 
     const isCorrect = answer === currentQuestion.correctAnswer;
 
+    // Broadcast SSE event o ujawnieniu odpowiedzi
+    sseManager.broadcast(
+      "answer-revealed",
+      {
+        selectedAnswer: answer,
+        correctAnswer: currentQuestion.correctAnswer,
+        isCorrect,
+        questionIndex: session.currentQuestionIndex,
+        questionId: currentQuestion.id,
+        gameWon: false, // Będzie zaktualizowane niżej jeśli prawda
+      },
+      "all"
+    );
+
     if (!isCorrect) {
       // Niepoprawna odpowiedź - zakończ grę
       const finishedSession = await gameSessionDb.finishGame(false);
@@ -76,6 +91,21 @@ export async function POST(request: NextRequest) {
     if (session.currentQuestionIndex >= 11) {
       // To było ostatnie pytanie - gracz wygrał! Zakończ grę
       const finishedSession = await gameSessionDb.finishGame(true);
+
+      // Broadcast SSE event o wygranej
+      sseManager.broadcast(
+        "answer-revealed",
+        {
+          selectedAnswer: answer,
+          correctAnswer: currentQuestion.correctAnswer,
+          isCorrect: true,
+          questionIndex: session.currentQuestionIndex,
+          questionId: currentQuestion.id,
+          gameWon: true,
+        },
+        "all"
+      );
+
       return NextResponse.json({
         success: true,
         data: {

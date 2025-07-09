@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { currentVoteSession } from "../start/route";
+import { currentVoteSession, votes } from "../start/route";
+import { broadcastEvent } from "@/lib/sse/manager";
 
 export async function POST() {
   try {
@@ -15,6 +16,14 @@ export async function POST() {
     currentVoteSession.endTime = new Date();
 
     console.log(`Zakończono głosowanie: ${currentVoteSession.id}`);
+
+    // 🔥 SSE: Powiadom o ręcznym zakończeniu głosowania
+    broadcastEvent("voting-ended", {
+      voteSessionId: currentVoteSession.id,
+      endTime: currentVoteSession.endTime,
+      totalVotes: Object.keys(votes).length,
+      reason: "manual", // Ręcznie zakończone przez admina
+    });
 
     return NextResponse.json({
       success: true,

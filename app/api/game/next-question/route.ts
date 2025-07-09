@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { gameSessionDb } from "@/lib/db/game-session";
 import { clearVotingSession } from "../../voting/start/route";
+import { sseManager } from "@/lib/sse/manager";
 
 export async function POST() {
   try {
@@ -17,6 +18,18 @@ export async function POST() {
 
     // Wyczyść sesję głosowania przy przejściu do kolejnego pytania
     clearVotingSession();
+
+    // Broadcast SSE event o zmianie pytania
+    sseManager.broadcast(
+      "question-changed",
+      {
+        questionIndex: session.currentQuestionIndex,
+        totalQuestions: session.totalQuestions,
+        questionId: session.id, // ID sesji, nie pytania
+        status: session.status,
+      },
+      "all"
+    );
 
     return NextResponse.json({
       success: true,

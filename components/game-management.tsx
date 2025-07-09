@@ -107,18 +107,6 @@ export function GameManagement({
           </div>
         )}
 
-        {/* Debug info - usuń w produkcji */}
-        {process.env.NODE_ENV === "development" && (
-          <div className="space-y-2">
-            <div className="text-xs text-gray-500">
-              Debug: isVotingActive = {isVotingActive ? "true" : "false"}
-            </div>
-            <div className="text-xs text-gray-500">
-              onEndVoting = {onEndVoting ? "provided" : "not provided"}
-            </div>
-          </div>
-        )}
-
         {/* Koła ratunkowe - pokazuj tylko gdy gra jest aktywna i nie jest zakończona */}
         {isGameActive && !isGameEnded && (
           <div className="space-y-2">
