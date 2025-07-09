@@ -17,6 +17,9 @@ export function useGameManagement() {
     gameWon: boolean;
     correctAnswer?: string;
   } | null>(null);
+  const [gameEndReason, setGameEndReason] = React.useState<
+    "wrong_answer" | "game_won" | "admin_stopped" | null
+  >(null);
 
   // Computed values
   const isGameActive = gameSession?.status === "active";
@@ -71,6 +74,7 @@ export function useGameManagement() {
       setSelectedAnswer(null);
       setIsAnswerRevealed(false);
       setLastAnswerResult(null);
+      setGameEndReason(null);
     } else if (response.error) {
       showErrorMessage(response.error);
     }
@@ -81,6 +85,7 @@ export function useGameManagement() {
     setSelectedAnswer(null);
     setIsAnswerRevealed(false);
     setLastAnswerResult(null);
+    setGameEndReason(null);
   }, []);
 
   return {
@@ -90,6 +95,7 @@ export function useGameManagement() {
     selectedAnswer,
     isAnswerRevealed,
     lastAnswerResult,
+    gameEndReason,
 
     // Computed values
     isGameActive,
@@ -110,6 +116,7 @@ export function useGameManagement() {
     setSelectedAnswer,
     setIsAnswerRevealed,
     setLastAnswerResult,
+    setGameEndReason,
     loadGameSession,
     resetGameState,
   };

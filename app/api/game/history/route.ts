@@ -34,29 +34,33 @@ export async function GET(request: Request) {
         );
       }
 
-      // Oblicz wygraną kwotę
-      let winnings = "0 zł";
-      if (session.status === "finished" && session.currentQuestionIndex > 0) {
-        const winningIndex = session.currentQuestionIndex - 1;
-        winnings = prizes[winningIndex] || "0 zł";
-      } else if (session.currentQuestionIndex >= session.totalQuestions) {
-        // Gracz ukończył wszystkie pytania
-        winnings = prizes[prizes.length - 1] || "1 000 000 zł";
-      }
-
       // Sprawdź czy gracz wygrał całą grę
+      // Gracz wygrywa jeśli currentQuestionIndex >= totalQuestions (zapisane przy wygranej)
       const gameWon = session.currentQuestionIndex >= session.totalQuestions;
 
       // Oblicz wynik
       let result = "Przerwana";
       if (session.status === "finished") {
         if (gameWon) {
-          result = "Wygrana - pełna gra";
+          result = "Wygrana";
         } else if (session.currentQuestionIndex >= 0) {
           result = `Przegrana na pytaniu ${session.currentQuestionIndex + 1}`;
         }
       } else if (session.status === "active") {
         result = "W toku";
+      }
+
+      // Oblicz wygraną kwotę
+      let winnings = "0 zł";
+      if (session.status === "finished") {
+        if (gameWon) {
+          // Jeśli gracz wygrał całą grę, dostaje milion
+          winnings = "1 000 000 zł";
+        } else if (session.currentQuestionIndex > 0) {
+          // Jeśli przegrał, dostaje nagrodę za poprzednie pytanie
+          const winningIndex = session.currentQuestionIndex - 1;
+          winnings = prizes[winningIndex] || "0 zł";
+        }
       }
 
       // Zlicz użyte koła ratunkowe

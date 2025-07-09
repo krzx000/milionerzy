@@ -79,7 +79,8 @@ export function GameManagement({
           <div className="space-y-2">
             <div className="text-sm font-medium">Pytanie:</div>
             <div className="text-center bg-blue-500/20 border border-blue-500/40 dark:text-blue-200 text-blue-600 py-2 rounded-md">
-              {currentQuestionIndex + 1} z {questionsCount}
+              {Math.min(currentQuestionIndex + 1, questionsCount)} z{" "}
+              {questionsCount}
             </div>
           </div>
         )}
@@ -147,6 +148,15 @@ export function GameManagement({
                 ? `🚫 Potrzeba min. 12 pytań (masz ${questionsCount})`
                 : "🎮 Rozpocznij grę"}
             </Button>
+          ) : isGameActive ? (
+            <div className="space-y-2">
+              <div className="text-xs text-center p-2 bg-blue-50 text-blue-700 rounded border">
+                Gra w toku. Sesję można zamknąć dopiero po jej zakończeniu.
+              </div>
+              <div className="text-xs text-gray-500 text-center">
+                Gracz wygrywa: {getWinningPrize(currentQuestionIndex)}
+              </div>
+            </div>
           ) : (
             <div className="space-y-2">
               <Button
@@ -155,27 +165,13 @@ export function GameManagement({
                 disabled={gameLoading}
                 className="w-full"
               >
-                {gameLoading
-                  ? isGameEnded
-                    ? "⏳ Zamykanie sesji..."
-                    : "⏳ Zatrzymywanie gry..."
-                  : isGameEnded
-                  ? "🛑 Zamknij sesję"
-                  : "🛑 Zatrzymaj grę"}
+                {gameLoading ? "⏳ Zamykanie sesji..." : "🛑 Zamknij sesję"}
               </Button>
 
-              {isGameEnded && (
-                <div className="text-xs text-center p-2 bg-blue-50 text-blue-700 rounded border">
-                  Gra zakończona. Kliknij &quot;Zamknij sesję&quot; aby
-                  zakończyć sesję.
-                </div>
-              )}
-
-              {!isGameEnded && (
-                <div className="text-xs text-gray-500 text-center">
-                  Gracz wygrywa: {getWinningPrize(currentQuestionIndex)}
-                </div>
-              )}
+              <div className="text-xs text-center p-2 dark:bg-blue-50/30 border dark:border-blue-50/40 dark:text-blue-200 bg-blue-50 rounded-md">
+                Gra zakończona. Kliknij &quot;Zamknij sesję&quot; aby zakończyć
+                sesję.
+              </div>
             </div>
           )}
         </div>

@@ -60,22 +60,7 @@ export class GameAPI {
     }
   }
 
-  static async stopGame(): Promise<ApiResponse<GameSession>> {
-    try {
-      const response = await fetch(`${this.baseUrl}/stop`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      return await response.json();
-    } catch {
-      return {
-        success: false,
-        error: "Błąd zatrzymania gry",
-      };
-    }
-  }
-
-  static async endGame(): Promise<ApiResponse<GameSession>> {
+  static async endGame(): Promise<ApiResponse<null>> {
     try {
       const response = await fetch(`${this.baseUrl}/end`, {
         method: "POST",
@@ -85,7 +70,7 @@ export class GameAPI {
     } catch {
       return {
         success: false,
-        error: "Błąd kończenia gry",
+        error: "Błąd zamykania sesji gry",
       };
     }
   }
@@ -172,6 +157,22 @@ export class GameAPI {
       return {
         success: false,
         error: "Błąd pobierania historii sesji",
+      };
+    }
+  }
+
+  static async clearAllSessions(): Promise<
+    ApiResponse<{ deletedCount: number }>
+  > {
+    try {
+      const response = await fetch(`${this.baseUrl}/clear-all`, {
+        method: "DELETE",
+      });
+      return await response.json();
+    } catch {
+      return {
+        success: false,
+        error: "Błąd usuwania wszystkich sesji",
       };
     }
   }

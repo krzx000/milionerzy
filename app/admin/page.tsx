@@ -42,6 +42,9 @@ export default function Admin() {
     gameWon: boolean;
     correctAnswer?: string;
   } | null>(null);
+  const [gameEndReason, setGameEndReason] = React.useState<
+    "wrong_answer" | "game_won" | null
+  >(null);
 
   // Computed values
   const isGameActive = gameSession?.status === "active";
@@ -149,30 +152,33 @@ export default function Admin() {
     loadGameSession,
   ]);
 
+  // Funkcja do zamknięcia sesji (usunięcie sesji)
   const handleEndGame = React.useCallback(async () => {
     try {
       const confirmed = await confirm({
-        title: "Zakończyć grę?",
+        title: "Zamknąć sesję?",
         description:
-          "Czy na pewno chcesz zakończyć grę? Sesja zostanie zamknięta.",
-        confirmText: isGameEnded ? "Zamknij sesję" : "Zakończ grę",
+          "Czy na pewno chcesz zamknąć tę sesję? Sesja zostanie przeniesiona do historii i nie będzie już pokazywana w panelu gry.",
+        confirmText: "Zamknij sesję",
         cancelText: "Anuluj",
         variant: "destructive",
       });
 
       if (confirmed) {
         setGameLoading(true);
+
         const response = await GameAPI.endGame();
 
-        if (response.success && response.data) {
+        if (response.success) {
           setGameSession(null);
           setSelectedAnswer(null);
           setIsAnswerRevealed(false);
           setLastAnswerResult(null);
+          setGameEndReason(null);
           loadGameHistory();
-          showGameStatusMessage("🛑 Sesja gry zamknięta!");
+          showGameStatusMessage("🛑 Sesja gry została zamknięta!");
         } else {
-          showErrorMessage(response.error || "Błąd kończenia gry");
+          showErrorMessage(response.error || "Błąd zamykania sesji");
         }
         setGameLoading(false);
       }
@@ -181,11 +187,55 @@ export default function Admin() {
       setGameLoading(false);
     }
   }, [
+    confirm,
     showGameStatusMessage,
     showErrorMessage,
-    confirm,
-    isGameEnded,
     loadGameHistory,
+    setGameEndReason,
+  ]);
+
+  // Funkcja do masowego usuwania wszystkich sesji
+  const handleClearAllSessions = React.useCallback(async () => {
+    try {
+      const confirmed = await confirm({
+        title: "Usunąć wszystkie sesje?",
+        description:
+          "Czy na pewno chcesz usunąć WSZYSTKIE sesje z bazy danych? Ta operacja jest nieodwracalna i usuwa całą historię gier.",
+        confirmText: "Usuń wszystkie",
+        cancelText: "Anuluj",
+        variant: "destructive",
+      });
+
+      if (confirmed) {
+        setHistoryLoading(true);
+
+        const response = await GameAPI.clearAllSessions();
+
+        if (response.success) {
+          setGameHistory([]);
+          setGameSession(null);
+          setSelectedAnswer(null);
+          setIsAnswerRevealed(false);
+          setLastAnswerResult(null);
+          setGameEndReason(null);
+          const deletedCount = response.data?.deletedCount || 0;
+          showSuccessMessage(`🗑️ Usunięto ${deletedCount} sesji z bazy danych`);
+        } else {
+          showErrorMessage(response.error || "Błąd usuwania sesji");
+        }
+        setHistoryLoading(false);
+      }
+    } catch (error) {
+      console.error("handleClearAllSessions: Exception:", error);
+      setHistoryLoading(false);
+    }
+  }, [
+    confirm,
+    showSuccessMessage,
+    showErrorMessage,
+    setGameSession,
+    setGameHistory,
+    setGameEndReason,
   ]);
 
   const handleUseLifeline = React.useCallback(
@@ -259,15 +309,23 @@ export default function Admin() {
           gameWon: gameWon || false,
           correctAnswer: correctAnswer,
         });
+
+        // Ustaw powód zakończenia gry
+        if (gameWon) {
+          setGameEndReason("game_won");
+        } else if (!correct) {
+          setGameEndReason("wrong_answer");
+        }
+
         setGameLoading(false);
 
         if (correct) {
           if (gameWon) {
             showSuccessMessage("Gratulacje! Gracz wygrał wszystkie pytania!");
+
             setTimeout(() => {
               setSelectedAnswer(null);
               setIsAnswerRevealed(false);
-              setLastAnswerResult(null);
             }, 3000);
           } else {
             showSuccessMessage("Poprawna odpowiedź!");
@@ -292,6 +350,7 @@ export default function Admin() {
     showGameStatusMessage,
     showSuccessMessage,
     showErrorMessage,
+    setGameEndReason,
   ]);
 
   const handleCancelAnswer = React.useCallback(() => {
@@ -389,6 +448,7 @@ export default function Admin() {
             isAnswerRevealed={isAnswerRevealed}
             gameLoading={gameLoading}
             lastAnswerResult={lastAnswerResult}
+            gameEndReason={gameEndReason}
             onSelectAnswer={handleSelectAnswer}
             onConfirmAnswer={handleConfirmAnswer}
             onCancelAnswer={handleCancelAnswer}
@@ -403,6 +463,7 @@ export default function Admin() {
           historyLoading={historyLoading}
           isHistoryVisible={isHistoryVisible}
           onToggleHistory={handleToggleHistory}
+          onClearAllSessions={handleClearAllSessions}
         />
       </div>
       {dialog}

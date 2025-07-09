@@ -3,28 +3,32 @@ import { gameSessionDb } from "@/lib/db/game-session";
 
 export async function POST() {
   try {
-    const session = await gameSessionDb.end();
-    if (!session) {
+    console.log("API /api/game/end called");
+    const success = await gameSessionDb.closeSession();
+
+    if (!success) {
+      console.log("No session found to close");
       return NextResponse.json(
         {
           success: false,
-          error: "Nie znaleziono sesji do zakończenia",
+          error: "Nie znaleziono sesji do zamknięcia",
         },
         { status: 404 }
       );
     }
 
+    console.log("Session closed successfully");
     return NextResponse.json({
       success: true,
-      data: session,
+      data: null,
       message: "Sesja gry została zamknięta",
     });
   } catch (error) {
-    console.error("Błąd zakończenia gry:", error);
+    console.error("Błąd zamykania sesji gry:", error);
     return NextResponse.json(
       {
         success: false,
-        error: "Błąd zakończenia gry",
+        error: "Błąd zamykania sesji gry",
       },
       { status: 500 }
     );

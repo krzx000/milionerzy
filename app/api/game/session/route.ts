@@ -5,13 +5,19 @@ import { prisma } from "@/lib/db/prisma";
 // GET /api/game/session - pobierz aktualną sesję gry
 export async function GET() {
   try {
-    const session = await gameSessionDb.getCurrent();
+    // Najpierw szukamy aktywnej sesji
+    let session = await gameSessionDb.getCurrent();
+
+    // Jeśli nie ma aktywnej sesji, pobierz ostatnią zakończoną (do wyświetlenia po zakończeniu gry)
+    if (!session) {
+      session = await gameSessionDb.getLastFinished();
+    }
 
     if (!session) {
       return NextResponse.json({
         success: true,
         data: null,
-        message: "Brak aktywnej sesji gry",
+        message: "Brak sesji gry",
       });
     }
 

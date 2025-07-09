@@ -57,11 +57,11 @@ export async function POST(request: NextRequest) {
 
     if (!isCorrect) {
       // Niepoprawna odpowiedź - zakończ grę
-      const endedSession = await gameSessionDb.end();
+      const finishedSession = await gameSessionDb.finishGame(false);
       return NextResponse.json({
         success: true,
         data: {
-          ...endedSession,
+          ...finishedSession,
           correct: false,
           correctAnswer: currentQuestion.correctAnswer,
         },
@@ -74,12 +74,12 @@ export async function POST(request: NextRequest) {
     // Poprawna odpowiedź
     // Sprawdź czy to było ostatnie pytanie (12 pytań = indeksy 0-11, więc ostatnie to indeks 11)
     if (session.currentQuestionIndex >= 11) {
-      // To było ostatnie pytanie - gracz wygrał!
-      const endedSession = await gameSessionDb.end();
+      // To było ostatnie pytanie - gracz wygrał! Zakończ grę
+      const finishedSession = await gameSessionDb.finishGame(true);
       return NextResponse.json({
         success: true,
         data: {
-          ...endedSession,
+          ...finishedSession,
           correct: true,
           gameWon: true,
           correctAnswer: currentQuestion.correctAnswer,

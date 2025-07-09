@@ -18,6 +18,7 @@ interface GameHistoryProps {
   historyLoading: boolean;
   isHistoryVisible: boolean;
   onToggleHistory: () => void;
+  onClearAllSessions?: () => void;
 }
 
 export function GameHistory({
@@ -25,6 +26,7 @@ export function GameHistory({
   historyLoading,
   isHistoryVisible,
   onToggleHistory,
+  onClearAllSessions,
 }: GameHistoryProps) {
   return (
     <Card>
@@ -36,29 +38,42 @@ export function GameHistory({
               Poprzednie sesje gry z wynikami i statystykami
             </CardDescription>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onToggleHistory}
-            className="flex items-center gap-2"
-          >
-            {isHistoryVisible ? "Ukryj historię" : "Pokaż historię"}
-            <svg
-              className={`w-4 h-4 transition-transform ${
-                isHistoryVisible ? "rotate-180" : ""
-              }`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <div className="flex gap-2">
+            {onClearAllSessions && gameHistory.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={onClearAllSessions}
+                disabled={historyLoading}
+                className="flex items-center gap-2"
+              >
+                🗑️ Usuń wszystkie sesje
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onToggleHistory}
+              className="flex items-center gap-2"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </Button>
+              {isHistoryVisible ? "Ukryj historię" : "Pokaż historię"}
+              <svg
+                className={`w-4 h-4 transition-transform ${
+                  isHistoryVisible ? "rotate-180" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </Button>
+          </div>
         </div>
       </CardHeader>
       {isHistoryVisible && (

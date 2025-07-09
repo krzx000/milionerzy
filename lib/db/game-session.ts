@@ -2,7 +2,7 @@ import { prisma } from "./prisma";
 import type { GameSession as PrismaGameSession } from "@prisma/client";
 import { Question } from "@/types/question";
 
-export type GameStatus = "inactive" | "active" | "paused" | "finished";
+export type GameStatus = "inactive" | "active" | "finished";
 
 export interface GameSession {
   id: string;
@@ -50,26 +50,53 @@ function mapPrismaToGameSession(prismaSession: PrismaGameSession): GameSession {
 
 // Helper do zarządzania sesją gry
 export const gameSessionDb = {
-  // Pobierz aktualną sesję (aktywną lub ostatnią zakończoną)
+  // Pobierz aktualną sesję (tylko aktywną)
   getCurrent: async (): Promise<GameSession | null> => {
     try {
-      // Najpierw próbujemy znaleźć aktywną sesję
-      let session = await prisma.gameSession.findFirst({
+      console.log("Getting current game session...");
+
+      // Szukamy tylko aktywnej sesji
+      const session = await prisma.gameSession.findFirst({
         where: { status: "active" },
         orderBy: { updatedAt: "desc" },
       });
 
-      // Jeśli nie ma aktywnej sesji, spróbuj znaleźć ostatnią zakończoną
-      if (!session) {
-        session = await prisma.gameSession.findFirst({
-          where: { status: "finished" },
-          orderBy: { updatedAt: "desc" },
-        });
+      if (session) {
+        console.log(`Found active session: ${session.id}`);
+        return mapPrismaToGameSession(session);
       }
 
-      return session ? mapPrismaToGameSession(session) : null;
+      console.log("No active session found");
+      return null;
     } catch (error) {
       console.error("Error getting current game session:", error);
+      return null;
+    }
+  },
+
+  // Pobierz ostatnią zakończoną sesję (do wyświetlenia po zakończeniu gry)
+  getLastFinished: async (): Promise<GameSession | null> => {
+    try {
+      console.log("Getting last finished game session...");
+
+      // Szukamy tylko sesji zakończonych, ale nie zamkniętych przez admina
+      const session = await prisma.gameSession.findFirst({
+        where: {
+          status: "finished",
+          gameTime: { not: -1 }, // Wykluczamy sesje zamknięte przez admina
+        },
+        orderBy: { updatedAt: "desc" },
+      });
+
+      if (session) {
+        console.log(`Found finished session: ${session.id}`);
+        return mapPrismaToGameSession(session);
+      }
+
+      console.log("No finished session found");
+      return null;
+    } catch (error) {
+      console.error("Error getting last finished game session:", error);
       return null;
     }
   },
@@ -160,9 +187,11 @@ export const gameSessionDb = {
     }
   },
 
-  // Zatrzymaj grę (zmień status na "finished")
-  stopGame: async (): Promise<GameSession | null> => {
+  // Zakończ grę (zmień status na "finished")
+  finishGame: async (isWon: boolean = false): Promise<GameSession | null> => {
     try {
+      console.log("Attempting to finish game session...");
+
       // Szukaj aktywnej sesji
       const session = await prisma.gameSession.findFirst({
         where: { status: "active" },
@@ -170,27 +199,43 @@ export const gameSessionDb = {
       });
 
       if (session) {
-        // Zatrzymaj aktywną sesję (zmień status na "finished")
+        console.log(`Found active session to finish: ${session.id}`);
+
+        // Zakończ aktywną sesję (zmień status na "finished")
         const updatedSession = await prisma.gameSession.update({
           where: { id: session.id },
           data: {
             status: "finished",
             endTime: new Date(),
+            updatedAt: new Date(),
+            // Jeśli gracz wygrał, ustaw currentQuestionIndex na totalQuestions
+            currentQuestionIndex: isWon
+              ? session.totalQuestions
+              : session.currentQuestionIndex,
           },
         });
+
+        console.log(
+          `Gra zakończona: sesja ${session.id} zmieniona na status 'finished'${
+            isWon ? " (WYGRANA)" : ""
+          }`
+        );
         return mapPrismaToGameSession(updatedSession);
       }
 
+      console.log("Nie znaleziono aktywnej sesji do zakończenia");
       return null;
     } catch (error) {
-      console.error("Error stopping game session:", error);
+      console.error("Error finishing game session:", error);
       return null;
     }
   },
 
-  // Zakończ grę (zamknij sesję)
-  end: async (): Promise<GameSession | null> => {
+  // Usuń sesję gry (zamknij sesję) - STARA WERSJA - już nie używana
+  deleteSession: async (): Promise<boolean> => {
     try {
+      console.log("Attempting to delete game session...");
+
       // Znajdź ostatnią zakończoną sesję
       const session = await prisma.gameSession.findFirst({
         where: { status: "finished" },
@@ -198,15 +243,95 @@ export const gameSessionDb = {
       });
 
       if (session) {
-        // Zwróć sesję aby mieć jej ID w API response, ale nie modyfikuj jej
-        // Faktyczne usunięcie odbędzie się w UI (setGameSession(null))
-        return mapPrismaToGameSession(session);
+        console.log(`Found finished session to delete: ${session.id}`);
+
+        // Usuń powiązania z pytaniami
+        await prisma.gameSessionQuestion.deleteMany({
+          where: { gameSessionId: session.id },
+        });
+
+        // Usuń sesję
+        await prisma.gameSession.delete({
+          where: { id: session.id },
+        });
+
+        console.log(`Sesja ${session.id} została usunięta`);
+        return true;
       }
 
-      return null;
+      console.log("No finished session found to delete");
+      return false;
     } catch (error) {
-      console.error("Error ending game session:", error);
-      return null;
+      console.error("Error deleting game session:", error);
+      return false;
+    }
+  },
+
+  // Zamknij sesję (pozostaw w historii) - NOWA WERSJA
+  closeSession: async (): Promise<boolean> => {
+    try {
+      console.log("Attempting to close game session...");
+
+      // Znajdź ostatnią zakończoną sesję
+      const session = await prisma.gameSession.findFirst({
+        where: { status: "finished" },
+        orderBy: { updatedAt: "desc" },
+      });
+
+      if (session) {
+        console.log(`Found finished session to close: ${session.id}`);
+
+        // Oznacz sesję jako zamkniętą przez admina - używamy specjalnej wartości gameTime
+        // (np. -1 oznacza zamknięte przez admina)
+        await prisma.gameSession.update({
+          where: { id: session.id },
+          data: {
+            gameTime: -1, // Specjalna wartość oznaczająca zamknięte przez admina
+            updatedAt: new Date(),
+          },
+        });
+
+        console.log(
+          `Sesja ${session.id} została zamknięta (pozostaje w historii)`
+        );
+        return true;
+      }
+
+      console.log("No finished session found to close");
+      return false;
+    } catch (error) {
+      console.error("Error closing game session:", error);
+      return false;
+    }
+  },
+
+  // Usuń wszystkie sesje z bazy danych (masowe czyszczenie)
+  clearAllSessions: async (): Promise<{
+    success: boolean;
+    deletedCount: number;
+  }> => {
+    try {
+      console.log("Attempting to clear all game sessions...");
+
+      // Policz wszystkie sesje przed usunięciem
+      const totalSessions = await prisma.gameSession.count();
+
+      if (totalSessions === 0) {
+        console.log("No sessions to delete");
+        return { success: true, deletedCount: 0 };
+      }
+
+      // Usuń wszystkie powiązania z pytaniami
+      await prisma.gameSessionQuestion.deleteMany({});
+
+      // Usuń wszystkie sesje
+      const result = await prisma.gameSession.deleteMany({});
+
+      console.log(`Successfully deleted ${result.count} sessions`);
+      return { success: true, deletedCount: result.count };
+    } catch (error) {
+      console.error("Error clearing all game sessions:", error);
+      return { success: false, deletedCount: 0 };
     }
   },
 

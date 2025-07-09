@@ -26,6 +26,7 @@ interface CurrentQuestionDisplayProps {
     gameWon: boolean;
     correctAnswer?: string;
   } | null;
+  gameEndReason: "wrong_answer" | "game_won" | null;
   onSelectAnswer: (answer: string) => void;
   onConfirmAnswer: () => void;
   onCancelAnswer: () => void;
@@ -39,6 +40,7 @@ export function CurrentQuestionDisplay({
   isAnswerRevealed,
   gameLoading,
   lastAnswerResult,
+  gameEndReason,
   onSelectAnswer,
   onConfirmAnswer,
   onCancelAnswer,
@@ -59,9 +61,15 @@ export function CurrentQuestionDisplay({
         </CardTitle>
         <CardDescription>
           {isGameActive
-            ? `Pytanie ${currentQuestionIndex + 1} z ${questionsCount}`
+            ? `Pytanie ${Math.min(
+                currentQuestionIndex + 1,
+                questionsCount
+              )} z ${questionsCount}`
             : isGameEnded
-            ? `Pytanie ${currentQuestionIndex + 1} z ${questionsCount}`
+            ? `Pytanie ${Math.min(
+                currentQuestionIndex + 1,
+                questionsCount
+              )} z ${questionsCount}`
             : "Brak aktywnej gry"}
         </CardDescription>
       </CardHeader>
@@ -199,8 +207,8 @@ export function CurrentQuestionDisplay({
           <div className="text-center text-gray-500 py-8">
             {isGameEnded ? (
               <div className="space-y-4">
-                {/* Sprawdź typ zakończenia gry */}
-                {lastAnswerResult?.correct === false ? (
+                {/* Sprawdź powód zakończenia gry */}
+                {gameEndReason === "wrong_answer" ? (
                   // Przegrana gra
                   <>
                     <div className="text-red-600 font-semibold text-lg">
@@ -221,14 +229,15 @@ export function CurrentQuestionDisplay({
                       Prowadzący może zamknąć sesję.
                     </div>
                   </>
-                ) : lastAnswerResult?.gameWon ? (
-                  // Wygrana gra
+                ) : gameEndReason === "game_won" ||
+                  (gameSession && currentQuestionIndex >= questionsCount) ? (
+                  // Wygrana gra (wykrywana przez gameEndReason lub currentQuestionIndex >= questionsCount)
                   <>
                     <div className="text-green-600 font-semibold text-lg">
                       Gratulacje!
                     </div>
-                    <div className="text-gray-700">
-                      Gracz wygrał wszystkie 12 pytań!
+                    <div className="text-gray-500">
+                      Gracz odpowiedział poprawnie na wszystkie 12 pytań!
                     </div>
                     <div className="p-4 bg-yellow-500/10 border border-yellow-300/80 rounded-lg">
                       <div className="text-sm text-yellow-700 mb-1">
@@ -243,20 +252,20 @@ export function CurrentQuestionDisplay({
                     </div>
                   </>
                 ) : (
-                  // Zatrzymanie gry przez admina
+                  // Fallback dla starych sesji lub nieznanych stanów - ale teraz sprawdzamy czy to nie przegrana
                   <>
-                    <div className="text-blue-600 font-semibold text-lg">
-                      Gra zatrzymana
+                    <div className="text-red-600 font-semibold text-lg">
+                      Gra zakończona
                     </div>
-                    <div className="text-gray-700">
-                      Gra została zatrzymana przez prowadzącego.
-                    </div>
+                    <div className="text-gray-700">Niepoprawna odpowiedź!</div>
                     <div className="p-4 bg-yellow-500/10 border border-yellow-300/80 rounded-lg">
                       <div className="text-sm text-yellow-700 mb-1">
                         Wygrana kwota:
                       </div>
                       <div className="text-2xl font-bold text-yellow-600">
-                        {getCurrentPrize(currentQuestionIndex)}
+                        {currentQuestionIndex === 0
+                          ? "0 zł"
+                          : getCurrentPrize(currentQuestionIndex - 1)}
                       </div>
                     </div>
                     <div className="text-sm text-gray-500">
