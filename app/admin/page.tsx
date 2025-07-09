@@ -60,6 +60,7 @@ export default function Admin() {
     results: Record<string, { count: number; percentage: number }>;
   } | null>(null);
   const [showVoteResults, setShowVoteResults] = React.useState(false);
+  const [isVotingActive, setIsVotingActive] = React.useState(false);
 
   // Computed values
   const isGameActive = gameSession?.status === "active";
@@ -281,6 +282,12 @@ export default function Admin() {
             // Po użyciu koła ratunkowego, ponownie załaduj pełną sesję z pytaniami
             // żeby nie stracić listy pytań (use-lifeline zwraca tylko podstawową sesję)
             await loadGameSession();
+
+            // Jeśli użyto koła "Pytanie do publiczności", ustaw stan głosowania jako aktywne
+            if (lifelineType === "askAudience") {
+              setIsVotingActive(true);
+            }
+
             showGameStatusMessage(`✅ Użyto koła ratunkowego: ${lifelineName}`);
           } else {
             showErrorMessage(response.error || "Błąd użycia koła ratunkowego");
@@ -299,6 +306,7 @@ export default function Admin() {
       showErrorMessage,
       loadGameSession,
       confirm,
+      setIsVotingActive,
     ]
   );
 
@@ -426,6 +434,48 @@ export default function Admin() {
     setIsHistoryVisible(!isHistoryVisible);
   }, [isHistoryVisible]);
 
+  // Funkcja do kończenia głosowania przez admina
+  const handleEndVoting = React.useCallback(async () => {
+    try {
+      const response = await fetch("/api/voting/end", {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        setIsVotingActive(false);
+        showGameStatusMessage("⏹️ Głosowanie zostało zakończone");
+      } else {
+        const error = await response.json();
+        showErrorMessage(error.error || "Błąd kończenia głosowania");
+      }
+    } catch {
+      showErrorMessage("Błąd kończenia głosowania");
+    }
+  }, [showGameStatusMessage, showErrorMessage, setIsVotingActive]);
+
+  // Funkcja do sprawdzania stanu głosowania
+  const checkVotingStatus = React.useCallback(async () => {
+    try {
+      const response = await fetch("/api/voting/current");
+      if (response.ok) {
+        const result = await response.json();
+        // Sprawdź czy w danych jest aktywna sesja głosowania
+        const hasActiveVoting =
+          result?.data &&
+          typeof result.data === "object" &&
+          "isActive" in result.data &&
+          result.data.isActive === true;
+        setIsVotingActive(hasActiveVoting);
+        console.log("Sprawdzanie stanu głosowania:", hasActiveVoting, result);
+      } else {
+        setIsVotingActive(false);
+      }
+    } catch (error) {
+      console.error("Błąd sprawdzania stanu głosowania:", error);
+      setIsVotingActive(false);
+    }
+  }, [setIsVotingActive]);
+
   // Effect do automatycznego przejścia do kolejnego pytania
   React.useEffect(() => {
     if (
@@ -466,7 +516,14 @@ export default function Admin() {
   React.useEffect(() => {
     loadGameSession();
     loadGameHistory();
-  }, [loadGameSession, loadGameHistory]);
+    checkVotingStatus(); // Sprawdź stan głosowania przy inicjalizacji
+  }, [loadGameSession, loadGameHistory, checkVotingStatus]);
+
+  // Regularnie sprawdzaj stan głosowania
+  React.useEffect(() => {
+    const intervalId = setInterval(checkVotingStatus, 2000); // Sprawdzaj co 2 sekundy
+    return () => clearInterval(intervalId);
+  }, [checkVotingStatus]);
 
   return (
     <div className="flex flex-col items-center justify-center">
@@ -501,7 +558,9 @@ export default function Admin() {
             onEndGame={handleEndGame}
             onUseLifeline={handleUseLifeline}
             onShowVoteResults={handleShowVoteResults}
+            onEndVoting={handleEndVoting}
             hasVoteResults={hasVoteResultsForCurrentQuestion}
+            isVotingActive={isVotingActive}
           />
         </section>
 

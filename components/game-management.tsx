@@ -23,7 +23,9 @@ interface GameManagementProps {
     lifelineType: keyof typeof GAME_CONSTANTS.LIFELINE_NAMES
   ) => void;
   onShowVoteResults?: () => void;
+  onEndVoting?: () => void; // Nowy prop - funkcja do kończenia głosowania
   hasVoteResults?: boolean; // Nowy prop - czy są dostępne wyniki głosowania
+  isVotingActive?: boolean; // Nowy prop - czy głosowanie jest aktywne
 }
 
 export function GameManagement({
@@ -34,7 +36,9 @@ export function GameManagement({
   onEndGame,
   onUseLifeline,
   onShowVoteResults,
+  onEndVoting,
   hasVoteResults = false,
+  isVotingActive = false,
 }: GameManagementProps) {
   const isGameActive = gameSession?.status === "active";
   const isGameEnded = gameSession?.status === "finished";
@@ -103,6 +107,18 @@ export function GameManagement({
           </div>
         )}
 
+        {/* Debug info - usuń w produkcji */}
+        {process.env.NODE_ENV === "development" && (
+          <div className="space-y-2">
+            <div className="text-xs text-gray-500">
+              Debug: isVotingActive = {isVotingActive ? "true" : "false"}
+            </div>
+            <div className="text-xs text-gray-500">
+              onEndVoting = {onEndVoting ? "provided" : "not provided"}
+            </div>
+          </div>
+        )}
+
         {/* Koła ratunkowe - pokazuj tylko gdy gra jest aktywna i nie jest zakończona */}
         {isGameActive && !isGameEnded && (
           <div className="space-y-2">
@@ -136,6 +152,7 @@ export function GameManagement({
               )}
             </div>
 
+            {/* Przyciski związane z głosowaniem */}
             {/* Przycisk do pokazywania wyników głosowania - dostępny gdy były głosy na to pytanie */}
             {onShowVoteResults && hasVoteResults && (
               <Button
@@ -144,6 +161,17 @@ export function GameManagement({
                 className="w-full"
               >
                 📊 Pokaż wyniki głosowania
+              </Button>
+            )}
+
+            {/* Przycisk do kończenia aktywnego głosowania */}
+            {onEndVoting && isVotingActive && (
+              <Button
+                onClick={onEndVoting}
+                variant="destructive"
+                className="w-full"
+              >
+                ⏹️ Zakończ głosowanie
               </Button>
             )}
           </div>
