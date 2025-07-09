@@ -28,7 +28,8 @@ export const GAME_CONSTANTS = {
   GAME_STATUS_STYLES: {
     active:
       "bg-green-600/20 border border-green-600/40 dark:text-green-200 text-green-700",
-    finished: "bg-red-600/20 border border-red-600/40 dark:text-red-300",
+    finished:
+      "bg-red-600/20 border border-red-600/40 text-red-700 dark:text-red-300",
     inactive:
       "bg-gray-400/15 border dark:border-gray-600/60 border-gray-600/20 dark:text-gray-300 text-gray-600",
   },
