@@ -186,7 +186,15 @@ export function GameHistory({
                       </span>
                     </div>
                     <div className="p-3 transition-colors duration-150">
-                      <span className="font-medium text-green-600">
+                      <span
+                        className={`font-medium ${
+                          session.gameWon
+                            ? "text-green-600"
+                            : session.currentQuestionIndex > 0
+                            ? "text-orange-600"
+                            : "text-red-600"
+                        }`}
+                      >
                         {session.winnings}
                       </span>
                     </div>

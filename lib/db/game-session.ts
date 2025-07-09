@@ -16,6 +16,8 @@ export interface GameSession {
     phoneAFriend: boolean;
     askAudience: boolean;
   };
+  // Informacje o ukrytych odpowiedziach dla 50:50 (dla każdego pytania)
+  hiddenAnswers: Record<number, string[]>; // numer pytania -> array ukrytych odpowiedzi (np. ["A", "C"])
   totalQuestions: number;
   createdAt: Date;
   updatedAt: Date;
@@ -30,6 +32,14 @@ export interface GameSessionWithQuestions extends GameSession {
 
 // Helper do konwersji modelu Prisma na interfejs GameSession
 function mapPrismaToGameSession(prismaSession: PrismaGameSession): GameSession {
+  let hiddenAnswers: Record<number, string[]> = {};
+  try {
+    hiddenAnswers = JSON.parse(prismaSession.hiddenAnswers || "{}");
+  } catch (error) {
+    console.error("Error parsing hiddenAnswers:", error);
+    hiddenAnswers = {};
+  }
+
   return {
     id: prismaSession.id,
     status: prismaSession.status as GameStatus,
@@ -42,6 +52,7 @@ function mapPrismaToGameSession(prismaSession: PrismaGameSession): GameSession {
       phoneAFriend: prismaSession.usedPhoneAFriend,
       askAudience: prismaSession.usedAskAudience,
     },
+    hiddenAnswers,
     totalQuestions: prismaSession.totalQuestions,
     createdAt: prismaSession.createdAt,
     updatedAt: prismaSession.updatedAt,
@@ -136,6 +147,7 @@ export const gameSessionDb = {
           usedFiftyFifty: false,
           usedPhoneAFriend: false,
           usedAskAudience: false,
+          hiddenAnswers: "{}",
         },
       });
 
@@ -164,6 +176,7 @@ export const gameSessionDb = {
           usedFiftyFifty: false,
           usedPhoneAFriend: false,
           usedAskAudience: false,
+          hiddenAnswers: "{}",
         },
       });
 
@@ -415,11 +428,67 @@ export const gameSessionDb = {
       const fieldToUpdate = lifelineFields[lifeline];
       if (!fieldToUpdate) return null;
 
+      const updateData: Record<string, boolean | string> = {
+        [fieldToUpdate]: true,
+      };
+
+      // Specjalna logika dla 50:50 - losuj ukryte odpowiedzi
+      if (lifeline === "fiftyFifty") {
+        // Pobierz aktualne pytanie
+        const sessionQuestions = await prisma.gameSessionQuestion.findMany({
+          where: { gameSessionId: activeSession.id },
+          orderBy: { order: "asc" },
+          include: { question: true },
+        });
+
+        const currentQuestion =
+          sessionQuestions[activeSession.currentQuestionIndex]?.question;
+
+        if (currentQuestion) {
+          // Znajdź poprawną odpowiedź
+          const correctAnswer = currentQuestion.correctAnswer;
+
+          // Lista wszystkich odpowiedzi
+          const allAnswers = ["A", "B", "C", "D"];
+
+          // Odpowiedzi do ukrycia (wszystkie oprócz poprawnej)
+          const incorrectAnswers = allAnswers.filter(
+            (answer) => answer !== correctAnswer
+          );
+
+          // Losowo wybierz 2 niepoprawne odpowiedzi do ukrycia
+          const shuffled = incorrectAnswers.sort(() => 0.5 - Math.random());
+          const hiddenAnswersForQuestion = shuffled.slice(0, 2);
+
+          console.log(
+            `50:50 dla pytania ${
+              activeSession.currentQuestionIndex
+            }: ukrywam odpowiedzi ${hiddenAnswersForQuestion.join(
+              ", "
+            )}, poprawna: ${correctAnswer}`
+          );
+
+          // Pobierz obecne ukryte odpowiedzi i dodaj nowe
+          let hiddenAnswers: Record<number, string[]> = {};
+          try {
+            hiddenAnswers = JSON.parse(activeSession.hiddenAnswers || "{}");
+          } catch (error) {
+            console.error("Error parsing existing hiddenAnswers:", error);
+            hiddenAnswers = {};
+          }
+
+          // Dodaj ukryte odpowiedzi dla obecnego pytania
+          hiddenAnswers[activeSession.currentQuestionIndex] =
+            hiddenAnswersForQuestion;
+
+          // Zaktualizuj dane do zapisu
+          updateData.hiddenAnswers = JSON.stringify(hiddenAnswers);
+        }
+      }
+
       const updatedSession = await prisma.gameSession.update({
         where: { id: activeSession.id },
-        data: {
-          [fieldToUpdate]: true,
-        },
+        data: updateData,
       });
 
       return mapPrismaToGameSession(updatedSession);

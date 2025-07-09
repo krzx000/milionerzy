@@ -36,6 +36,7 @@ model GameSession {
   usedFiftyFifty        Boolean  @default(false)
   usedPhoneAFriend      Boolean  @default(false)
   usedAskAudience       Boolean  @default(false)
+  hiddenAnswers         String   @default("{}") // JSON string z ukrytymi odpowiedziami dla 50:50
   totalQuestions        Int      @default(0)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt

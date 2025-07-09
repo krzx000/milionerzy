@@ -12,10 +12,22 @@ export function getCurrentPrize(questionIndex: number): string {
 }
 
 /**
- * Zwraca nagrodę, którą gracz wygrywa po zatrzymaniu gry
+ * Zwraca nagrodę, którą gracz wygrywa po zakończeniu gry
  */
-export function getWinningPrize(questionIndex: number): string {
-  // Po zatrzymaniu gry, gracz wygrywa kwotę za aktualne pytanie (na którym się zatrzymał)
-  // nie za ostatnie poprawnie odpowiedziane pytanie
-  return getCurrentPrize(questionIndex);
+export function getWinningPrize(
+  questionIndex: number,
+  totalQuestions: number
+): string {
+  // Sprawdź czy gracz wygrał całą grę
+  if (questionIndex >= totalQuestions) {
+    return "1 000 000 zł";
+  }
+
+  // Jeśli przegrał, gracz wygrywa kwotę za poprzednie pytanie (gwarantowaną)
+  if (questionIndex > 0) {
+    return getCurrentPrize(questionIndex - 1);
+  }
+
+  // Jeśli przegrał na pierwszym pytaniu, wygrywa 0 zł
+  return "0 zł";
 }

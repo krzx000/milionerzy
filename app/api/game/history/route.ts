@@ -61,6 +61,7 @@ export async function GET(request: Request) {
           const winningIndex = session.currentQuestionIndex - 1;
           winnings = prizes[winningIndex] || "0 zł";
         }
+        // Jeśli currentQuestionIndex === 0, zostaje "0 zł"
       }
 
       // Zlicz użyte koła ratunkowe

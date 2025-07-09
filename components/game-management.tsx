@@ -93,7 +93,7 @@ export function GameManagement({
             </div>
             <div className=" text-center bg-yellow-500/10 border border-yellow-300/80 dark:border-yellow-200/30 text-yellow-600 dark:text-yellow-200 py-2 rounded-md">
               {isGameEnded
-                ? getWinningPrize(currentQuestionIndex)
+                ? getWinningPrize(currentQuestionIndex, questionsCount)
                 : getCurrentPrize(currentQuestionIndex)}
             </div>
           </div>
@@ -150,11 +150,8 @@ export function GameManagement({
             </Button>
           ) : isGameActive ? (
             <div className="space-y-2">
-              <div className="text-xs text-center p-2 bg-blue-50 text-blue-700 rounded border">
+              <div className="text-xs text-center p-2 dark:bg-blue-50/30 dark:border-blue-50/40 dark:text-blue-300 bg-blue-50 text-blue-500 rounded-md border">
                 Gra w toku. Sesję można zamknąć dopiero po jej zakończeniu.
-              </div>
-              <div className="text-xs text-gray-500 text-center">
-                Gracz wygrywa: {getWinningPrize(currentQuestionIndex)}
               </div>
             </div>
           ) : (

@@ -101,6 +101,11 @@ export function CurrentQuestionDisplay({
                   lastAnswerResult &&
                   key !== lastAnswerResult.correctAnswer;
 
+                // Sprawdź czy ta odpowiedź jest ukryta przez 50:50
+                const hiddenAnswersForCurrentQuestion =
+                  gameSession?.hiddenAnswers?.[currentQuestionIndex] || [];
+                const isHidden = hiddenAnswersForCurrentQuestion.includes(key);
+
                 let variant:
                   | "default"
                   | "secondary"
@@ -109,7 +114,12 @@ export function CurrentQuestionDisplay({
                 let className =
                   "justify-start text-left h-auto py-3 px-4 whitespace-normal break-words min-h-[3rem]";
 
-                if (isCorrect) {
+                if (isHidden) {
+                  // Odpowiedź ukryta przez 50:50
+                  variant = "secondary";
+                  className +=
+                    " opacity-30 bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed";
+                } else if (isCorrect) {
                   variant = "default";
                   className +=
                     " bg-green-100 border-green-500 text-green-800 hover:bg-green-100";
@@ -131,16 +141,18 @@ export function CurrentQuestionDisplay({
                       gameLoading ||
                       isAnswerRevealed ||
                       isGameEnded ||
-                      lastAnswerResult?.gameWon
+                      lastAnswerResult?.gameWon ||
+                      isHidden
                     }
-                    onClick={() => onSelectAnswer(key)}
+                    onClick={() => !isHidden && onSelectAnswer(key)}
                   >
                     <span className="font-bold mr-3 flex-shrink-0">{key}:</span>
                     <span className="flex-1 break-words leading-relaxed">
-                      {value}
+                      {isHidden ? "••••••••" : value}
                     </span>
                     {isCorrect && <span className="ml-2 flex-shrink-0">✓</span>}
                     {isWrong && <span className="ml-2 flex-shrink-0">✗</span>}
+                    {isHidden && <span className="ml-2 flex-shrink-0">⚖️</span>}
                   </Button>
                 );
               })}

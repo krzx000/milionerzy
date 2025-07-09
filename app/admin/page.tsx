@@ -246,7 +246,9 @@ export default function Admin() {
       const response = await GameAPI.activateLifeline(lifelineType);
 
       if (response.success && response.data) {
-        setGameSession(response.data);
+        // Po użyciu koła ratunkowego, ponownie załaduj pełną sesję z pytaniami
+        // żeby nie stracić listy pytań (use-lifeline zwraca tylko podstawową sesję)
+        await loadGameSession();
         showGameStatusMessage(
           `Użyto koła ratunkowego: ${GAME_CONSTANTS.LIFELINE_NAMES[lifelineType]}`
         );
@@ -255,7 +257,13 @@ export default function Admin() {
       }
       setGameLoading(false);
     },
-    [gameSession, usedLifelines, showGameStatusMessage, showErrorMessage]
+    [
+      gameSession,
+      usedLifelines,
+      showGameStatusMessage,
+      showErrorMessage,
+      loadGameSession,
+    ]
   );
 
   const handleSelectAnswer = React.useCallback(
