@@ -30,6 +30,9 @@ interface ViewerState {
   selectedAnswer: string | null;
   correctAnswer: string | null;
   isAnswerRevealed: boolean;
+  gameEnded: boolean;
+  gameWon: boolean;
+  finalAmount: number;
 }
 
 export default function VotePage() {
@@ -44,6 +47,9 @@ export default function VotePage() {
     selectedAnswer: null,
     correctAnswer: null,
     isAnswerRevealed: false,
+    gameEnded: false,
+    gameWon: false,
+    finalAmount: 0,
   });
 
   const [isLoading, setIsLoading] = React.useState(true);
@@ -130,6 +136,9 @@ export default function VotePage() {
           selectedAnswer: null,
           correctAnswer: null,
           isAnswerRevealed: false,
+          gameEnded: false,
+          gameWon: false,
+          finalAmount: 0,
         });
       }
     } catch (error) {
@@ -179,10 +188,17 @@ export default function VotePage() {
             selectedAnswer: null,
             correctAnswer: null,
             isAnswerRevealed: false,
+            gameEnded: false,
           }));
           setTimeout(() => loadCurrentState(), 200);
           break;
         case "game-ended":
+          const endGameWon = data.gameWon as boolean;
+          const endFinalAmount = data.finalAmount as number;
+          console.log("🏁 SSE: Gra zakończona:", {
+            gameWon: endGameWon,
+            finalAmount: endFinalAmount,
+          });
           setViewerState((prev) => ({
             ...prev,
             voteSession: null,
@@ -191,8 +207,10 @@ export default function VotePage() {
             selectedAnswer: null,
             correctAnswer: null,
             isAnswerRevealed: false,
+            gameEnded: true,
+            gameWon: endGameWon,
+            finalAmount: endFinalAmount || 0,
           }));
-          loadCurrentState();
           break;
         case "vote-stats-updated":
           loadVoteStats();
@@ -350,6 +368,7 @@ export default function VotePage() {
         selectedAnswer: null,
         correctAnswer: null,
         isAnswerRevealed: false,
+        gameEnded: false,
       }));
     }
 
@@ -660,7 +679,7 @@ export default function VotePage() {
                         "bg-teal-600",
                       ];
 
-                      let cardClass = `flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                      let cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 overflow-hidden ${
                         canVoteForThis && !isHidden
                           ? "bg-gray-50 border-gray-200 hover:border-gray-300 active:scale-95"
                           : isHidden
@@ -669,18 +688,18 @@ export default function VotePage() {
                       }`;
 
                       if (isSelected) {
-                        cardClass = `flex items-center justify-between p-3 rounded-xl border-2 bg-blue-50 border-blue-400`;
+                        cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 bg-blue-50 border-blue-400 overflow-hidden`;
                       }
 
                       if (isAdminSelected && !isRevealed) {
-                        cardClass = `flex items-center justify-between p-3 rounded-xl border-2 bg-yellow-50 border-yellow-400`;
+                        cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 bg-yellow-50 border-yellow-400 overflow-hidden`;
                       }
 
                       if (isRevealed) {
                         if (isCorrectAnswer) {
-                          cardClass = `flex items-center justify-between p-3 rounded-xl border-2 bg-green-50 border-green-400`;
+                          cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 bg-green-50 border-green-400 overflow-hidden`;
                         } else if (isAdminSelected) {
-                          cardClass = `flex items-center justify-between p-3 rounded-xl border-2 bg-red-50 border-red-400`;
+                          cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 bg-red-50 border-red-400 overflow-hidden`;
                         }
                       }
 
@@ -694,7 +713,7 @@ export default function VotePage() {
                         >
                           {viewerState.showResults && !isHidden && (
                             <div
-                              className="absolute inset-0 bg-blue-100 rounded-xl opacity-30"
+                              className="absolute inset-0 bg-blue-200 rounded-xl opacity-60 transition-all duration-500"
                               style={{ width: `${votePercentage}%` }}
                             />
                           )}
@@ -711,7 +730,9 @@ export default function VotePage() {
                               <span className="text-lg animate-bounce">👆</span>
                             )}
                             {isRevealed && isCorrectAnswer && (
-                              <span className="text-lg">✅</span>
+                              <span className="text-lg overflow-hidden">
+                                ✅
+                              </span>
                             )}
                             {isRevealed &&
                               isAdminSelected &&
@@ -882,17 +903,94 @@ export default function VotePage() {
           </div>
         )}
 
+        {/* Ekran zakończenia gry */}
+        {viewerState.gameEnded && (
+          <div className="px-4 pb-6">
+            <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+              <CardContent className="text-center py-8">
+                <div
+                  className={`w-20 h-20 mx-auto mb-6 rounded-3xl flex items-center justify-center ${
+                    viewerState.gameWon ? "bg-green-100" : "bg-red-100"
+                  }`}
+                >
+                  <span className="text-4xl">
+                    {viewerState.gameWon ? "🎉" : "💔"}
+                  </span>
+                </div>
+
+                <h2
+                  className={`text-2xl font-bold mb-4 ${
+                    viewerState.gameWon ? "text-green-700" : "text-red-700"
+                  }`}
+                >
+                  {viewerState.gameWon ? "🏆 WYGRAŁ!" : "😢 PRZEGRAŁ"}
+                </h2>
+
+                <div
+                  className={`rounded-2xl p-4 mb-6 ${
+                    viewerState.gameWon
+                      ? "bg-green-50 border border-green-200"
+                      : "bg-red-50 border border-red-200"
+                  }`}
+                >
+                  <p className="text-lg font-semibold text-gray-800 mb-2">
+                    Końcowa kwota:
+                  </p>
+                  <p
+                    className={`text-3xl font-bold ${
+                      viewerState.gameWon ? "text-green-700" : "text-red-700"
+                    }`}
+                  >
+                    {viewerState.finalAmount.toLocaleString("pl-PL")} zł
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  {viewerState.gameWon ? (
+                    <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+                      <p className="text-lg font-semibold text-gray-800 mb-2">
+                        🎊 Gratulacje!
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Uczestnik odpowiedział na wszystkie pytania poprawnie i
+                        zdobył główną nagrodę!
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                      <p className="text-lg font-semibold text-gray-800 mb-2">
+                        😔 Niestety...
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Uczestnik udzielił błędnej odpowiedzi. Gra zakończona.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                    <p className="text-sm font-medium text-gray-700">
+                      💫 Dziękujemy za udział w głosowaniu publiczności!
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Brak aktywnej gry */}
         {(!viewerState.gameState &&
           !viewerState.voteSession &&
           !viewerState.showResults &&
+          !viewerState.gameEnded &&
           !isLoading) ||
         (!isLoading &&
           !viewerState.gameState?.currentQuestion &&
           !viewerState.voteSession?.question &&
           !viewerState.stats &&
           !viewerState.canVote &&
-          !viewerState.showResults) ? (
+          !viewerState.showResults &&
+          !viewerState.gameEnded) ? (
           <div className="px-4 pb-6">
             <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
               <CardContent className="text-center py-6">
@@ -921,130 +1019,132 @@ export default function VotePage() {
       </div>
 
       {/* Fixed Footer Bar */}
-      {(viewerState.gameState || viewerState.voteSession) && (
-        <div className="fixed bottom-2 left-2 right-2 z-10">
-          <div className="max-w-md mx-auto">
-            <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-2xl shadow-xl px-4 py-3">
-              <div className="flex items-center justify-between">
-                {/* Progres pytań */}
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 bg-blue-100 rounded-md flex items-center justify-center">
-                    <span className="text-xs font-semibold text-blue-600">
-                      #
-                    </span>
-                  </div>
-                  <div className="text-xs">
-                    <span className="font-semibold text-gray-800">
-                      {(viewerState.gameState?.gameSession
-                        ?.currentQuestionIndex ?? 0) + 1}
-                    </span>
-                    <span className="text-gray-500 mx-1">/</span>
-                    <span className="text-gray-600">
-                      {viewerState.gameState?.gameSession?.totalQuestions || 12}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Progres bar */}
-                <div className="flex-1 mx-3">
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-blue-500 transition-all duration-300"
-                      style={{
-                        width: `${
-                          (((viewerState.gameState?.gameSession
-                            ?.currentQuestionIndex ?? 0) +
-                            1) /
-                            (viewerState.gameState?.gameSession
-                              ?.totalQuestions || 12)) *
-                          100
-                        }%`,
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Koła ratunkowe - kompaktowy widok */}
-                <div className="flex items-center gap-1">
-                  {/* 50:50 */}
-                  <div className="relative">
-                    <div
-                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-                        viewerState.gameState?.gameSession?.usedLifelines
-                          .fiftyFifty
-                          ? "bg-gray-300 text-gray-500 border border-gray-400"
-                          : "bg-blue-600 text-white"
-                      }`}
-                    >
-                      ½
+      {(viewerState.gameState || viewerState.voteSession) &&
+        !viewerState.gameEnded && (
+          <div className="fixed bottom-2 left-2 right-2 z-10">
+            <div className="max-w-md mx-auto">
+              <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-2xl shadow-xl px-4 py-3">
+                <div className="flex items-center justify-between">
+                  {/* Progres pytań */}
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 bg-blue-100 rounded-md flex items-center justify-center">
+                      <span className="text-xs font-semibold text-blue-600">
+                        #
+                      </span>
                     </div>
-                    {viewerState.gameState?.gameSession?.usedLifelines
-                      .fiftyFifty && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-8 h-0.5 bg-red-600 rotate-45 rounded-full shadow-sm"></div>
-                      </div>
-                    )}
+                    <div className="text-xs">
+                      <span className="font-semibold text-gray-800">
+                        {(viewerState.gameState?.gameSession
+                          ?.currentQuestionIndex ?? 0) + 1}
+                      </span>
+                      <span className="text-gray-500 mx-1">/</span>
+                      <span className="text-gray-600">
+                        {viewerState.gameState?.gameSession?.totalQuestions ||
+                          12}
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Telefon */}
-                  <div className="relative">
-                    <div
-                      className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        viewerState.gameState?.gameSession?.usedLifelines
-                          .phoneAFriend
-                          ? "bg-gray-300 border border-gray-400"
-                          : "bg-orange-500"
-                      }`}
-                    >
-                      <Phone
-                        className={`w-2.5 h-2.5 ${
+                  {/* Progres bar */}
+                  <div className="flex-1 mx-3">
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-blue-500 transition-all duration-300"
+                        style={{
+                          width: `${
+                            (((viewerState.gameState?.gameSession
+                              ?.currentQuestionIndex ?? 0) +
+                              1) /
+                              (viewerState.gameState?.gameSession
+                                ?.totalQuestions || 12)) *
+                            100
+                          }%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Koła ratunkowe - kompaktowy widok */}
+                  <div className="flex items-center gap-1">
+                    {/* 50:50 */}
+                    <div className="relative">
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
+                          viewerState.gameState?.gameSession?.usedLifelines
+                            .fiftyFifty
+                            ? "bg-gray-300 text-gray-500 border border-gray-400"
+                            : "bg-blue-600 text-white"
+                        }`}
+                      >
+                        ½
+                      </div>
+                      {viewerState.gameState?.gameSession?.usedLifelines
+                        .fiftyFifty && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-8 h-0.5 bg-red-600 rotate-45 rounded-full shadow-sm"></div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Telefon */}
+                    <div className="relative">
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center ${
                           viewerState.gameState?.gameSession?.usedLifelines
                             .phoneAFriend
-                            ? "text-gray-500"
-                            : "text-white"
+                            ? "bg-gray-300 border border-gray-400"
+                            : "bg-orange-500"
                         }`}
-                      />
-                    </div>
-                    {viewerState.gameState?.gameSession?.usedLifelines
-                      .phoneAFriend && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-8 h-0.5 bg-red-600 rotate-45 rounded-full shadow-sm"></div>
+                      >
+                        <Phone
+                          className={`w-2.5 h-2.5 ${
+                            viewerState.gameState?.gameSession?.usedLifelines
+                              .phoneAFriend
+                              ? "text-gray-500"
+                              : "text-white"
+                          }`}
+                        />
                       </div>
-                    )}
-                  </div>
+                      {viewerState.gameState?.gameSession?.usedLifelines
+                        .phoneAFriend && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-8 h-0.5 bg-red-600 rotate-45 rounded-full shadow-sm"></div>
+                        </div>
+                      )}
+                    </div>
 
-                  {/* Publiczność */}
-                  <div className="relative">
-                    <div
-                      className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        viewerState.gameState?.gameSession?.usedLifelines
-                          .askAudience
-                          ? "bg-gray-300 border border-gray-400"
-                          : "bg-purple-600"
-                      }`}
-                    >
-                      <UserCheck
-                        className={`w-2.5 h-2.5 ${
+                    {/* Publiczność */}
+                    <div className="relative">
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center ${
                           viewerState.gameState?.gameSession?.usedLifelines
                             .askAudience
-                            ? "text-gray-500"
-                            : "text-white"
+                            ? "bg-gray-300 border border-gray-400"
+                            : "bg-purple-600"
                         }`}
-                      />
-                    </div>
-                    {viewerState.gameState?.gameSession?.usedLifelines
-                      .askAudience && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-8 h-0.5 bg-red-600 rotate-45 rounded-full shadow-sm"></div>
+                      >
+                        <UserCheck
+                          className={`w-2.5 h-2.5 ${
+                            viewerState.gameState?.gameSession?.usedLifelines
+                              .askAudience
+                              ? "text-gray-500"
+                              : "text-white"
+                          }`}
+                        />
                       </div>
-                    )}
+                      {viewerState.gameState?.gameSession?.usedLifelines
+                        .askAudience && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-8 h-0.5 bg-red-600 rotate-45 rounded-full shadow-sm"></div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }
