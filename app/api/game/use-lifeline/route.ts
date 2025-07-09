@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { gameSessionDb } from "@/lib/db/game-session";
+import { startVotingSession } from "../../voting/start/route";
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,6 +49,25 @@ export async function POST(request: NextRequest) {
         },
         { status: 404 }
       );
+    }
+
+    // Jeśli użyto koła "pytanie do publiczności", automatycznie uruchom głosowanie
+    if (lifeline === "askAudience") {
+      try {
+        // Uruchom sesję głosowania bezpośrednio
+        const voteResult = await startVotingSession(session.id);
+
+        if (voteResult.success) {
+          console.log("Głosowanie zostało automatycznie uruchomione");
+        } else {
+          console.error(
+            "Nie udało się uruchomić głosowania:",
+            voteResult.error
+          );
+        }
+      } catch (error) {
+        console.error("Błąd uruchamiania głosowania:", error);
+      }
     }
 
     // Mapowanie nazw kół ratunkowych na przyjazne nazwy

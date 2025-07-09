@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { gameSessionDb } from "@/lib/db/game-session";
+import { clearVotingSession } from "../../voting/start/route";
 
 export async function POST() {
   try {
@@ -13,6 +14,9 @@ export async function POST() {
         { status: 404 }
       );
     }
+
+    // Wyczyść sesję głosowania przy przejściu do kolejnego pytania
+    clearVotingSession();
 
     return NextResponse.json({
       success: true,

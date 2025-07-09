@@ -22,6 +22,8 @@ interface GameManagementProps {
   onUseLifeline: (
     lifelineType: keyof typeof GAME_CONSTANTS.LIFELINE_NAMES
   ) => void;
+  onShowVoteResults?: () => void;
+  hasVoteResults?: boolean; // Nowy prop - czy są dostępne wyniki głosowania
 }
 
 export function GameManagement({
@@ -31,6 +33,8 @@ export function GameManagement({
   onStartGame,
   onEndGame,
   onUseLifeline,
+  onShowVoteResults,
+  hasVoteResults = false,
 }: GameManagementProps) {
   const isGameActive = gameSession?.status === "active";
   const isGameEnded = gameSession?.status === "finished";
@@ -131,6 +135,17 @@ export function GameManagement({
                 }
               )}
             </div>
+
+            {/* Przycisk do pokazywania wyników głosowania - dostępny gdy były głosy na to pytanie */}
+            {onShowVoteResults && hasVoteResults && (
+              <Button
+                onClick={onShowVoteResults}
+                variant="outline"
+                className="w-full"
+              >
+                📊 Pokaż wyniki głosowania
+              </Button>
+            )}
           </div>
         )}
 

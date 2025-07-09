@@ -13,6 +13,14 @@ import { GameSessionWithQuestions } from "@/lib/db/game-session";
 import { toast } from "sonner";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { GAME_CONSTANTS } from "@/lib/constants/game";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 
 export default function Admin() {
   const { confirm, dialog } = useConfirmDialog();
@@ -46,6 +54,13 @@ export default function Admin() {
     "wrong_answer" | "game_won" | null
   >(null);
 
+  // Stan głosowania
+  const [voteResults, setVoteResults] = React.useState<{
+    totalVotes: number;
+    results: Record<string, { count: number; percentage: number }>;
+  } | null>(null);
+  const [showVoteResults, setShowVoteResults] = React.useState(false);
+
   // Computed values
   const isGameActive = gameSession?.status === "active";
   const isGameEnded = gameSession?.status === "finished";
@@ -59,6 +74,12 @@ export default function Admin() {
       },
     [gameSession?.usedLifelines]
   );
+
+  // Sprawdź czy dla aktualnego pytania było głosowanie publiczności
+  const hasVoteResultsForCurrentQuestion = React.useMemo(() => {
+    if (!gameSession?.audienceVoteQuestions) return false;
+    return gameSession.audienceVoteQuestions.includes(currentQuestionIndex);
+  }, [gameSession?.audienceVoteQuestions, currentQuestionIndex]);
 
   // Pobierz aktualne pytanie - używaj pytań z sesji jeśli dostępne, inaczej z globalnej listy
   const currentQuestion = React.useMemo(() => {
@@ -380,6 +401,27 @@ export default function Admin() {
     setSelectedAnswer(null);
   }, []);
 
+  // Funkcja do pobierania wyników głosowania
+  const handleShowVoteResults = React.useCallback(async () => {
+    try {
+      const response = await fetch("/api/voting/stats");
+      if (response.ok) {
+        const stats = await response.json();
+        if (stats.totalVotes > 0) {
+          setVoteResults(stats);
+          setShowVoteResults(true);
+          showGameStatusMessage("📊 Pobrano wyniki głosowania");
+        } else {
+          showErrorMessage("Brak wyników głosowania do wyświetlenia");
+        }
+      } else {
+        showErrorMessage("Brak dostępnych wyników głosowania");
+      }
+    } catch {
+      showErrorMessage("Błąd pobierania wyników głosowania");
+    }
+  }, [showGameStatusMessage, showErrorMessage]);
+
   const handleToggleHistory = React.useCallback(() => {
     setIsHistoryVisible(!isHistoryVisible);
   }, [isHistoryVisible]);
@@ -458,6 +500,8 @@ export default function Admin() {
             onStartGame={handleStartGame}
             onEndGame={handleEndGame}
             onUseLifeline={handleUseLifeline}
+            onShowVoteResults={handleShowVoteResults}
+            hasVoteResults={hasVoteResultsForCurrentQuestion}
           />
         </section>
 
@@ -478,6 +522,82 @@ export default function Admin() {
           />
         </section>
       </div>
+
+      {/* Wyniki głosowania */}
+      <Dialog open={showVoteResults} onOpenChange={setShowVoteResults}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              📊 Wyniki głosowania publiczności
+            </DialogTitle>
+          </DialogHeader>
+
+          {voteResults && (
+            <div className="space-y-6">
+              {/* Łączna liczba głosów */}
+              <div className="text-center bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 p-4 rounded-lg">
+                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                  {voteResults.totalVotes}
+                </p>
+                <p className="text-lg text-gray-600 dark:text-gray-300">
+                  Łącznie głosów
+                </p>
+              </div>
+
+              {/* Wyniki dla każdej opcji */}
+              <div className="space-y-4">
+                {Object.entries(voteResults.results)
+                  .sort(([, a], [, b]) => b.percentage - a.percentage)
+                  .map(([option, result]) => (
+                    <div
+                      key={option}
+                      className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg"
+                    >
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xl font-bold">
+                          Odpowiedź {option}.
+                        </span>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                            {result.percentage}%
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {result.count} głosów
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Progress bar */}
+                      <div className="relative">
+                        <Progress
+                          value={result.percentage}
+                          className="h-3 bg-gray-200 dark:bg-gray-700"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-xs font-medium text-white mix-blend-difference">
+                            {result.percentage > 5
+                              ? `${result.percentage}%`
+                              : ""}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+
+              {/* Przycisk zamknij */}
+              <div className="flex justify-center pt-4">
+                <Button
+                  onClick={() => setShowVoteResults(false)}
+                  className="px-8 py-2 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Zamknij wyniki
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Historia sesji gry */}
       <div className="w-full p-4 pt-0">

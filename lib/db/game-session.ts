@@ -4,6 +4,12 @@ import { Question } from "@/types/question";
 
 export type GameStatus = "inactive" | "active" | "finished";
 
+// Rozszerzenie typu Prisma o nowe pole (dla kompatybilności wstecznej)
+interface ExtendedPrismaGameSession
+  extends Omit<PrismaGameSession, "audienceVoteQuestions"> {
+  audienceVoteQuestions: string;
+}
+
 export interface GameSession {
   id: string;
   status: GameStatus;
@@ -18,6 +24,8 @@ export interface GameSession {
   };
   // Informacje o ukrytych odpowiedziach dla 50:50 (dla każdego pytania)
   hiddenAnswers: Record<number, string[]>; // numer pytania -> array ukrytych odpowiedzi (np. ["A", "C"])
+  // Informacje o pytaniach, dla których było głosowanie publiczności
+  audienceVoteQuestions: number[]; // array z indeksami pytań, dla których było głosowanie
   totalQuestions: number;
   createdAt: Date;
   updatedAt: Date;
@@ -31,13 +39,25 @@ export interface GameSessionWithQuestions extends GameSession {
 }
 
 // Helper do konwersji modelu Prisma na interfejs GameSession
-function mapPrismaToGameSession(prismaSession: PrismaGameSession): GameSession {
+function mapPrismaToGameSession(
+  prismaSession: ExtendedPrismaGameSession
+): GameSession {
   let hiddenAnswers: Record<number, string[]> = {};
   try {
     hiddenAnswers = JSON.parse(prismaSession.hiddenAnswers || "{}");
   } catch (error) {
     console.error("Error parsing hiddenAnswers:", error);
     hiddenAnswers = {};
+  }
+
+  let audienceVoteQuestions: number[] = [];
+  try {
+    // Bezpieczny dostęp do właściwości - może być undefined w starszych rekordach
+    const voteQuestionsJson = prismaSession.audienceVoteQuestions || "[]";
+    audienceVoteQuestions = JSON.parse(voteQuestionsJson);
+  } catch (error) {
+    console.error("Error parsing audienceVoteQuestions:", error);
+    audienceVoteQuestions = [];
   }
 
   return {
@@ -53,6 +73,7 @@ function mapPrismaToGameSession(prismaSession: PrismaGameSession): GameSession {
       askAudience: prismaSession.usedAskAudience,
     },
     hiddenAnswers,
+    audienceVoteQuestions,
     totalQuestions: prismaSession.totalQuestions,
     createdAt: prismaSession.createdAt,
     updatedAt: prismaSession.updatedAt,
@@ -518,6 +539,78 @@ export const gameSessionDb = {
       return mapPrismaToGameSession(updatedSession);
     } catch (error) {
       console.error("Error updating game time:", error);
+      return null;
+    }
+  },
+
+  // Pobierz sesję po ID
+  getById: async (id: string): Promise<GameSession | null> => {
+    try {
+      console.log(`Getting game session by ID: ${id}`);
+
+      const session = await prisma.gameSession.findUnique({
+        where: { id },
+      });
+
+      if (session) {
+        console.log(`Found session: ${session.id}`);
+        return mapPrismaToGameSession(session);
+      }
+
+      console.log("Session not found");
+      return null;
+    } catch (error) {
+      console.error("Error getting game session by ID:", error);
+      return null;
+    }
+  },
+
+  // Dodaj pytanie do listy pytań z głosowaniem publiczności
+  addAudienceVoteQuestion: async (
+    questionIndex: number
+  ): Promise<GameSession | null> => {
+    try {
+      const activeSession = await prisma.gameSession.findFirst({
+        where: { status: "active" },
+        orderBy: { updatedAt: "desc" },
+      });
+
+      if (!activeSession) return null;
+
+      // Pobierz obecną listę pytań z głosowaniem
+      let audienceVoteQuestions: number[] = [];
+      try {
+        const voteQuestionsJson =
+          (activeSession as ExtendedPrismaGameSession).audienceVoteQuestions ||
+          "[]";
+        audienceVoteQuestions = JSON.parse(voteQuestionsJson);
+      } catch (error) {
+        console.error("Error parsing existing audienceVoteQuestions:", error);
+        audienceVoteQuestions = [];
+      }
+
+      // Dodaj pytanie do listy, jeśli jeszcze nie ma
+      if (!audienceVoteQuestions.includes(questionIndex)) {
+        audienceVoteQuestions.push(questionIndex);
+
+        const updatedSession = await prisma.gameSession.update({
+          where: { id: activeSession.id },
+          data: {
+            audienceVoteQuestions: JSON.stringify(audienceVoteQuestions),
+          } as { audienceVoteQuestions: string }, // Explicit type for new field
+        });
+
+        console.log(
+          `Dodano pytanie ${questionIndex} do listy pytań z głosowaniem publiczności`
+        );
+        return mapPrismaToGameSession(
+          updatedSession as ExtendedPrismaGameSession
+        );
+      }
+
+      return mapPrismaToGameSession(activeSession as ExtendedPrismaGameSession);
+    } catch (error) {
+      console.error("Error adding audience vote question:", error);
       return null;
     }
   },
