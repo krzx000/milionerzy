@@ -242,20 +242,34 @@ export default function Admin() {
     async (lifelineType: keyof typeof usedLifelines) => {
       if (!gameSession || usedLifelines[lifelineType]) return;
 
-      setGameLoading(true);
-      const response = await GameAPI.activateLifeline(lifelineType);
+      try {
+        const lifelineName = GAME_CONSTANTS.LIFELINE_NAMES[lifelineType];
+        const confirmed = await confirm({
+          title: "Użyć koła ratunkowego?",
+          description: `Czy na pewno chcesz użyć koła ratunkowego "${lifelineName}"? Po użyciu nie będzie można go użyć ponownie w tej grze.`,
+          confirmText: `Użyj ${lifelineName}`,
+          cancelText: "Anuluj",
+          variant: "default",
+        });
 
-      if (response.success && response.data) {
-        // Po użyciu koła ratunkowego, ponownie załaduj pełną sesję z pytaniami
-        // żeby nie stracić listy pytań (use-lifeline zwraca tylko podstawową sesję)
-        await loadGameSession();
-        showGameStatusMessage(
-          `Użyto koła ratunkowego: ${GAME_CONSTANTS.LIFELINE_NAMES[lifelineType]}`
-        );
-      } else {
-        showErrorMessage(response.error || "Błąd użycia koła ratunkowego");
+        if (confirmed) {
+          setGameLoading(true);
+          const response = await GameAPI.activateLifeline(lifelineType);
+
+          if (response.success && response.data) {
+            // Po użyciu koła ratunkowego, ponownie załaduj pełną sesję z pytaniami
+            // żeby nie stracić listy pytań (use-lifeline zwraca tylko podstawową sesję)
+            await loadGameSession();
+            showGameStatusMessage(`✅ Użyto koła ratunkowego: ${lifelineName}`);
+          } else {
+            showErrorMessage(response.error || "Błąd użycia koła ratunkowego");
+          }
+          setGameLoading(false);
+        }
+      } catch (error) {
+        console.error("handleUseLifeline: Exception:", error);
+        setGameLoading(false);
       }
-      setGameLoading(false);
     },
     [
       gameSession,
@@ -263,6 +277,7 @@ export default function Admin() {
       showGameStatusMessage,
       showErrorMessage,
       loadGameSession,
+      confirm,
     ]
   );
 
@@ -413,8 +428,8 @@ export default function Admin() {
 
   return (
     <div className="flex flex-col items-center justify-center">
-      {/* Fixed theme toggle */}
-      <div className="fixed top-6 right-6 z-50">
+      {/* Fixed theme toggle and debug */}
+      <div className="fixed top-6 right-6 z-50 flex gap-2">
         <ThemeToggle />
       </div>
 
@@ -474,6 +489,7 @@ export default function Admin() {
           onClearAllSessions={handleClearAllSessions}
         />
       </div>
+
       {dialog}
     </div>
   );
