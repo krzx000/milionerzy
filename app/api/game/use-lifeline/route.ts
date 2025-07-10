@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { gameSessionDb } from "@/lib/db/game-session";
-import { startVotingSession } from "../../voting/start/route";
+import { startVotingSession } from "@/lib/voting/session-manager";
 import { sseManager } from "@/lib/sse/manager";
 
 export async function POST(request: NextRequest) {

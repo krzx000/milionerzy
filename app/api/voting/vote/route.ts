@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { VoteOption } from "@/types/voting";
-import { currentVoteSession, votes } from "../start/route";
+import { getCurrentVoteSession, addVote } from "@/lib/voting/session-manager";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const currentVoteSession = getCurrentVoteSession();
     if (!currentVoteSession || !currentVoteSession.isActive) {
       return NextResponse.json(
         { error: "Brak aktywnej sesji głosowania" },
@@ -40,10 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Zapisz głos (nadpisz jeśli użytkownik już głosował)
-    votes[userId] = {
-      option: option as VoteOption,
-      timestamp: now,
-    };
+    addVote(userId, option as VoteOption);
 
     console.log(`Głos zapisany: ${userId} -> ${option}`);
 

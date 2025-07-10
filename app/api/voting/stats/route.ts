@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { VoteStats, VoteResult, VoteOption } from "@/types/voting";
-import { currentVoteSession, votes } from "../start/route";
+import { getCurrentVoteSession, getVotes } from "@/lib/voting/session-manager";
 
 export async function GET() {
   try {
+    const currentVoteSession = getCurrentVoteSession();
     if (!currentVoteSession) {
       // Zwróć pustą statystykę zamiast błędu
       return NextResponse.json({
@@ -25,6 +26,7 @@ export async function GET() {
       D: 0,
     };
 
+    const votes = getVotes();
     Object.values(votes).forEach((vote) => {
       voteCounts[vote.option as VoteOption]++;
     });

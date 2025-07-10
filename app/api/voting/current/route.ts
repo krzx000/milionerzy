@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { gameSessionDb } from "@/lib/db/game-session";
 import { prisma } from "@/lib/db/prisma";
-import { currentVoteSession } from "../start/route";
+import { getCurrentVoteSession } from "@/lib/voting/session-manager";
 
 export async function GET() {
   try {
     // Jeśli jest aktywna sesja głosowania, zwróć ją
+    const currentVoteSession = getCurrentVoteSession();
     if (currentVoteSession) {
       return NextResponse.json({
         success: true,

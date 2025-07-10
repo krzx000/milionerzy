@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { gameSessionDb } from "@/lib/db/game-session";
-import { clearVotingSession } from "../../voting/start/route";
+import { clearVotingSession } from "@/lib/voting/session-manager";
 import { sseManager } from "@/lib/sse/manager";
 
 export async function POST() {

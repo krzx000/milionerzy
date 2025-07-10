@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { clearVotingSession } from "../start/route";
+import { clearVotingSession } from "@/lib/voting/session-manager";
 
 export async function POST() {
   try {

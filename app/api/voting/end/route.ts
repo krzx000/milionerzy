@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { currentVoteSession, votes } from "../start/route";
+import { getCurrentVoteSession, getVotes } from "@/lib/voting/session-manager";
 import { broadcastEvent } from "@/lib/sse/manager";
 
 export async function POST() {
   try {
+    const currentVoteSession = getCurrentVoteSession();
     if (!currentVoteSession) {
       return NextResponse.json(
         { error: "Brak sesji głosowania" },
@@ -17,6 +18,7 @@ export async function POST() {
 
     console.log(`Zakończono głosowanie: ${currentVoteSession.id}`);
 
+    const votes = getVotes();
     // 🔥 SSE: Powiadom o ręcznym zakończeniu głosowania
     broadcastEvent("voting-ended", {
       voteSessionId: currentVoteSession.id,
