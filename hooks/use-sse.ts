@@ -155,6 +155,9 @@ export function useServerSentEvents({
 
         // Dodatkowe event listenery dla konkretnych typów eventów
         const eventTypes: GameEventType[] = [
+          "game-started",
+          "game-paused",
+          "game-resumed",
           "voting-started",
           "voting-ended",
           "question-changed",
@@ -162,6 +165,7 @@ export function useServerSentEvents({
           "lifeline-used",
           "vote-stats-updated",
           "answer-selected",
+          "answer-locked",
           "answer-revealed",
           "admin-message",
           "connection-established",

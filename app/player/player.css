@@ -1,0 +1,69 @@
+body {
+    background-image: url("/assets/images/background.jpg");
+    margin: 0;
+    padding: 0;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+/* Nowe style dla image-styling */
+.image-styling {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Animacje dla kół ratunkowych */
+#HINTANIMATION {
+  animation: lifeline-pulse 1s ease-in-out infinite;
+}
+
+@keyframes lifeline-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+/* Stany odpowiedzi dla klas A, B, C, D */
+.A, .B, .C, .D {
+  opacity: 1 !important;
+  transition: all 0.3s ease;
+}
+
+/* Efekty hover dla odpowiedzi */
+.answer-container:hover {
+  transform: scale(1.02);
+}
+
+/* Responsywność */
+@media (max-width: 1024px) {
+  .image-styling {
+    background-size: cover;
+  }
+  
+  .mt-16 {
+    margin-top: 2rem;
+  }
+  
+  .bottom-16 {
+    bottom: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .flex {
+    flex-direction: column;
+  }
+  
+  .gap-4 {
+    gap: 0.5rem;
+  }
+}

@@ -214,14 +214,18 @@ export function usePlayerState() {
           const session = gameStartData.session as GameSession;
           const currentQuestion = gameStartData.currentQuestion as Question;
           const hiddenAnswers = (gameStartData.hiddenAnswers as string[]) || [];
+          const questionIndex = gameStartData.questionIndex as number;
+          const totalQuestions = gameStartData.totalQuestions as number;
 
           setState((prev) => ({
             ...prev,
             session,
             currentQuestion,
-            questionIndex: session?.currentQuestionIndex || 0,
-            totalQuestions: session?.totalQuestions || 0,
-            currentPrize: getCurrentPrize(session?.currentQuestionIndex || 0),
+            questionIndex: questionIndex || session?.currentQuestionIndex || 0,
+            totalQuestions: totalQuestions || 0,
+            currentPrize: getCurrentPrize(
+              questionIndex || session?.currentQuestionIndex || 0
+            ),
             gameStatus: "active",
             selectedAnswer: null,
             correctAnswer: null,
@@ -245,37 +249,138 @@ export function usePlayerState() {
           const questionData = data as Record<string, unknown>;
           const newQuestion = questionData.currentQuestion as Question;
           const newQuestionIndex = (questionData.questionIndex as number) || 0;
+          const newTotalQuestions =
+            (questionData.totalQuestions as number) || 0;
           const newHiddenAnswers =
             (questionData.hiddenAnswers as string[]) || [];
 
-          setState((prev) => ({
-            ...prev,
-            currentQuestion: newQuestion,
-            questionIndex: newQuestionIndex,
-            currentPrize: getCurrentPrize(newQuestionIndex),
-            selectedAnswer: null,
-            correctAnswer: null,
-            isAnswerRevealed: false,
-            hiddenAnswers:
-              newHiddenAnswers.length > 0
-                ? newHiddenAnswers
-                : prev.hiddenAnswers,
-            answerLocked: false,
-            showFinalAnswer: false,
-          }));
+          console.log(
+            "🎮 Player: question-changed - aktualizacja stanu do aktywnego"
+          );
 
-          triggerAnimation("showQuestionAnimation");
-          triggerAnimation("showPrizeAnimation");
-          startTimer(30);
+          // Jeśli nie ma pytania w event'cie, pobierz sesję z API
+          if (!newQuestion) {
+            console.log(
+              "🎮 Player: Brak pytania w question-changed, pobieranie z API..."
+            );
+            fetch("/api/game/session")
+              .then((response) => response.json())
+              .then((result) => {
+                if (result.success && result.data) {
+                  const sessionWithQuestions = result.data;
+                  const currentQuestion = sessionWithQuestions.currentQuestion;
+
+                  setState((prev) => ({
+                    ...prev,
+                    session: sessionWithQuestions,
+                    currentQuestion,
+                    questionIndex: newQuestionIndex,
+                    totalQuestions:
+                      newTotalQuestions > 0
+                        ? newTotalQuestions
+                        : sessionWithQuestions.totalQuestions ||
+                          prev.totalQuestions,
+                    currentPrize: getCurrentPrize(newQuestionIndex),
+                    gameStatus: "active",
+                    selectedAnswer: null,
+                    correctAnswer: null,
+                    isAnswerRevealed: false,
+                    answerLocked: false,
+                    showFinalAnswer: false,
+                  }));
+
+                  triggerAnimation("showQuestionAnimation");
+                  triggerAnimation("showPrizeAnimation");
+                  startTimer(30);
+                }
+              })
+              .catch((error) => {
+                console.error("🎮 Player: Błąd pobierania sesji z API:", error);
+              });
+          } else {
+            setState((prev) => ({
+              ...prev,
+              currentQuestion: newQuestion,
+              questionIndex: newQuestionIndex,
+              totalQuestions:
+                newTotalQuestions > 0 ? newTotalQuestions : prev.totalQuestions,
+              currentPrize: getCurrentPrize(newQuestionIndex),
+              gameStatus: "active",
+              selectedAnswer: null,
+              correctAnswer: null,
+              isAnswerRevealed: false,
+              hiddenAnswers:
+                newHiddenAnswers.length > 0
+                  ? newHiddenAnswers
+                  : prev.hiddenAnswers,
+              answerLocked: false,
+              showFinalAnswer: false,
+            }));
+
+            triggerAnimation("showQuestionAnimation");
+            triggerAnimation("showPrizeAnimation");
+            startTimer(30);
+          }
           break;
 
         case "answer-selected":
           const selectedAnswer = data.selectedAnswer as string;
+
           setState((prev) => ({
             ...prev,
             selectedAnswer,
           }));
           triggerAnimation("showAnswerAnimation");
+
+          // Jeśli nie mamy aktualnego pytania, ale otrzymujemy answer-selected,
+          // oznacza to że gra jest aktywna - pobierz aktualne pytanie
+          setState((prevState) => {
+            if (
+              !prevState.currentQuestion &&
+              prevState.gameStatus === "waiting"
+            ) {
+              console.log(
+                "🎮 Player: answer-selected bez pytania - pobieranie sesji z API..."
+              );
+              fetch("/api/game/session")
+                .then((response) => response.json())
+                .then((result) => {
+                  if (result.success && result.data) {
+                    const sessionWithQuestions = result.data;
+                    const currentQuestion =
+                      sessionWithQuestions.currentQuestion;
+
+                    setState((prev) => ({
+                      ...prev,
+                      session: sessionWithQuestions,
+                      currentQuestion,
+                      questionIndex:
+                        sessionWithQuestions.currentQuestionIndex || 0,
+                      totalQuestions: sessionWithQuestions.totalQuestions || 0,
+                      currentPrize: getCurrentPrize(
+                        sessionWithQuestions.currentQuestionIndex || 0
+                      ),
+                      gameStatus: "active",
+                      selectedAnswer,
+                      correctAnswer: null,
+                      isAnswerRevealed: false,
+                      answerLocked: false,
+                      showFinalAnswer: false,
+                    }));
+
+                    triggerAnimation("showQuestionAnimation");
+                    startTimer(30);
+                  }
+                })
+                .catch((error) => {
+                  console.error(
+                    "🎮 Player: Błąd pobierania sesji po answer-selected:",
+                    error
+                  );
+                });
+            }
+            return prevState;
+          });
           break;
 
         case "answer-locked":
@@ -288,29 +393,32 @@ export function usePlayerState() {
 
         case "answer-revealed":
           const correctAnswer = data.correctAnswer as string;
-          const timeUsed = state.questionStartTime
-            ? Math.floor(
-                (new Date().getTime() - state.questionStartTime.getTime()) /
-                  1000
-              )
-            : 0;
 
-          setState((prev) => ({
-            ...prev,
-            correctAnswer,
-            isAnswerRevealed: true,
-            showFinalAnswer: true,
-            answerHistory: [
-              ...prev.answerHistory,
-              {
-                questionIndex: prev.questionIndex,
-                selectedAnswer: prev.selectedAnswer || "",
-                correctAnswer,
-                isCorrect: prev.selectedAnswer === correctAnswer,
-                timeUsed,
-              },
-            ],
-          }));
+          setState((prev) => {
+            const timeUsed = prev.questionStartTime
+              ? Math.floor(
+                  (new Date().getTime() - prev.questionStartTime.getTime()) /
+                    1000
+                )
+              : 0;
+
+            return {
+              ...prev,
+              correctAnswer,
+              isAnswerRevealed: true,
+              showFinalAnswer: true,
+              answerHistory: [
+                ...prev.answerHistory,
+                {
+                  questionIndex: prev.questionIndex,
+                  selectedAnswer: prev.selectedAnswer || "",
+                  correctAnswer,
+                  isCorrect: prev.selectedAnswer === correctAnswer,
+                  timeUsed,
+                },
+              ],
+            };
+          });
           stopTimer();
           break;
 
@@ -369,20 +477,22 @@ export function usePlayerState() {
           const finalQuestionIndex =
             (gameEndData.finalQuestionIndex as number) || 0;
 
-          const isWin = result === "win";
-          const winnings = isWin
-            ? getWinningPrize(finalQuestionIndex, state.totalQuestions)
-            : getWinningPrize(
-                Math.max(0, finalQuestionIndex - 1),
-                state.totalQuestions
-              );
+          setState((prev) => {
+            const isWin = result === "win";
+            const winnings = isWin
+              ? getWinningPrize(finalQuestionIndex, prev.totalQuestions)
+              : getWinningPrize(
+                  Math.max(0, finalQuestionIndex - 1),
+                  prev.totalQuestions
+                );
 
-          setState((prev) => ({
-            ...prev,
-            gameStatus: "ended",
-            finalResult: result,
-            winnings,
-          }));
+            return {
+              ...prev,
+              gameStatus: "ended",
+              finalResult: result,
+              winnings,
+            };
+          });
           stopTimer();
           break;
 
@@ -399,9 +509,13 @@ export function usePlayerState() {
             ...prev,
             gameStatus: "active",
           }));
-          if (state.timeRemaining > 0) {
-            startTimer(state.timeRemaining);
-          }
+
+          setState((prevState) => {
+            if (prevState.timeRemaining > 0) {
+              startTimer(prevState.timeRemaining);
+            }
+            return prevState;
+          });
           break;
 
         case "game-reset":
@@ -413,20 +527,46 @@ export function usePlayerState() {
           break;
       }
     },
-    [
-      startTimer,
-      stopTimer,
-      state.totalQuestions,
-      state.questionStartTime,
-      state.timeRemaining,
-      triggerAnimation,
-    ]
+    [startTimer, stopTimer, triggerAnimation]
   );
 
   // Hook SSE
   const { isConnected } = useServerSentEvents({
     clientType: "player",
     onEvent: handleGameEvent,
+    onConnect: () => {
+      console.log("🎮 Player: SSE połączone, żądanie aktualnego stanu...");
+
+      // Krótkie opóźnienie żeby upewnić się że SSE jest w pełni gotowe
+      setTimeout(() => {
+        // Automatycznie żądaj aktualnego stanu po połączeniu
+        fetch("/api/player/action", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "request-current-state",
+          }),
+        })
+          .then((response) => {
+            console.log(
+              "🎮 Player: Odpowiedź na request-current-state:",
+              response.status
+            );
+            return response.json();
+          })
+          .then((data) => {
+            console.log("🎮 Player: Dane z request-current-state:", data);
+          })
+          .catch((error) => {
+            console.error(
+              "🎮 Player: Błąd żądania stanu po połączeniu SSE:",
+              error
+            );
+          });
+      }, 100);
+    },
   });
 
   // Czyszczenie timerów przy unmount
@@ -440,6 +580,71 @@ export function usePlayerState() {
       }
     };
   }, []);
+
+  // Dodatkowy hook do sprawdzenia stanu gry po połączeniu SSE
+  React.useEffect(() => {
+    // Jeśli SSE jest połączone, ale nie mamy aktywnej gry, sprawdź stan
+    if (
+      isConnected &&
+      state.gameStatus === "waiting" &&
+      !state.currentQuestion
+    ) {
+      console.log(
+        "🎮 Player: SSE połączone ale brak aktywnej gry - sprawdzanie stanu z /api/game/session"
+      );
+
+      setTimeout(() => {
+        fetch("/api/game/session")
+          .then((response) => response.json())
+          .then((result) => {
+            if (result.success && result.data && result.data.currentQuestion) {
+              console.log(
+                "🎮 Player: Znaleziono aktywną sesję przez fallback:",
+                result.data
+              );
+              const sessionData = result.data;
+
+              setState((prev) => ({
+                ...prev,
+                session: sessionData,
+                currentQuestion: sessionData.currentQuestion,
+                questionIndex: sessionData.currentQuestionIndex || 0,
+                totalQuestions: sessionData.totalQuestions || 0,
+                currentPrize: getCurrentPrize(
+                  sessionData.currentQuestionIndex || 0
+                ),
+                gameStatus:
+                  sessionData.status === "active" ? "active" : "waiting",
+                lifelinesUsed: {
+                  fiftyFifty: sessionData.usedLifelines?.fiftyFifty || false,
+                  phoneAFriend:
+                    sessionData.usedLifelines?.phoneAFriend || false,
+                  askAudience: sessionData.usedLifelines?.askAudience || false,
+                },
+                hiddenAnswers:
+                  sessionData.hiddenAnswers?.[
+                    sessionData.currentQuestionIndex
+                  ] || [],
+              }));
+
+              triggerAnimation("showQuestionAnimation");
+              startTimer(30);
+            } else {
+              console.log("🎮 Player: Brak aktywnej sesji w fallback");
+            }
+          })
+          .catch((error) => {
+            console.error("🎮 Player: Błąd fallback sprawdzenia sesji:", error);
+          });
+      }, 2000); // 2 sekundy opóźnienia
+    }
+  }, [
+    isConnected,
+    state.gameStatus,
+    state.currentQuestion,
+    triggerAnimation,
+    startTimer,
+  ]);
 
   // Funkcje pomocnicze
   const formatTime = React.useCallback((seconds: number) => {
