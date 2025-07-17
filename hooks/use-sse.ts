@@ -101,22 +101,94 @@ export function useServerSentEvents({
 
       console.log(`SSE: Łączenie jako ${clientType}...`);
 
-      const eventSource = new EventSource(`/api/events?type=${clientType}`);
-      eventSourceRef.current = eventSource;
+      try {
+        const eventSource = new EventSource(`/api/events?type=${clientType}`);
+        eventSourceRef.current = eventSource;
 
-      // Event listeners
-      eventSource.onopen = () => {
-        console.log(`SSE: Połączono jako ${clientType}`);
-        setIsConnected(true);
-        onConnectRef.current?.();
-      };
+        // Event listeners
+        eventSource.onopen = () => {
+          console.log(`SSE: Połączono jako ${clientType}`);
+          setIsConnected(true);
+          onConnectRef.current?.();
+        };
 
-      eventSource.onerror = (error) => {
-        console.error(`SSE: Błąd połączenia (${clientType}):`, error);
+        eventSource.onerror = (error) => {
+          console.error(`SSE: Błąd połączenia (${clientType}):`, {
+            error,
+            readyState: eventSource.readyState,
+            url: eventSource.url,
+            type: error.type,
+            target: error.target,
+          });
+          setIsConnected(false);
+          onErrorRef.current?.(error);
+
+          // Auto-reconnect
+          if (shouldReconnectRef.current && autoReconnect) {
+            console.log(`SSE: Ponowne łączenie za ${reconnectDelay}ms...`);
+            reconnectTimeoutRef.current = setTimeout(() => {
+              if (shouldReconnectRef.current) {
+                connectSSE();
+              }
+            }, reconnectDelay);
+          }
+        };
+
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log(`SSE: Otrzymano event:`, event.type || "message", data);
+
+            lastEventRef.current = {
+              type: (event.type || "admin-message") as GameEventType,
+              data,
+            };
+
+            onEventRef.current?.(
+              lastEventRef.current.type,
+              lastEventRef.current.data
+            );
+          } catch (error) {
+            console.error("SSE: Błąd parsowania danych:", error);
+          }
+        };
+
+        // Dodatkowe event listenery dla konkretnych typów eventów
+        const eventTypes: GameEventType[] = [
+          "voting-started",
+          "voting-ended",
+          "question-changed",
+          "game-ended",
+          "lifeline-used",
+          "vote-stats-updated",
+          "answer-selected",
+          "answer-revealed",
+          "admin-message",
+          "connection-established",
+        ];
+
+        eventTypes.forEach((eventType) => {
+          eventSource.addEventListener(eventType, (event) => {
+            try {
+              const data = JSON.parse((event as MessageEvent).data);
+              console.log(`SSE: Otrzymano ${eventType}:`, data);
+
+              lastEventRef.current = { type: eventType, data };
+              onEventRef.current?.(eventType, data);
+            } catch (error) {
+              console.error(`SSE: Błąd parsowania ${eventType}:`, error);
+            }
+          });
+        });
+      } catch (error) {
+        console.error(
+          `SSE: Błąd inicjalizacji EventSource (${clientType}):`,
+          error
+        );
         setIsConnected(false);
-        onErrorRef.current?.(error);
+        onErrorRef.current?.(error as Event);
 
-        // Auto-reconnect
+        // Auto-reconnect przy błędzie inicjalizacji
         if (shouldReconnectRef.current && autoReconnect) {
           console.log(`SSE: Ponowne łączenie za ${reconnectDelay}ms...`);
           reconnectTimeoutRef.current = setTimeout(() => {
@@ -125,54 +197,7 @@ export function useServerSentEvents({
             }
           }, reconnectDelay);
         }
-      };
-
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          console.log(`SSE: Otrzymano event:`, event.type || "message", data);
-
-          lastEventRef.current = {
-            type: (event.type || "admin-message") as GameEventType,
-            data,
-          };
-
-          onEventRef.current?.(
-            lastEventRef.current.type,
-            lastEventRef.current.data
-          );
-        } catch (error) {
-          console.error("SSE: Błąd parsowania danych:", error);
-        }
-      };
-
-      // Dodatkowe event listenery dla konkretnych typów eventów
-      const eventTypes: GameEventType[] = [
-        "voting-started",
-        "voting-ended",
-        "question-changed",
-        "game-ended",
-        "lifeline-used",
-        "vote-stats-updated",
-        "answer-selected",
-        "answer-revealed",
-        "admin-message",
-        "connection-established",
-      ];
-
-      eventTypes.forEach((eventType) => {
-        eventSource.addEventListener(eventType, (event) => {
-          try {
-            const data = JSON.parse((event as MessageEvent).data);
-            console.log(`SSE: Otrzymano ${eventType}:`, data);
-
-            lastEventRef.current = { type: eventType, data };
-            onEventRef.current?.(eventType, data);
-          } catch (error) {
-            console.error(`SSE: Błąd parsowania ${eventType}:`, error);
-          }
-        });
-      });
+      }
     };
 
     connectSSERef.current = connectSSE;

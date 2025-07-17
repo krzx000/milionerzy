@@ -1,6 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
@@ -10,11 +8,9 @@ export default function Home() {
         alt="Logo"
         width={512}
         height={512}
-        className="w-1/4 animate-pulse"
+        draggable={false}
+        className="w-1/4 animate-pulse select-none"
       />
-      <Link className="absolute bottom-16" href={"/admin"}>
-        <Button variant={"teritary"}>Widok prowadzącego</Button>
-      </Link>
     </div>
   );
 }

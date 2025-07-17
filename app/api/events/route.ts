@@ -3,13 +3,20 @@ import { sseManager } from "@/lib/sse/manager";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const clientType = searchParams.get("type") as "admin" | "voter" | null;
+  const clientType = searchParams.get("type") as
+    | "admin"
+    | "voter"
+    | "player"
+    | null;
 
   // Walidacja typu klienta
-  if (!clientType || !["admin", "voter"].includes(clientType)) {
-    return new Response("Invalid client type. Use ?type=admin or ?type=voter", {
-      status: 400,
-    });
+  if (!clientType || !["admin", "voter", "player"].includes(clientType)) {
+    return new Response(
+      "Invalid client type. Use ?type=admin, ?type=voter, or ?type=player",
+      {
+        status: 400,
+      }
+    );
   }
 
   // Unikalna ID dla klienta

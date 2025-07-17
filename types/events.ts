@@ -1,6 +1,6 @@
 // Typy dla Server-Sent Events
 
-export type ClientType = "admin" | "voter" | "all";
+export type ClientType = "admin" | "voter" | "player" | "all";
 
 export interface SSEClient {
   id: string;
@@ -16,9 +16,14 @@ export type GameEventType =
   | "vote-cast"
   | "question-changed"
   | "game-ended"
+  | "game-started"
+  | "game-paused"
+  | "game-resumed"
+  | "game-reset"
   | "lifeline-used"
   | "vote-stats-updated"
   | "answer-selected"
+  | "answer-locked"
   | "answer-revealed"
   | "admin-message"
   | "connection-established";
