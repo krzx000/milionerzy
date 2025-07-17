@@ -90,21 +90,6 @@ export class GameAPI {
     }
   }
 
-  static async previousQuestion(): Promise<ApiResponse<GameSession>> {
-    try {
-      const response = await fetch(`${this.baseUrl}/previous-question`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      return await response.json();
-    } catch {
-      return {
-        success: false,
-        error: "Błąd przejścia do poprzedniego pytania",
-      };
-    }
-  }
-
   static async activateLifeline(
     lifeline: string
   ): Promise<ApiResponse<GameSession>> {
