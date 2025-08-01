@@ -368,7 +368,7 @@ export default function PlayerViewPage() {
       {/* TUTAJ MOŻESZ ZBUDOWAĆ SWÓJ WŁASNY INTERFEJS */}
 
       {/* Przykładowa podstawowa struktura - możesz całkowicie ją zastąpić */}
-      <div className="">
+      <div className=" h-screen flex flex-col justify-end">
         {/* Górna sekcja - nagroda i koła ratunkowe */}
         <div className="flex justify-between items-center mb-8">
           {/* Koła ratunkowe */}
@@ -398,6 +398,18 @@ export default function PlayerViewPage() {
         </div>
 
         {/* Pytanie */}
+
+        <div className="flex justify-center">
+          <Image
+            src={IMAGES.LOGO}
+            alt="Logo"
+            width={512}
+            height={512}
+            draggable={false}
+            className="w-1/4 select-none"
+          />
+        </div>
+
         {currentQuestion && (
           <div
             className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
@@ -443,7 +455,7 @@ export default function PlayerViewPage() {
 
         {/* Odpowiedzi */}
         {currentQuestion && (
-          <div className="space-y-4">
+          <div className="-space-y-8">
             {/* Rząd A i B */}
             <div
               className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"

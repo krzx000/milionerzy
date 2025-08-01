@@ -1,12 +1,12 @@
 // Ścieżki do obrazków
 export const IMAGES = {
   LOGO: "/assets/images/logo.png",
-  QUESTION_BACKGROUND: "/assets/images/question-prize-background.svg",
+  QUESTION_BACKGROUND: "/assets/images/question-prize-background.png",
   BACKGROUND: "/assets/images/background.png",
 
   // Koła ratunkowe
   HINTS: {
-    F_F: "/assets/images/lifelines/50-50.png", // Możesz dodać te obrazki
+    F_F: "/assets/images/lifelines/50-50.png",
     VOTING: "/assets/images/lifelines/audience.png",
     PHONE: "/assets/images/lifelines/phone.png",
   },
