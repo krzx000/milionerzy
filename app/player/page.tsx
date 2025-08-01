@@ -309,8 +309,10 @@ export default function PlayerViewPage() {
   const getAnswerState = (
     key: AnswerKey
   ): "default" | "selected" | "correct" => {
-    if (selectedAnswer === key) return "selected";
+    // Pierwszeństwo ma ujawniona poprawna odpowiedź
     if (isAnswerRevealed && correctAnswer === key) return "correct";
+    // Potem sprawdzamy czy jest wybrana (ale nie ujawniona)
+    if (selectedAnswer === key && !isAnswerRevealed) return "selected";
     return "default";
   };
 
@@ -611,6 +613,59 @@ export default function PlayerViewPage() {
             </details>
           </div>
         )}
+
+        {/* Preloadowanie wszystkich obrazków tła odpowiedzi */}
+        <div className="hidden">
+          <Image
+            src={IMAGES.ANSWER_BACKGROUNDS.DEFAULT_DEFAULT}
+            width={1920}
+            height={150}
+            alt="Preload"
+            priority
+          />
+          <Image
+            src={IMAGES.ANSWER_BACKGROUNDS.DEFAULT_SELECTED}
+            width={1920}
+            height={150}
+            alt="Preload"
+            priority
+          />
+          <Image
+            src={IMAGES.ANSWER_BACKGROUNDS.DEFAULT_CORRECT}
+            width={1920}
+            height={150}
+            alt="Preload"
+            priority
+          />
+          <Image
+            src={IMAGES.ANSWER_BACKGROUNDS.CORRECT_DEFAULT}
+            width={1920}
+            height={150}
+            alt="Preload"
+            priority
+          />
+          <Image
+            src={IMAGES.ANSWER_BACKGROUNDS.CORRECT_SELECTED}
+            width={1920}
+            height={150}
+            alt="Preload"
+            priority
+          />
+          <Image
+            src={IMAGES.ANSWER_BACKGROUNDS.SELECTED_DEFAULT}
+            width={1920}
+            height={150}
+            alt="Preload"
+            priority
+          />
+          <Image
+            src={IMAGES.ANSWER_BACKGROUNDS.SELECTED_CORRECT}
+            width={1920}
+            height={150}
+            alt="Preload"
+            priority
+          />
+        </div>
       </div>
     </div>
   );
