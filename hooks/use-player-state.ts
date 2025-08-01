@@ -206,7 +206,7 @@ export function usePlayerState() {
   // Obsługa eventów SSE
   const handleGameEvent = React.useCallback(
     (event: GameEventType, data: Record<string, unknown>) => {
-      console.log("🎮 Player received event:", event, data);
+      console.log("Player received event:", event, data);
 
       switch (event) {
         case "game-started":
@@ -255,13 +255,13 @@ export function usePlayerState() {
             (questionData.hiddenAnswers as string[]) || [];
 
           console.log(
-            "🎮 Player: question-changed - aktualizacja stanu do aktywnego"
+            "Player: question-changed - aktualizacja stanu do aktywnego"
           );
 
           // Jeśli nie ma pytania w event'cie, pobierz sesję z API
           if (!newQuestion) {
             console.log(
-              "🎮 Player: Brak pytania w question-changed, pobieranie z API..."
+              "Player: Brak pytania w question-changed, pobieranie z API..."
             );
             fetch("/api/game/session")
               .then((response) => response.json())
@@ -295,7 +295,7 @@ export function usePlayerState() {
                 }
               })
               .catch((error) => {
-                console.error("🎮 Player: Błąd pobierania sesji z API:", error);
+                console.error("Player: Błąd pobierania sesji z API:", error);
               });
           } else {
             setState((prev) => ({
@@ -340,7 +340,7 @@ export function usePlayerState() {
               prevState.gameStatus === "waiting"
             ) {
               console.log(
-                "🎮 Player: answer-selected bez pytania - pobieranie sesji z API..."
+                "Player: answer-selected bez pytania - pobieranie sesji z API..."
               );
               fetch("/api/game/session")
                 .then((response) => response.json())
@@ -374,7 +374,7 @@ export function usePlayerState() {
                 })
                 .catch((error) => {
                   console.error(
-                    "🎮 Player: Błąd pobierania sesji po answer-selected:",
+                    "Player: Błąd pobierania sesji po answer-selected:",
                     error
                   );
                 });
@@ -535,7 +535,7 @@ export function usePlayerState() {
     clientType: "player",
     onEvent: handleGameEvent,
     onConnect: () => {
-      console.log("🎮 Player: SSE połączone, żądanie aktualnego stanu...");
+      console.log("Player: SSE połączone, żądanie aktualnego stanu...");
 
       // Krótkie opóźnienie żeby upewnić się że SSE jest w pełni gotowe
       setTimeout(() => {
@@ -551,17 +551,17 @@ export function usePlayerState() {
         })
           .then((response) => {
             console.log(
-              "🎮 Player: Odpowiedź na request-current-state:",
+              "Player: Odpowiedź na request-current-state:",
               response.status
             );
             return response.json();
           })
           .then((data) => {
-            console.log("🎮 Player: Dane z request-current-state:", data);
+            console.log("Player: Dane z request-current-state:", data);
           })
           .catch((error) => {
             console.error(
-              "🎮 Player: Błąd żądania stanu po połączeniu SSE:",
+              "Player: Błąd żądania stanu po połączeniu SSE:",
               error
             );
           });
@@ -590,7 +590,7 @@ export function usePlayerState() {
       !state.currentQuestion
     ) {
       console.log(
-        "🎮 Player: SSE połączone ale brak aktywnej gry - sprawdzanie stanu z /api/game/session"
+        "Player: SSE połączone ale brak aktywnej gry - sprawdzanie stanu z /api/game/session"
       );
 
       setTimeout(() => {
@@ -599,7 +599,7 @@ export function usePlayerState() {
           .then((result) => {
             if (result.success && result.data && result.data.currentQuestion) {
               console.log(
-                "🎮 Player: Znaleziono aktywną sesję przez fallback:",
+                "Player: Znaleziono aktywną sesję przez fallback:",
                 result.data
               );
               const sessionData = result.data;
@@ -630,11 +630,11 @@ export function usePlayerState() {
               triggerAnimation("showQuestionAnimation");
               startTimer(30);
             } else {
-              console.log("🎮 Player: Brak aktywnej sesji w fallback");
+              console.log("Player: Brak aktywnej sesji w fallback");
             }
           })
           .catch((error) => {
-            console.error("🎮 Player: Błąd fallback sprawdzenia sesji:", error);
+            console.error("Player: Błąd fallback sprawdzenia sesji:", error);
           });
       }, 2000); // 2 sekundy opóźnienia
     }

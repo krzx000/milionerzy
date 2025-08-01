@@ -8,17 +8,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { action, data } = body;
 
-    console.log("🎮 Player API: Otrzymano akcję:", action, data);
+    console.log("Player API: Otrzymano akcję:", action, data);
 
     if (!action) {
-      console.log("🎮 Player API: Brak akcji w żądaniu");
+      console.log("Player API: Brak akcji w żądaniu");
       return NextResponse.json(
         { success: false, error: "Brak akcji" },
         { status: 400 }
       );
     }
 
-    console.log("🎮 Player API: Przetwarzanie akcji:", action);
+    console.log("Player API: Przetwarzanie akcji:", action);
 
     switch (action) {
       case "ping":
@@ -31,10 +31,10 @@ export async function POST(request: NextRequest) {
       case "request-current-state":
         // Żądanie aktualnego stanu gry
         try {
-          console.log("🎮 Player API: Przetwarzanie request-current-state...");
+          console.log("Player API: Przetwarzanie request-current-state...");
 
           // Najpierw wyślij prosty event testowy
-          console.log("🎮 Player API: Wysyłanie eventu testowego...");
+          console.log("Player API: Wysyłanie eventu testowego...");
           broadcastEvent(
             "game-started",
             {
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
           const session = await gameSessionDb.getCurrent();
 
           if (!session) {
-            console.log("🎮 Player API: Brak aktywnej sesji gry");
+            console.log("Player API: Brak aktywnej sesji gry");
             broadcastEvent(
               "connection-established",
               {
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
             );
           } else {
             console.log(
-              "🎮 Player API: Znaleziona aktywna sesja:",
+              "Player API: Znaleziona aktywna sesja:",
               session.id,
               "status:",
               session.status
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
               session.hiddenAnswers[session.currentQuestionIndex] || [];
 
             console.log(
-              "🎮 Player API: Wysyłanie stanu gry - pytanie",
+              "Player API: Wysyłanie stanu gry - pytanie",
               session.currentQuestionIndex + 1,
               "status sesji:",
               session.status,
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
             message: "State request processed",
           });
         } catch (error) {
-          console.error("🎮 Player API: Błąd pobierania stanu gry:", error);
+          console.error("Player API: Błąd pobierania stanu gry:", error);
           return NextResponse.json(
             { success: false, error: "Błąd pobierania stanu gry" },
             { status: 500 }
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
 
       case "log-player-action":
         // Logowanie akcji gracza dla celów debugowania/analizy
-        console.log("🎮 Player action logged:", data);
+        console.log("Player action logged:", data);
         return NextResponse.json({
           success: true,
           message: "Action logged",

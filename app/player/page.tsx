@@ -139,30 +139,27 @@ export default function PlayerViewPage() {
   // Inicjalizacja połączenia
   React.useEffect(() => {
     const initializeConnection = async () => {
-      console.log("🎮 Player: Rozpoczynanie inicjalizacji połączenia...");
+      console.log("Player: Rozpoczynanie inicjalizacji połączenia...");
       try {
         const pingResult = await PlayerAPI.ping();
-        console.log("🎮 Player: Odpowiedź ping:", pingResult);
+        console.log("Player: Odpowiedź ping:", pingResult);
 
         if (pingResult.success) {
           setConnectionStatus(PLAYER_CONSTANTS.CONNECTION_STATES.CONNECTED);
-          console.log("🎮 Player: Połączenie ustanowione");
+          console.log("Player: Połączenie ustanowione");
         } else {
           console.error(
-            "🎮 Player: Ping zakończony niepowodzeniem:",
+            "Player: Ping zakończony niepowodzeniem:",
             pingResult.error
           );
           setConnectionStatus(PLAYER_CONSTANTS.CONNECTION_STATES.ERROR);
         }
       } catch (error) {
-        console.error(
-          "🎮 Player: Błąd inicjalizacji połączenia gracza:",
-          error
-        );
+        console.error("Player: Błąd inicjalizacji połączenia gracza:", error);
         setConnectionStatus(PLAYER_CONSTANTS.CONNECTION_STATES.ERROR);
       } finally {
         setIsInitialized(true);
-        console.log("🎮 Player: Inicjalizacja zakończona");
+        console.log("Player: Inicjalizacja zakończona");
       }
     };
 
@@ -181,7 +178,7 @@ export default function PlayerViewPage() {
   // Dźwięk startowy przy nowym pytaniu
   React.useEffect(() => {
     if (currentQuestion && showQuestionAnimation && questionIndex >= 0) {
-      console.log("🎵 Nowe pytanie - odtwarzanie dźwięku startowego");
+      console.log("Nowe pytanie - odtwarzanie dźwięku startowego");
       playStartSound(questionIndex + 1);
     }
   }, [currentQuestion, showQuestionAnimation, questionIndex, playStartSound]);
@@ -189,7 +186,7 @@ export default function PlayerViewPage() {
   // Dźwięk wyboru odpowiedzi
   React.useEffect(() => {
     if (selectedAnswer && !isAnswerRevealed) {
-      console.log("🎵 Wybrano odpowiedź - odtwarzanie dźwięku");
+      console.log("Wybrano odpowiedź - odtwarzanie dźwięku");
       playAnswerSound();
     }
   }, [selectedAnswer, isAnswerRevealed, playAnswerSound]);
@@ -198,16 +195,16 @@ export default function PlayerViewPage() {
   React.useEffect(() => {
     if (isAnswerRevealed && selectedAnswer && correctAnswer) {
       const isCorrect = selectedAnswer === correctAnswer;
-      console.log("🎵 Ujawniono odpowiedź - odtwarzanie dźwięków");
+      console.log("Ujawniono odpowiedź - odtwarzanie dźwięków");
 
       playLightsDown();
 
       setTimeout(() => {
         if (isCorrect) {
-          console.log("🎵 Poprawna odpowiedź - dźwięk wygranej");
+          console.log("Poprawna odpowiedź - dźwięk wygranej");
           playWinSound();
         } else {
-          console.log("🎵 Niepoprawna odpowiedź - dźwięk przegranej");
+          console.log("Niepoprawna odpowiedź - dźwięk przegranej");
           playLoseSound();
         }
       }, 1000);
@@ -224,7 +221,7 @@ export default function PlayerViewPage() {
   // Zatrzymaj dźwięki przy zmianie gry lub błędzie
   React.useEffect(() => {
     if (gameStatus === "ended" || gameStatus === "waiting") {
-      console.log("🎵 Gra zakończona/oczekująca - zatrzymywanie dźwięków");
+      console.log("Gra zakończona/oczekująca - zatrzymywanie dźwięków");
       stopAll();
     }
   }, [gameStatus, stopAll]);

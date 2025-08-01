@@ -79,7 +79,7 @@ export function useVoteState() {
             Math.floor((endTime.getTime() - now.getTime()) / 1000)
           );
 
-          console.log("🗳️ Setting VoteSession state:", {
+          console.log("Setting VoteSession state:", {
             voteSession,
             timeRemaining,
           });
@@ -101,7 +101,7 @@ export function useVoteState() {
           }
         } else {
           const gameState = data as GameViewerState;
-          console.log("🎮 Setting GameViewerState:", gameState);
+          console.log("Setting GameViewerState:", gameState);
           setViewerState((prev) => ({
             ...prev,
             gameState,
@@ -114,7 +114,7 @@ export function useVoteState() {
           }));
         }
       } else {
-        console.log("❌ Brak danych z API - czyszczenie stanu");
+        console.log("Brak danych z API - czyszczenie stanu");
         setViewerState({
           gameState: null,
           voteSession: null,
@@ -132,7 +132,7 @@ export function useVoteState() {
         });
       }
     } catch (error) {
-      console.error("❌ Błąd ładowania stanu:", error);
+      console.error("Błąd ładowania stanu:", error);
     } finally {
       setIsLoading(false);
     }
@@ -144,11 +144,11 @@ export function useVoteState() {
 
       switch (eventType) {
         case "voting-started":
-          console.log("🗳️ SSE: Głosowanie rozpoczęte");
+          console.log("SSE: Głosowanie rozpoczęte");
           setTimeout(() => loadCurrentState(), 100);
           break;
         case "voting-ended":
-          console.log("🏁 SSE: Głosowanie zakończone");
+          console.log("SSE: Głosowanie zakończone");
           setViewerState((prev) => ({
             ...prev,
             canVote: false,
@@ -186,7 +186,7 @@ export function useVoteState() {
           const endGameWon = data.gameWon as boolean;
           const endFinalAmount = data.finalAmount as number;
           const endReason = data.reason as string;
-          console.log("🏁 SSE: Gra zakończona:", {
+          console.log("SSE: Gra zakończona:", {
             gameWon: endGameWon,
             finalAmount: endFinalAmount,
             reason: endReason,
@@ -234,7 +234,7 @@ export function useVoteState() {
           break;
         case "answer-selected":
           const selectedAnswer = data.selectedAnswer as string;
-          console.log("👆 SSE: Wybrano odpowiedź:", selectedAnswer);
+          console.log("SSE: Wybrano odpowiedź:", selectedAnswer);
           setViewerState((prev) => ({
             ...prev,
             selectedAnswer,
@@ -246,7 +246,7 @@ export function useVoteState() {
           const isCorrect = data.isCorrect as boolean;
           const gameWon = data.gameWon as boolean;
           const finalAmount = data.finalAmount as number;
-          console.log("✅ SSE: Ujawniono odpowiedź:", {
+          console.log("SSE: Ujawniono odpowiedź:", {
             correctAnswer,
             isCorrect,
             gameWon,
@@ -263,7 +263,7 @@ export function useVoteState() {
           if (!isCorrect) {
             setTimeout(() => {
               console.log(
-                "🏁 Automatyczne przejście do ekranu zakończenia gry po niepoprawnej odpowiedzi"
+                "Automatyczne przejście do ekranu zakończenia gry po niepoprawnej odpowiedzi"
               );
               setViewerState((prev) => {
                 // Oblicz finalAmount na podstawie aktualnego pytania
@@ -313,14 +313,14 @@ export function useVoteState() {
     clientType: "voter",
     onEvent: handleSSEEvent,
     onConnect: () => {
-      console.log("✅ SSE connected - odświeżam stan");
+      console.log("SSE connected - odświeżam stan");
       setTimeout(() => loadCurrentState(), 100);
     },
     onDisconnect: () => {
-      console.log("❌ SSE disconnected");
+      console.log("SSE disconnected");
     },
     onError: (error) => {
-      console.error("⚠️ SSE error:", error);
+      console.error("SSE error:", error);
     },
     autoReconnect: true,
     reconnectDelay: 3000,
@@ -379,7 +379,7 @@ export function useVoteState() {
   // Connection polling effect
   React.useEffect(() => {
     if (!isConnected) {
-      console.log("⚠️ SSE nie połączone - używam backup polling");
+      console.log("SSE nie połączone - używam backup polling");
       const pollInterval = setInterval(() => {
         loadCurrentState();
       }, 3000);
