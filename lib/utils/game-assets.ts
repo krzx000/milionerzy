@@ -1,6 +1,6 @@
 // Ścieżki do obrazków
 export const IMAGES = {
-  LOGO: "/assets/images/logo.svg",
+  LOGO: "/assets/images/logo.png",
   QUESTION_BACKGROUND: "/assets/images/question-prize-background.svg",
   BACKGROUND: "/assets/images/background.png",
 
@@ -13,15 +13,15 @@ export const IMAGES = {
 
   // Tła odpowiedzi
   ANSWER_BACKGROUNDS: {
-    DEFAULT_DEFAULT: "/assets/images/answer-background/default-default.svg",
-    DEFAULT_SELECTED: "/assets/images/answer-background/default-selected.svg",
-    DEFAULT_CORRECT: "/assets/images/answer-background/default-correct.svg",
+    DEFAULT_DEFAULT: "/assets/images/answer-background/default-default.png",
+    DEFAULT_SELECTED: "/assets/images/answer-background/default-selected.png",
+    DEFAULT_CORRECT: "/assets/images/answer-background/default-correct.png",
 
-    CORRECT_DEFAULT: "/assets/images/answer-background/correct-default.svg",
-    CORRECT_SELECTED: "/assets/images/answer-background/correct-selected.svg",
+    CORRECT_DEFAULT: "/assets/images/answer-background/correct-default.png",
+    CORRECT_SELECTED: "/assets/images/answer-background/correct-selected.png",
 
-    SELECTED_DEFAULT: "/assets/images/answer-background/selected-default.svg",
-    SELECTED_CORRECT: "/assets/images/answer-background/selected-correct.svg",
+    SELECTED_DEFAULT: "/assets/images/answer-background/selected-default.png",
+    SELECTED_CORRECT: "/assets/images/answer-background/selected-correct.png",
   },
 } as const;
 

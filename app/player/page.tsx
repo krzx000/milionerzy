@@ -584,36 +584,6 @@ export default function PlayerViewPage() {
           </div>
         )}
 
-        {/* Informacje pomocnicze do developmentu */}
-        {process.env.NODE_ENV === "development" && (
-          <div className="mt-8 p-4 bg-gray-100 rounded">
-            <details>
-              <summary className="cursor-pointer font-bold">Debug Info</summary>
-              <pre className="text-xs mt-2 whitespace-pre-wrap">
-                {JSON.stringify(
-                  {
-                    gameStatus,
-                    questionIndex,
-                    selectedAnswer,
-                    correctAnswer,
-                    isAnswerRevealed,
-                    answerLocked,
-                    timeRemaining,
-                    isConnected,
-                    connectionStatus,
-                    lifelinesUsed,
-                    audienceVotingActive,
-                    showQuestionAnimation,
-                    showAnswerAnimation,
-                  },
-                  null,
-                  2
-                )}
-              </pre>
-            </details>
-          </div>
-        )}
-
         {/* Preloadowanie wszystkich obrazków tła odpowiedzi */}
         <div className="hidden">
           <Image
