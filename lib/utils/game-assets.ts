@@ -1,10 +1,8 @@
 // Ścieżki do obrazków
 export const IMAGES = {
-  LOGO: "/assets/images/logo.webp",
-  PRIZE_BACKGROUND: "/assets/images/prize-background.png",
-  QUESTION_BACKGROUND: "/assets/images/question-background.png",
-  WIN_BACKGROUND: "/assets/images/win-background.png",
-  CROSS_MARK: "/assets/images/cross-mark.png", // Możesz dodać ten obrazek
+  LOGO: "/assets/images/logo.svg",
+  QUESTION_BACKGROUND: "/assets/images/question-prize-background.svg",
+  BACKGROUND: "/assets/images/background.png",
 
   // Koła ratunkowe
   HINTS: {
@@ -15,26 +13,15 @@ export const IMAGES = {
 
   // Tła odpowiedzi
   ANSWER_BACKGROUNDS: {
-    A: {
-      NORMAL: "/assets/images/answer-background/a/normal.png",
-      SELECTED: "/assets/images/answer-background/a/selected.png",
-      CORRECT: "/assets/images/answer-background/a/correct.png",
-    },
-    B: {
-      NORMAL: "/assets/images/answer-background/b/normal.png",
-      SELECTED: "/assets/images/answer-background/b/selected.png",
-      CORRECT: "/assets/images/answer-background/b/correct.png",
-    },
-    C: {
-      NORMAL: "/assets/images/answer-background/c/normal.png",
-      SELECTED: "/assets/images/answer-background/c/selected.png",
-      CORRECT: "/assets/images/answer-background/c/correct.png",
-    },
-    D: {
-      NORMAL: "/assets/images/answer-background/d/normal.png",
-      SELECTED: "/assets/images/answer-background/d/selected.png",
-      CORRECT: "/assets/images/answer-background/d/correct.png",
-    },
+    DEFAULT_DEFAULT: "/assets/images/answer-background/default-default.svg",
+    DEFAULT_SELECTED: "/assets/images/answer-background/default-selected.svg",
+    DEFAULT_CORRECT: "/assets/images/answer-background/default-correct.svg",
+
+    CORRECT_DEFAULT: "/assets/images/answer-background/correct-default.svg",
+    CORRECT_SELECTED: "/assets/images/answer-background/correct-selected.svg",
+
+    SELECTED_DEFAULT: "/assets/images/answer-background/selected-default.svg",
+    SELECTED_CORRECT: "/assets/images/answer-background/selected-correct.svg",
   },
 } as const;
 
@@ -42,13 +29,23 @@ export type AnswerKey = "A" | "B" | "C" | "D";
 export type LifelineType = "F_F" | "VOTING" | "PHONE";
 
 // Funkcja do pobierania tła odpowiedzi
-export function getAnswerBackground(
-  answerKey: AnswerKey,
-  state: "normal" | "selected" | "correct" = "normal"
+export function getAnswerRowBackground(
+  leftAnswerState: "default" | "selected" | "correct",
+  rightAnswerState: "default" | "selected" | "correct"
 ): string {
-  const stateKey =
-    state.toUpperCase() as keyof typeof IMAGES.ANSWER_BACKGROUNDS.A;
-  return IMAGES.ANSWER_BACKGROUNDS[answerKey][stateKey];
+  const state = `${leftAnswerState}-${rightAnswerState}`;
+  const backgroundMap: Record<string, string> = {
+    "default-default": IMAGES.ANSWER_BACKGROUNDS.DEFAULT_DEFAULT,
+    "default-selected": IMAGES.ANSWER_BACKGROUNDS.DEFAULT_SELECTED,
+    "default-correct": IMAGES.ANSWER_BACKGROUNDS.DEFAULT_CORRECT,
+
+    "correct-default": IMAGES.ANSWER_BACKGROUNDS.CORRECT_DEFAULT,
+    "correct-selected": IMAGES.ANSWER_BACKGROUNDS.CORRECT_SELECTED,
+
+    "selected-default": IMAGES.ANSWER_BACKGROUNDS.SELECTED_DEFAULT,
+    "selected-correct": IMAGES.ANSWER_BACKGROUNDS.SELECTED_CORRECT,
+  };
+  return backgroundMap[state] || IMAGES.ANSWER_BACKGROUNDS.DEFAULT_DEFAULT;
 }
 
 // Mapowanie nazw kół ratunkowych z systemu na UI

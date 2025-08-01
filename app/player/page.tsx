@@ -1,27 +1,37 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import * as React from "react";
-import { motion } from "framer-motion";
-import useFitText from "use-fit-text";
 import { usePlayerState } from "@/hooks/use-player-state";
 import { useSound } from "@/hooks/use-sound";
 import { PlayerAPI } from "@/lib/api/player";
 import { PLAYER_CONSTANTS } from "@/lib/constants/player";
+import { Coiny, Inter } from "next/font/google";
+
 import {
   getConnectionStatusText,
   getConnectionStatusEmoji,
   formatLogData,
 } from "@/lib/utils/player";
 import {
+  getAnswerRowBackground,
   IMAGES,
-  getAnswerBackground,
-  //   mapLifelineToUI,
   type AnswerKey,
   type LifelineType,
 } from "@/lib/utils/game-assets";
 import type { ConnectionState } from "@/lib/constants/player";
-import "./player.css";
 import Image from "next/image";
+import useFitText from "use-fit-text";
+
+const COINY = Coiny({
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
+const INTER = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 export default function PlayerViewPage() {
   // ============== DOSTĘPNE STATE'Y I ZMIENNE ==============
@@ -32,7 +42,7 @@ export default function PlayerViewPage() {
     session, // Aktualna sesja gry
     currentQuestion, // Aktualne pytanie
     questionIndex, // Indeks pytania (0-based)
-    // totalQuestions, // Łączna liczba pytań
+    totalQuestions, // Łączna liczba pytań
     currentPrize, // Aktualna nagroda
     gameStatus, // Status gry: "waiting" | "active" | "paused" | "ended"
 
@@ -41,7 +51,7 @@ export default function PlayerViewPage() {
     correctAnswer, // Poprawna odpowiedź (A/B/C/D)
     isAnswerRevealed, // Czy odpowiedź została ujawniona
     answerLocked, // Czy odpowiedź została zatwierdzona
-    // showFinalAnswer, // Czy pokazać finalne podsumowanie odpowiedzi
+    showFinalAnswer, // Czy pokazać finalne podsumowanie odpowiedzi
 
     // Timer
     timeRemaining, // Pozostały czas w sekundach
@@ -56,16 +66,16 @@ export default function PlayerViewPage() {
 
     // Animacje
     showQuestionAnimation, // Czy pokazać animację pytania
-    // showAnswerAnimation, // Czy pokazać animację odpowiedzi
+    showAnswerAnimation, // Czy pokazać animację odpowiedzi
 
     // Historia
     answerHistory, // Historia wszystkich odpowiedzi
 
     // Funkcje pomocnicze
     isConnected, // Czy połączony z SSE
-    // formatTime, // Funkcja do formatowania czasu
-    // isAnswerHidden, // Funkcja sprawdzająca czy odpowiedź jest ukryta (50:50)
-    // getAnswerClass, // Funkcja zwracająca klasę CSS dla odpowiedzi
+    formatTime, // Funkcja do formatowania czasu
+    isAnswerHidden, // Funkcja sprawdzająca czy odpowiedź jest ukryta (50:50)
+    getAnswerClass, // Funkcja zwracająca klasę CSS dla odpowiedzi
   } = usePlayerState();
 
   // Hook do dźwięków
@@ -78,72 +88,43 @@ export default function PlayerViewPage() {
     stopAll,
   } = useSound();
 
+  // Wielkości czcionek
+  const { fontSize: questionFontSize, ref: questionRef } = useFitText({
+    maxFontSize: 300,
+    minFontSize: 50,
+  });
+
+  const { fontSize: prizeFontSize, ref: prizeRef } = useFitText({
+    maxFontSize: 150,
+    minFontSize: 50,
+  });
+
+  const { fontSize: answerAFontSize, ref: answerARef } = useFitText({
+    maxFontSize: 200,
+    minFontSize: 50,
+  });
+
+  const { fontSize: answerBFontSize, ref: answerBRef } = useFitText({
+    maxFontSize: 200,
+    minFontSize: 50,
+  });
+
+  const { fontSize: answerCFontSize, ref: answerCRef } = useFitText({
+    maxFontSize: 200,
+    minFontSize: 50,
+  });
+
+  const { fontSize: answerDFontSize, ref: answerDRef } = useFitText({
+    maxFontSize: 200,
+    minFontSize: 50,
+  });
+
   // Stan lokalny dla połączenia
   const [isInitialized, setIsInitialized] = React.useState(false);
   const [connectionStatus, setConnectionStatus] =
     React.useState<ConnectionState>(
       PLAYER_CONSTANTS.CONNECTION_STATES.CONNECTING
     );
-
-  // Stan lokalny dla efektów wizualnych (możesz rozszerzyć)
-  const [particles, setParticles] = React.useState<
-    Array<{ id: number; x: number; y: number }>
-  >([]);
-  const [celebrationBursts, setCelebrationBursts] = React.useState<
-    Array<{ id: number; x: number; y: number }>
-  >([]);
-  const [questionTransition, setQuestionTransition] = React.useState(false);
-
-  // Hooks do automatycznego skalowania fontów
-  const { fontSize: questionFontSize, ref: questionFontRef } = useFitText({
-    maxFontSize: 300,
-    minFontSize: 34,
-  });
-
-  const { fontSize: answerAFontSize, ref: answerAFontRef } = useFitText({
-    maxFontSize: 300,
-    minFontSize: 16,
-  });
-
-  const { fontSize: answerBFontSize, ref: answerBFontRef } = useFitText({
-    maxFontSize: 300,
-    minFontSize: 16,
-  });
-
-  const { fontSize: answerCFontSize, ref: answerCFontRef } = useFitText({
-    maxFontSize: 300,
-    minFontSize: 16,
-  });
-
-  const { fontSize: answerDFontSize, ref: answerDFontRef } = useFitText({
-    maxFontSize: 300,
-    minFontSize: 16,
-  });
-
-  const { fontSize: prizeFontSize, ref: prizeFontRef } = useFitText({
-    maxFontSize: 250,
-    minFontSize: 20,
-  });
-
-  // Funkcja pomocnicza do wyboru odpowiedniego ref i fontSize dla odpowiedzi
-  const getAnswerFontProps = (key: AnswerKey) => {
-    switch (key) {
-      case "A":
-        return { ref: answerAFontRef, fontSize: answerAFontSize };
-      case "B":
-        return { ref: answerBFontRef, fontSize: answerBFontSize };
-      case "C":
-        return { ref: answerCFontRef, fontSize: answerCFontSize };
-      case "D":
-        return { ref: answerDFontRef, fontSize: answerDFontSize };
-      default:
-        return { ref: answerAFontRef, fontSize: answerAFontSize };
-    }
-  };
-
-  // Stan dla aktywnego koła ratunkowego (animacja)
-  const [activeLifeline, setActiveLifeline] =
-    React.useState<LifelineType | null>(null);
 
   // Stan dla wyników koła ratunkowego (które odpowiedzi pokazać po 50:50)
   const [lifelineResult, setLifelineResult] = React.useState<AnswerKey[]>([
@@ -152,42 +133,6 @@ export default function PlayerViewPage() {
     "C",
     "D",
   ]);
-
-  // ============== FUNKCJE POMOCNICZE ==============
-
-  // Funkcja do tworzenia efektów cząsteczkowych
-  const createParticles = React.useCallback((count: number = 20) => {
-    const newParticles = Array.from({ length: count }, (_, i) => ({
-      id: Date.now() + i,
-      x: Math.random() * window.innerWidth,
-      y: window.innerHeight + 20,
-    }));
-
-    setParticles((prev) => [...prev, ...newParticles]);
-
-    setTimeout(() => {
-      setParticles((prev) =>
-        prev.filter((p) => !newParticles.find((np) => np.id === p.id))
-      );
-    }, 4000);
-  }, []);
-
-  // Funkcja do tworzenia efektów wybuchowych
-  const createCelebrationBursts = React.useCallback((count: number = 5) => {
-    const newBursts = Array.from({ length: count }, (_, i) => ({
-      id: Date.now() + i,
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
-    }));
-
-    setCelebrationBursts((prev) => [...prev, ...newBursts]);
-
-    setTimeout(() => {
-      setCelebrationBursts((prev) =>
-        prev.filter((b) => !newBursts.find((nb) => nb.id === b.id))
-      );
-    }, 1000);
-  }, []);
 
   // ============== EFEKTY I LOGIKA ==============
 
@@ -232,32 +177,6 @@ export default function PlayerViewPage() {
       setConnectionStatus(PLAYER_CONSTANTS.CONNECTION_STATES.DISCONNECTED);
     }
   }, [isConnected, isInitialized]);
-
-  // Efekt przejścia pytania
-  React.useEffect(() => {
-    if (showQuestionAnimation) {
-      setQuestionTransition(true);
-      const timer = setTimeout(() => setQuestionTransition(false), 800);
-      return () => clearTimeout(timer);
-    }
-  }, [showQuestionAnimation]);
-
-  // Efekt cząsteczkowy dla poprawnej odpowiedzi
-  React.useEffect(() => {
-    if (isAnswerRevealed && selectedAnswer === correctAnswer) {
-      createParticles(40);
-      createCelebrationBursts(8);
-
-      setTimeout(() => createParticles(25), 500);
-      setTimeout(() => createParticles(15), 1000);
-    }
-  }, [
-    isAnswerRevealed,
-    selectedAnswer,
-    correctAnswer,
-    createParticles,
-    createCelebrationBursts,
-  ]);
 
   // Dźwięk startowy przy nowym pytaniu
   React.useEffect(() => {
@@ -379,12 +298,28 @@ export default function PlayerViewPage() {
     }
   }, [isAnswerRevealed, correctAnswer, selectedAnswer, questionIndex]);
 
-  // ============== RENDER - TUTAJ MOŻESZ DODAĆ SWÓJ WYGLĄD ==============
+  // ============== FUNKCJE POMOCNICZE ==============
+
+  // Funkcja do sprawdzania czy odpowiedź jest ukryta (50:50)
+  const isAnswerVisible = (key: AnswerKey): boolean => {
+    return lifelineResult.includes(key);
+  };
+
+  // Funkcja do pobierania stanu odpowiedzi
+  const getAnswerState = (
+    key: AnswerKey
+  ): "default" | "selected" | "correct" => {
+    if (selectedAnswer === key) return "selected";
+    if (isAnswerRevealed && correctAnswer === key) return "correct";
+    return "default";
+  };
+
+  // ============== RENDER - TUTAJ MOŻESZ ZBUDOWAĆ SWÓJ INTERFEJS ==============
 
   // Jeśli nie jest jeszcze zainicjalizowane
   if (!isInitialized) {
     return (
-      <div className="loading">
+      <div className="min-h-screen flex items-center justify-center">
         <p>Łączenie z grą...</p>
       </div>
     );
@@ -393,7 +328,7 @@ export default function PlayerViewPage() {
   // Jeśli wystąpił błąd połączenia
   if (connectionStatus === PLAYER_CONSTANTS.CONNECTION_STATES.ERROR) {
     return (
-      <div className="error">
+      <div className="min-h-screen flex items-center justify-center flex-col">
         <h2>Błąd połączenia</h2>
         <p>Nie udało się połączyć z serwerem gry.</p>
         <button onClick={() => window.location.reload()}>
@@ -406,7 +341,7 @@ export default function PlayerViewPage() {
   // Jeśli gra nie została jeszcze rozpoczęta
   if (gameStatus === "waiting" || !session) {
     return (
-      <div className="waiting">
+      <div className="min-h-screen flex items-center justify-center flex-col">
         <h1>Milionerzy</h1>
         <p>Oczekiwanie na rozpoczęcie gry...</p>
         <p>
@@ -419,379 +354,264 @@ export default function PlayerViewPage() {
 
   // Jeśli gra się zakończyła
   if (gameStatus === "ended") {
-    return (
-      <div className="game-ended">
-        <h1>Koniec gry!</h1>
-        <h2>{finalResult === "win" ? "Wygrana!" : "Przegrana"}</h2>
-        <p>Wygrane: {winnings}</p>
-
-        {/* Historia odpowiedzi */}
-        {answerHistory.length > 0 && (
-          <div>
-            <h3>Historia odpowiedzi:</h3>
-            {answerHistory.map((answer, index) => (
-              <div
-                key={index}
-                className={answer.isCorrect ? "correct" : "incorrect"}
-              >
-                Pytanie {answer.questionIndex + 1}: {answer.selectedAnswer}
-                (poprawna: {answer.correctAnswer})
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
+    return <></>;
   }
 
-  // Główny widok gry
+  // ============== GŁÓWNY WIDOK GRY - TUTAJ ZBUDUJ SWÓJ INTERFEJS ==============
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
-      {/* Górna sekcja z nagrodą i kołami ratunkowymi */}
-      <div className="mt-16 flex justify-between">
-        {/* Aktualna nagroda */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div
-            className="image-styling relative w-80"
-            style={{ backgroundImage: `url(${IMAGES.PRIZE_BACKGROUND})` }}
-          >
-            <div
-              ref={prizeFontRef}
-              style={{ fontSize: prizeFontSize }}
-              className="absolute left-[35%] top-1/2 -translate-y-1/2 w-[53%] h-[90%] text-center font-bold text-white flex items-center justify-center"
-            >
-              {currentPrize}
-            </div>
-            <Image
-              width={2000}
-              height={2000}
-              src={IMAGES.PRIZE_BACKGROUND}
-              className="invisible"
-              alt="Prize"
-            />
-          </div>
-        </motion.div>
+    <div
+      className="min-h-screen bg-cover bg-center"
+      style={{ backgroundImage: `url(${IMAGES.BACKGROUND})` }}
+    >
+      {/* TUTAJ MOŻESZ ZBUDOWAĆ SWÓJ WŁASNY INTERFEJS */}
 
-        {/* Koła ratunkowe */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+      {/* Przykładowa podstawowa struktura - możesz całkowicie ją zastąpić */}
+      <div className="">
+        {/* Górna sekcja - nagroda i koła ratunkowe */}
+        <div className="flex justify-between items-center mb-8">
+          {/* Koła ratunkowe */}
           <div className="flex gap-4">
-            {/* 50:50 */}
-            <div className="relative">
-              <Image
-                width={2000}
-                height={2000}
-                src={IMAGES.CROSS_MARK || "/assets/images/cross-mark.png"}
-                className={`absolute w-3/4 transition-opacity duration-200 ${
-                  lifelinesUsed.fiftyFifty ? "opacity-100" : "opacity-0"
-                }`}
-                alt="Użyte 50:50"
-              />
-              <Image
-                width={2000}
-                height={2000}
-                src={IMAGES.HINTS.F_F}
-                className="w-3/4"
-                alt="50:50"
-              />
+            <div
+              className={`p-2 rounded ${
+                lifelinesUsed.fiftyFifty ? "bg-red-500" : "bg-green-500"
+              } text-white`}
+            >
+              50:50 {lifelinesUsed.fiftyFifty ? "✗" : "✓"}
             </div>
-
-            {/* Publiczność */}
-            <div className="relative">
-              <Image
-                width={2000}
-                height={2000}
-                src={IMAGES.CROSS_MARK || "/assets/images/cross-mark.png"}
-                className={`absolute w-3/4 transition-opacity duration-200 ${
-                  lifelinesUsed.askAudience ? "opacity-100" : "opacity-0"
-                }`}
-                alt="Użyte głosowanie"
-              />
-              <Image
-                width={2000}
-                height={2000}
-                src={IMAGES.HINTS.VOTING}
-                className="w-3/4"
-                alt="Publiczność"
-              />
+            <div
+              className={`p-2 rounded ${
+                lifelinesUsed.askAudience ? "bg-red-500" : "bg-green-500"
+              } text-white`}
+            >
+              Publiczność {lifelinesUsed.askAudience ? "✗" : "✓"}
             </div>
-
-            {/* Telefon */}
-            <div className="relative">
-              <Image
-                width={2000}
-                height={2000}
-                src={IMAGES.CROSS_MARK || "/assets/images/cross-mark.png"}
-                className={`absolute w-3/4 transition-opacity duration-200 ${
-                  lifelinesUsed.phoneAFriend ? "opacity-100" : "opacity-0"
-                }`}
-                alt="Użyty telefon"
-              />
-              <Image
-                width={2000}
-                height={2000}
-                src={IMAGES.HINTS.PHONE}
-                className="w-3/4"
-                alt="Telefon"
-              />
+            <div
+              className={`p-2 rounded ${
+                lifelinesUsed.phoneAFriend ? "bg-red-500" : "bg-green-500"
+              } text-white`}
+            >
+              Telefon {lifelinesUsed.phoneAFriend ? "✗" : "✓"}
             </div>
           </div>
-        </motion.div>
-      </div>
+        </div>
 
-      {/* Dolna sekcja z pytaniem i odpowiedziami */}
-      <div className="absolute bottom-16 flex flex-col gap-16 w-full">
         {/* Pytanie */}
         {currentQuestion && (
-          <motion.div
-            key={currentQuestion.content}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
+          <div
+            className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url(${IMAGES.QUESTION_BACKGROUND})`,
+            }}
           >
+            {/* Niewidoczny obrazek dla wymiarów */}
+            <Image
+              src={IMAGES.QUESTION_BACKGROUND}
+              width={1920}
+              height={400}
+              alt="Pytanie"
+              className="w-full invisible"
+              draggable={false}
+            />
+
             <div
-              className="image-styling relative w-full"
-              style={{ backgroundImage: `url(${IMAGES.QUESTION_BACKGROUND})` }}
+              ref={prizeRef}
+              className="absolute top-[31%] -translate-y-1/2 left-1/2 -translate-x-1/2 w-[9%] h-[15%] flex items-center justify-center"
             >
-              <div
-                ref={questionFontRef}
-                style={{ fontSize: questionFontSize }}
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75%] h-[90%] text-center font-bold text-white flex justify-center items-center"
+              <p
+                style={{ ...COINY.style, fontSize: prizeFontSize }}
+                className="text-white text-center text-shadow-bold"
+              >
+                {currentPrize}
+              </p>
+            </div>
+
+            <div
+              ref={questionRef}
+              className="absolute top-[55%] -translate-y-1/2 h-[40%] left-1/2 -translate-x-1/2 w-[76%] flex items-center justify-center"
+            >
+              <p
+                style={{ ...INTER.style, fontSize: questionFontSize }}
+                className="text-white text-center font-bold text-shadow-bold"
               >
                 {currentQuestion.content}
-              </div>
-              <Image
-                width={2000}
-                height={2000}
-                src={IMAGES.QUESTION_BACKGROUND}
-                className="invisible w-full"
-                alt="Question Background"
-              />
+              </p>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Odpowiedzi */}
         {currentQuestion && (
-          <div className="flex flex-col gap-4 relative">
-            {/* Animacja aktywnego koła ratunkowego */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-28">
-              {activeLifeline && (
-                <Image
-                  width={2000}
-                  height={2000}
-                  src={IMAGES.HINTS[activeLifeline]}
-                  alt=""
-                  id="HINTANIMATION"
-                />
+          <div className="space-y-4">
+            {/* Rząd A i B */}
+            <div
+              className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
+              style={{
+                backgroundImage: `url(${getAnswerRowBackground(
+                  getAnswerState("A"),
+                  getAnswerState("B")
+                )})`,
+              }}
+            >
+              {/* Niewidoczny obrazek dla wymiarów */}
+              <Image
+                src={getAnswerRowBackground(
+                  getAnswerState("A"),
+                  getAnswerState("B")
+                )}
+                width={1920}
+                height={150}
+                alt="Odpowiedzi A i B"
+                className="w-full invisible"
+                draggable={false}
+              />
+
+              {/* Odpowiedź A */}
+              {isAnswerVisible("A") && (
+                <div
+                  ref={answerARef}
+                  className="absolute left-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center"
+                >
+                  <p
+                    style={{ ...INTER.style, fontSize: answerAFontSize }}
+                    className="text-white font-bold px-4 text-shadow-bold flex justify-between items-center w-full"
+                  >
+                    <span className="font-extrabold">A:</span>
+                    <span>{currentQuestion.answers.A}</span>
+                    <span className="invisible">A:</span>
+                  </p>
+                </div>
+              )}
+
+              {/* Odpowiedź B */}
+              {isAnswerVisible("B") && (
+                <div
+                  ref={answerBRef}
+                  className="absolute right-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center"
+                >
+                  <p
+                    style={{ ...INTER.style, fontSize: answerBFontSize }}
+                    className="text-white font-bold px-4 text-shadow-bold flex justify-between items-center w-full"
+                  >
+                    <span className="font-extrabold">B:</span>
+                    <span>{currentQuestion.answers.B}</span>
+                    <span className="invisible">B:</span>
+                  </p>
+                </div>
               )}
             </div>
 
-            {/* Grupa A i B */}
-            <div className="flex">
-              {(["A", "B"] as AnswerKey[]).map((key) => (
-                <motion.div
-                  className="flex-1"
-                  key={`${key}-${questionIndex}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{
-                    duration: 1.5,
-                    delay: 0.5 * (key === "A" ? 1 : 2),
-                  }}
-                >
-                  <div
-                    className={`image-styling relative ${
-                      lifelineResult.includes(key) ? key : "opacity-0"
-                    }`}
-                    style={{
-                      backgroundImage: `url(${getAnswerBackground(
-                        key,
-                        selectedAnswer === key
-                          ? "selected"
-                          : isAnswerRevealed && correctAnswer === key
-                          ? "correct"
-                          : "normal"
-                      )})`,
-                    }}
-                  >
-                    <div
-                      ref={getAnswerFontProps(key).ref}
-                      style={{ fontSize: getAnswerFontProps(key).fontSize }}
-                      className={`absolute ${
-                        key === "A" ? "left-[35%]" : "left-[20%]"
-                      } top-1/2 -translate-y-1/2 w-[57.5%] font-bold flex justify-start items-center text-white h-[90%]`}
-                    >
-                      {currentQuestion.answers[key]}
-                    </div>
-                    <Image
-                      width={2000}
-                      height={2000}
-                      src={getAnswerBackground(
-                        key,
-                        selectedAnswer === key
-                          ? "selected"
-                          : isAnswerRevealed && correctAnswer === key
-                          ? "correct"
-                          : "normal"
-                      )}
-                      className="invisible w-full"
-                      alt={` Answer Background ${key}`}
-                    />
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+            {/* Rząd C i D */}
+            <div
+              className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
+              style={{
+                backgroundImage: `url(${getAnswerRowBackground(
+                  getAnswerState("C"),
+                  getAnswerState("D")
+                )})`,
+              }}
+            >
+              {/* Niewidoczny obrazek dla wymiarów */}
+              <Image
+                src={getAnswerRowBackground(
+                  getAnswerState("C"),
+                  getAnswerState("D")
+                )}
+                width={1920}
+                height={150}
+                alt="Odpowiedzi C i D"
+                className="w-full invisible"
+                draggable={false}
+              />
 
-            {/* Grupa C i D */}
-            <div className="flex">
-              {(["C", "D"] as AnswerKey[]).map((key) => (
-                <motion.div
-                  className="flex-1"
-                  key={`${key}-${questionIndex}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{
-                    duration: 1.5,
-                    delay: 0.5 * (key === "C" ? 3 : 4),
-                  }}
+              {/* Odpowiedź C */}
+              {isAnswerVisible("C") && (
+                <div
+                  ref={answerCRef}
+                  className="absolute left-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center"
                 >
-                  <div
-                    className={`image-styling relative ${
-                      lifelineResult.includes(key) ? key : "opacity-0"
-                    }`}
-                    style={{
-                      backgroundImage: `url(${getAnswerBackground(
-                        key,
-                        selectedAnswer === key
-                          ? "selected"
-                          : isAnswerRevealed && correctAnswer === key
-                          ? "correct"
-                          : "normal"
-                      )})`,
-                    }}
+                  <p
+                    style={{ ...INTER.style, fontSize: answerCFontSize }}
+                    className="text-white font-bold px-4 text-shadow-bold flex justify-between items-center w-full"
                   >
-                    <div
-                      ref={getAnswerFontProps(key).ref}
-                      style={{ fontSize: getAnswerFontProps(key).fontSize }}
-                      className={`absolute ${
-                        key === "C" ? "left-[35%]" : "left-[20%]"
-                      } top-1/2 -translate-y-1/2 w-[57.5%] font-bold h-[90%] flex justify-start items-center text-white`}
-                    >
-                      {currentQuestion.answers[key]}
-                    </div>
-                    <Image
-                      width={2000}
-                      height={2000}
-                      src={getAnswerBackground(
-                        key,
-                        selectedAnswer === key
-                          ? "selected"
-                          : isAnswerRevealed && correctAnswer === key
-                          ? "correct"
-                          : "normal"
-                      )}
-                      className="invisible w-full"
-                      alt={`Answer Background ${key}`}
-                    />
-                  </div>
-                </motion.div>
-              ))}
+                    <span className="font-extrabold">C:</span>
+                    <span>{currentQuestion.answers.C}</span>
+                    <span className="invisible">C:</span>
+                  </p>
+                </div>
+              )}
+
+              {/* Odpowiedź D */}
+              {isAnswerVisible("D") && (
+                <div
+                  ref={answerDRef}
+                  className="absolute right-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center"
+                >
+                  <p
+                    style={{ ...INTER.style, fontSize: answerDFontSize }}
+                    className="text-white font-bold px-4 text-shadow-bold flex justify-between items-center w-full"
+                  >
+                    <span className="font-extrabold">D:</span>
+                    <span>{currentQuestion.answers.D}</span>
+                    <span className="invisible">D:</span>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
-      </div>
 
-      {/* Stan głosowania publiczności */}
-      {audienceVotingActive && (
-        <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-20">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="bg-blue-900 p-8 rounded-lg text-center"
-          >
-            <h3 className="text-2xl font-bold text-yellow-400 mb-4">
-              🗳️ Trwa głosowanie publiczności...
-            </h3>
-            <div className="animate-pulse">
-              <div className="w-16 h-16 bg-yellow-400 rounded-full mx-auto"></div>
+        {/* Stan głosowania publiczności */}
+        {audienceVotingActive && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-white p-8 rounded">
+              <h3 className="text-xl mb-4">
+                🗳️ Trwa głosowanie publiczności...
+              </h3>
+              <div className="animate-pulse bg-blue-500 w-16 h-16 rounded-full mx-auto"></div>
             </div>
-          </motion.div>
-        </div>
-      )}
+          </div>
+        )}
 
-      {/* Stan pauzy */}
-      {gameStatus === "paused" && (
-        <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-70 flex items-center justify-center z-20">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="bg-gray-900 p-8 rounded-lg text-center"
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Gra wstrzymana
-            </h2>
-            <p className="text-xl text-gray-300">
-              Oczekiwanie na wznowienie...
-            </p>
-          </motion.div>
-        </div>
-      )}
+        {/* Stan pauzy */}
+        {gameStatus === "paused" && (
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center">
+            <div className="bg-white p-8 rounded text-center">
+              <h2 className="text-2xl font-bold mb-4">Gra wstrzymana</h2>
+              <p>Oczekiwanie na wznowienie...</p>
+            </div>
+          </div>
+        )}
 
-      {/* Efekty wizualne */}
-      {particles.map((particle) => (
-        <div
-          key={particle.id}
-          className="particle"
-          style={{ left: `${particle.x}px`, top: `${particle.y}px` }}
-        />
-      ))}
-
-      {celebrationBursts.map((burst) => (
-        <div
-          key={burst.id}
-          className="celebration-burst"
-          style={{ left: `${burst.x}px`, top: `${burst.y}px` }}
-        />
-      ))}
-
-      {/* Debug info (development) */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="absolute top-4 right-4 bg-black bg-opacity-70 p-4 rounded text-white text-sm max-w-xs">
-          <details>
-            <summary className="cursor-pointer">Debug Info</summary>
-            <pre className="text-xs mt-2">
-              {JSON.stringify(
-                {
-                  gameStatus,
-                  questionIndex,
-                  selectedAnswer,
-                  correctAnswer,
-                  isAnswerRevealed,
-                  answerLocked,
-                  timeRemaining,
-                  isConnected,
-                  connectionStatus,
-                },
-                null,
-                2
-              )}
-            </pre>
-          </details>
-        </div>
-      )}
+        {/* Informacje pomocnicze do developmentu */}
+        {process.env.NODE_ENV === "development" && (
+          <div className="mt-8 p-4 bg-gray-100 rounded">
+            <details>
+              <summary className="cursor-pointer font-bold">Debug Info</summary>
+              <pre className="text-xs mt-2 whitespace-pre-wrap">
+                {JSON.stringify(
+                  {
+                    gameStatus,
+                    questionIndex,
+                    selectedAnswer,
+                    correctAnswer,
+                    isAnswerRevealed,
+                    answerLocked,
+                    timeRemaining,
+                    isConnected,
+                    connectionStatus,
+                    lifelinesUsed,
+                    audienceVotingActive,
+                    showQuestionAnimation,
+                    showAnswerAnimation,
+                  },
+                  null,
+                  2
+                )}
+              </pre>
+            </details>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

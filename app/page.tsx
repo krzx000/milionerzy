@@ -1,10 +1,14 @@
+import { IMAGES } from "@/lib/utils/game-assets";
 import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="w-screen h-screen relative flex flex-col items-center justify-center bg-[url(/assets/images/background.jpg)] bg-no-repeat bg-center bg-cover">
+    <div
+      style={{ backgroundImage: `url(${IMAGES.BACKGROUND})` }}
+      className={`w-screen h-screen relative flex flex-col items-center justify-center bg-no-repeat bg-center bg-cover`}
+    >
       <Image
-        src={"/assets/images/logo.webp"}
+        src={IMAGES.LOGO}
         alt="Logo"
         width={512}
         height={512}
