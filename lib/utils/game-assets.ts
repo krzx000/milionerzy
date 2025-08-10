@@ -23,6 +23,20 @@ export const IMAGES = {
     SELECTED_DEFAULT: "/assets/images/answer-background/selected-default.png",
     SELECTED_CORRECT: "/assets/images/answer-background/selected-correct.png",
   },
+  LIFELINES_BACKGROUND: {
+    FIFTY_FIFTY: {
+      AVAILABLE: "/assets/images/lifelines/fifty.png",
+      USED: "/assets/images/lifelines/fifty-used.png",
+    },
+    VOTING: {
+      AVAILABLE: "/assets/images/lifelines/audience.png",
+      USED: "/assets/images/lifelines/audience-used.png",
+    },
+    PHONE: {
+      AVAILABLE: "/assets/images/lifelines/phone.png",
+      USED: "/assets/images/lifelines/phone-used.png",
+    },
+  },
 } as const;
 
 export type AnswerKey = "A" | "B" | "C" | "D";
