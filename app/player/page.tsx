@@ -307,8 +307,8 @@ export default function PlayerViewPage() {
   ): "default" | "selected" | "correct" => {
     // Pierwszeństwo ma ujawniona poprawna odpowiedź
     if (isAnswerRevealed && correctAnswer === key) return "correct";
-    // Potem sprawdzamy czy jest wybrana (ale nie ujawniona)
-    if (selectedAnswer === key && !isAnswerRevealed) return "selected";
+    // Jeśli odpowiedź jest zaznaczona (niezależnie od tego czy jest ujawniona czy nie)
+    if (selectedAnswer === key) return "selected";
     return "default";
   };
 
