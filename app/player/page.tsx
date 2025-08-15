@@ -451,34 +451,6 @@ export default function PlayerViewPage() {
 
       {/* Przykładowa podstawowa struktura - możesz całkowicie ją zastąpić */}
       <div className=" h-screen flex flex-col justify-end">
-        {/* Górna sekcja - nagroda i koła ratunkowe */}
-        <div className="flex justify-between items-center mb-8">
-          {/* Koła ratunkowe */}
-          <div className="flex gap-4">
-            <div
-              className={`p-2 rounded ${
-                lifelinesUsed.fiftyFifty ? "bg-red-500" : "bg-green-500"
-              } text-white`}
-            >
-              50:50 {lifelinesUsed.fiftyFifty ? "✗" : "✓"}
-            </div>
-            <div
-              className={`p-2 rounded ${
-                lifelinesUsed.askAudience ? "bg-red-500" : "bg-green-500"
-              } text-white`}
-            >
-              Publiczność {lifelinesUsed.askAudience ? "✗" : "✓"}
-            </div>
-            <div
-              className={`p-2 rounded ${
-                lifelinesUsed.phoneAFriend ? "bg-red-500" : "bg-green-500"
-              } text-white`}
-            >
-              Telefon {lifelinesUsed.phoneAFriend ? "✗" : "✓"}
-            </div>
-          </div>
-        </div>
-
         {/* Pytanie */}
 
         <div className="flex justify-center">
@@ -584,7 +556,7 @@ export default function PlayerViewPage() {
 
         {/* Odpowiedzi */}
         {currentQuestion && (
-          <div className="-space-y-8">
+          <div className="-space-y-8 relative">
             {/* Rząd A i B */}
             <div
               className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
@@ -641,6 +613,22 @@ export default function PlayerViewPage() {
                   </p>
                 </div>
               )}
+            </div>
+
+            <div className="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-fit h-[55%]">
+              <span
+                style={{ ...COINY.style }}
+                className="absolute left-1/2 top-[52%] -translate-y-1/2 -translate-x-1/2 text-white text-4xl text-shadow-bold"
+              >
+                {questionIndex + 1}
+              </span>
+              <Image
+                src={IMAGES.QUESTION_INDEX_BACKGROUND}
+                alt="Indeks pytania"
+                width={256}
+                height={256}
+                className="h-full w-full"
+              />
             </div>
 
             {/* Rząd C i D */}

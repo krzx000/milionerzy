@@ -3,6 +3,7 @@ export const IMAGES = {
   LOGO: "/assets/images/logo.png",
   QUESTION_BACKGROUND: "/assets/images/question-prize-background.png",
   BACKGROUND: "/assets/images/background.png",
+  QUESTION_INDEX_BACKGROUND: "/assets/images/question-index-background.png",
 
   // Koła ratunkowe
   HINTS: {
