@@ -45,6 +45,7 @@ export interface PlayerGameState {
   showQuestionAnimation: boolean;
   showAnswerAnimation: boolean;
   showPrizeAnimation: boolean;
+  showTransitionScreen: boolean;
 
   // Historia odpowiedzi
   answerHistory: Array<{
@@ -91,6 +92,7 @@ const initialState: PlayerGameState = {
   showQuestionAnimation: false,
   showAnswerAnimation: false,
   showPrizeAnimation: false,
+  showTransitionScreen: false,
   answerHistory: [],
 };
 
@@ -203,6 +205,109 @@ export function usePlayerState() {
     }
   }, []);
 
+  // Funkcja pomocnicza do obsługi nowego pytania
+  const handleNewQuestion = React.useCallback(
+    (
+      newQuestion: Question | null,
+      newQuestionIndex: number,
+      newTotalQuestions: number,
+      newHiddenAnswers: string[]
+    ) => {
+      // Jeśli nie ma pytania w event'cie, pobierz sesję z API
+      if (!newQuestion) {
+        console.log(
+          "Player: Brak pytania w question-changed, pobieranie z API..."
+        );
+        fetch("/api/game/session")
+          .then((response) => response.json())
+          .then((result) => {
+            if (result.success && result.data) {
+              const sessionWithQuestions = result.data;
+              const currentQuestion = sessionWithQuestions.currentQuestion;
+
+              setState((prev) => ({
+                ...prev,
+                session: sessionWithQuestions,
+                currentQuestion,
+                questionIndex: newQuestionIndex,
+                totalQuestions:
+                  newTotalQuestions > 0
+                    ? newTotalQuestions
+                    : sessionWithQuestions.totalQuestions ||
+                      prev.totalQuestions,
+                currentPrize: getCurrentPrize(newQuestionIndex),
+                gameStatus: "active",
+                selectedAnswer: null,
+                correctAnswer: null,
+                isAnswerRevealed: false,
+                hiddenAnswers: newHiddenAnswers,
+                answerLocked: false,
+                showFinalAnswer: false,
+                showTransitionScreen: false,
+                // Reset kół ratunkowych na początku nowej gry (pierwsze pytanie)
+                lifelinesUsed:
+                  newQuestionIndex === 0
+                    ? {
+                        fiftyFifty: false,
+                        phoneAFriend: false,
+                        askAudience: false,
+                      }
+                    : {
+                        fiftyFifty:
+                          sessionWithQuestions?.usedLifelines?.fiftyFifty ||
+                          false,
+                        phoneAFriend:
+                          sessionWithQuestions?.usedLifelines?.phoneAFriend ||
+                          false,
+                        askAudience:
+                          sessionWithQuestions?.usedLifelines?.askAudience ||
+                          false,
+                      },
+              }));
+
+              triggerAnimation("showQuestionAnimation");
+              triggerAnimation("showPrizeAnimation");
+              startTimer(30);
+            }
+          })
+          .catch((error) => {
+            console.error("Player: Błąd pobierania sesji z API:", error);
+          });
+      } else {
+        setState((prev) => ({
+          ...prev,
+          currentQuestion: newQuestion,
+          questionIndex: newQuestionIndex,
+          totalQuestions:
+            newTotalQuestions > 0 ? newTotalQuestions : prev.totalQuestions,
+          currentPrize: getCurrentPrize(newQuestionIndex),
+          gameStatus: "active",
+          selectedAnswer: null,
+          correctAnswer: null,
+          isAnswerRevealed: false,
+          hiddenAnswers: newHiddenAnswers,
+          answerLocked: false,
+          showFinalAnswer: false,
+          showTransitionScreen: false,
+          // Reset kół ratunkowych na początku nowej gry (pierwsze pytanie)
+          lifelinesUsed:
+            newQuestionIndex === 0
+              ? {
+                  fiftyFifty: false,
+                  phoneAFriend: false,
+                  askAudience: false,
+                }
+              : prev.lifelinesUsed, // Zachowaj obecny stan jeśli to nie pierwsze pytanie
+        }));
+
+        triggerAnimation("showQuestionAnimation");
+        triggerAnimation("showPrizeAnimation");
+        startTimer(30);
+      }
+    },
+    [triggerAnimation, startTimer]
+  );
+
   // Obsługa eventów SSE
   const handleGameEvent = React.useCallback(
     (event: GameEventType, data: Record<string, unknown>) => {
@@ -268,94 +373,30 @@ export function usePlayerState() {
             "Player: question-changed - aktualizacja stanu do aktywnego"
           );
 
-          // Jeśli nie ma pytania w event'cie, pobierz sesję z API
-          if (!newQuestion) {
-            console.log(
-              "Player: Brak pytania w question-changed, pobieranie z API..."
-            );
-            fetch("/api/game/session")
-              .then((response) => response.json())
-              .then((result) => {
-                if (result.success && result.data) {
-                  const sessionWithQuestions = result.data;
-                  const currentQuestion = sessionWithQuestions.currentQuestion;
-
-                  setState((prev) => ({
-                    ...prev,
-                    session: sessionWithQuestions,
-                    currentQuestion,
-                    questionIndex: newQuestionIndex,
-                    totalQuestions:
-                      newTotalQuestions > 0
-                        ? newTotalQuestions
-                        : sessionWithQuestions.totalQuestions ||
-                          prev.totalQuestions,
-                    currentPrize: getCurrentPrize(newQuestionIndex),
-                    gameStatus: "active",
-                    selectedAnswer: null,
-                    correctAnswer: null,
-                    isAnswerRevealed: false,
-                    hiddenAnswers: newHiddenAnswers, // Zawsze ustaw nowe ukryte odpowiedzi
-                    answerLocked: false,
-                    showFinalAnswer: false,
-                    // Reset kół ratunkowych na początku nowej gry (pierwsze pytanie)
-                    lifelinesUsed:
-                      newQuestionIndex === 0
-                        ? {
-                            fiftyFifty: false,
-                            phoneAFriend: false,
-                            askAudience: false,
-                          }
-                        : {
-                            fiftyFifty:
-                              sessionWithQuestions?.usedLifelines?.fiftyFifty ||
-                              false,
-                            phoneAFriend:
-                              sessionWithQuestions?.usedLifelines
-                                ?.phoneAFriend || false,
-                            askAudience:
-                              sessionWithQuestions?.usedLifelines
-                                ?.askAudience || false,
-                          },
-                  }));
-
-                  triggerAnimation("showQuestionAnimation");
-                  triggerAnimation("showPrizeAnimation");
-                  startTimer(30);
-                }
-              })
-              .catch((error) => {
-                console.error("Player: Błąd pobierania sesji z API:", error);
-              });
-          } else {
+          // Jeśli to nie pierwsze pytanie, najpierw pokaż ekran przejściowy
+          if (newQuestionIndex > 0) {
             setState((prev) => ({
               ...prev,
-              currentQuestion: newQuestion,
-              questionIndex: newQuestionIndex,
-              totalQuestions:
-                newTotalQuestions > 0 ? newTotalQuestions : prev.totalQuestions,
-              currentPrize: getCurrentPrize(newQuestionIndex),
-              gameStatus: "active",
-              selectedAnswer: null,
-              correctAnswer: null,
-              isAnswerRevealed: false,
-              hiddenAnswers: newHiddenAnswers, // Zawsze ustaw nowe ukryte odpowiedzi (może być pusta tablica)
-              answerLocked: false,
-              showFinalAnswer: false,
-              // Reset kół ratunkowych na początku nowej gry (pierwsze pytanie)
-              lifelinesUsed:
-                newQuestionIndex === 0
-                  ? {
-                      fiftyFifty: false,
-                      phoneAFriend: false,
-                      askAudience: false,
-                    }
-                  : prev.lifelinesUsed, // Zachowaj obecny stan jeśli to nie pierwsze pytanie
+              showTransitionScreen: true,
             }));
 
-            triggerAnimation("showQuestionAnimation");
-            triggerAnimation("showPrizeAnimation");
-            startTimer(30);
+            // Po 3.2 sekundach ukryj ekran przejściowy i pokaż nowe pytanie
+            setTimeout(() => {
+              handleNewQuestion(
+                newQuestion,
+                newQuestionIndex,
+                newTotalQuestions,
+                newHiddenAnswers
+              );
+            }, 3200);
+          } else {
+            // Pierwsze pytanie - pokaż od razu
+            handleNewQuestion(
+              newQuestion,
+              newQuestionIndex,
+              newTotalQuestions,
+              newHiddenAnswers
+            );
           }
           break;
 
@@ -566,7 +607,7 @@ export function usePlayerState() {
           break;
       }
     },
-    [startTimer, stopTimer, triggerAnimation]
+    [startTimer, stopTimer, triggerAnimation, handleNewQuestion]
   );
 
   // Hook SSE

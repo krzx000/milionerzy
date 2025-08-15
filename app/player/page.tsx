@@ -70,6 +70,7 @@ export default function PlayerViewPage() {
     // Animacje
     showQuestionAnimation, // Czy pokazać animację pytania
     showAnswerAnimation, // Czy pokazać animację odpowiedzi
+    showTransitionScreen, // Czy pokazać ekran przejściowy między pytaniami
 
     // Historia
     answerHistory, // Historia wszystkich odpowiedzi
@@ -93,7 +94,7 @@ export default function PlayerViewPage() {
 
   // Wielkości czcionek
   const { fontSize: questionFontSize, ref: questionRef } = useFitText({
-    maxFontSize: 300,
+    maxFontSize: 270,
     minFontSize: 50,
   });
 
@@ -427,6 +428,7 @@ export default function PlayerViewPage() {
   });
 
   // ============== GŁÓWNY WIDOK GRY - TUTAJ ZBUDUJ SWÓJ INTERFEJS ==============
+
   return (
     <div
       className="min-h-screen bg-cover bg-center relative"
@@ -447,10 +449,8 @@ export default function PlayerViewPage() {
         )}
       </div>
 
-      {/* TUTAJ MOŻESZ ZBUDOWAĆ SWÓJ WŁASNY INTERFEJS */}
-
-      {/* Przykładowa podstawowa struktura - możesz całkowicie ją zastąpić */}
-      <div className=" h-screen flex flex-col justify-end">
+      {/* GŁÓWNA ZAWARTOŚĆ GRY */}
+      <div className="h-screen flex flex-col justify-end">
         {/* Pytanie */}
 
         <div className="flex justify-center">
@@ -460,13 +460,18 @@ export default function PlayerViewPage() {
             width={512}
             height={512}
             draggable={false}
-            className="w-1/4 select-none"
+            className={`w-1/4 select-none transition-all duration-500 ${
+              showTransitionScreen ? "opacity-0" : "opacity-100"
+            }`}
+            id="main-logo"
           />
         </div>
 
         {currentQuestion && (
           <div
-            className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
+            className={`relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat ${
+              showTransitionScreen ? "opacity-0" : "opacity-100"
+            }`}
             style={{
               backgroundImage: `url(${IMAGES.QUESTION_BACKGROUND})`,
             }}
@@ -507,7 +512,11 @@ export default function PlayerViewPage() {
           </div>
         )}
         {/* Koła ratunkowe (graficzne) */}
-        <div className="flex justify-center gap-4">
+        <div
+          className={`flex justify-center gap-4 transition-opacity duration-500 ${
+            showTransitionScreen ? "opacity-0" : "opacity-100"
+          }`}
+        >
           {/* 50:50 */}
           <Image
             src={
@@ -556,7 +565,11 @@ export default function PlayerViewPage() {
 
         {/* Odpowiedzi */}
         {currentQuestion && (
-          <div className="-space-y-8 relative">
+          <div
+            className={`-space-y-8 relative transition-opacity duration-500 ${
+              showTransitionScreen ? "opacity-0" : "opacity-100"
+            }`}
+          >
             {/* Rząd A i B */}
             <div
               className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
@@ -766,6 +779,114 @@ export default function PlayerViewPage() {
           />
         </div>
       </div>
+
+      {/* EKRAN PRZEJŚCIOWY - NAKŁADKA */}
+      {showTransitionScreen && (
+        <div className="fixed inset-0 z-40 transition-screen-overlay">
+          {/* Tło z blur */}
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${IMAGES.BACKGROUND})`,
+              filter: "blur(3px)",
+              transform: "scale(1.1)", // Żeby uniknąć białych krawędzi przy blur
+            }}
+          ></div>
+
+          {/* Overlay dla kontrastu */}
+          <div
+            className="absolute inset-0"
+            style={{ backgroundColor: "rgba(0, 0, 0, 0.2)" }}
+          ></div>
+
+          {/* Logo animowane - przechodzi z pozycji górnej na środek i pulsuje */}
+          <div className="relative min-h-screen flex items-center justify-center">
+            <div className="transition-screen-logo">
+              <Image
+                src={IMAGES.LOGO}
+                alt="Logo Milionerzy"
+                width={600}
+                height={300}
+                className="drop-shadow-2xl"
+                priority
+              />
+            </div>
+          </div>
+
+          {/* Style CSS dla animacji */}
+          <style jsx>{`
+            .transition-screen-overlay {
+              animation: overlayFadeIn 0.3s ease-out;
+            }
+
+            .transition-screen-logo {
+              animation: logoTransition 3.2s ease-in-out;
+            }
+
+            @keyframes overlayFadeIn {
+              from {
+                opacity: 0;
+              }
+              to {
+                opacity: 1;
+              }
+            }
+
+            @keyframes logoTransition {
+              0% {
+                /* Zaczynamy z pozycji gdzie logo jest na górze ekranu */
+                transform: translateY(-35vh) scale(0.5);
+                opacity: 0.8;
+              }
+              15% {
+                /* Przesuwamy do środka */
+                transform: translateY(0) scale(0.8);
+                opacity: 1;
+              }
+              25% {
+                /* Logo osiąga środek i zaczyna pulsować */
+                transform: translateY(0) scale(1);
+                opacity: 1;
+              }
+              35% {
+                transform: translateY(0) scale(1.15);
+                opacity: 0.95;
+              }
+              45% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+              }
+              55% {
+                transform: translateY(0) scale(1.1);
+                opacity: 0.95;
+              }
+              65% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+              }
+              75% {
+                transform: translateY(0) scale(1.05);
+                opacity: 0.98;
+              }
+              85% {
+                /* Kończy pulsowanie */
+                transform: translateY(0) scale(1);
+                opacity: 1;
+              }
+              95% {
+                /* Delikatnie zaczyna wracać */
+                transform: translateY(-20vh) scale(0.75);
+                opacity: 0.6;
+              }
+              100% {
+                /* Znika */
+                transform: translateY(-20vh) scale(0.5);
+                opacity: 0;
+              }
+            }
+          `}</style>
+        </div>
+      )}
     </div>
   );
 }
