@@ -78,17 +78,23 @@ export async function POST(request: NextRequest) {
       askAudience: "Pytanie do publiczności",
     } as const;
 
+    // Przygotuj dodatkowe dane dla eventu SSE
+    const eventData: Record<string, unknown> = {
+      lifeline,
+      lifelineName: lifelineNames[lifeline] || lifeline,
+      questionIndex: session.currentQuestionIndex,
+      usedLifelines: session.usedLifelines,
+    };
+
+    // Jeśli to koło 50:50, dodaj informacje o ukrytych odpowiedziach
+    if (lifeline === "fiftyFifty") {
+      const hiddenForCurrentQuestion =
+        session.hiddenAnswers[session.currentQuestionIndex] || [];
+      eventData.hiddenAnswers = hiddenForCurrentQuestion;
+    }
+
     // Broadcast SSE event o użyciu koła ratunkowego
-    sseManager.broadcast(
-      "lifeline-used",
-      {
-        lifeline,
-        lifelineName: lifelineNames[lifeline] || lifeline,
-        questionIndex: session.currentQuestionIndex,
-        usedLifelines: session.usedLifelines,
-      },
-      "all"
-    );
+    sseManager.broadcast("lifeline-used", eventData, "all");
 
     return NextResponse.json({
       success: true,

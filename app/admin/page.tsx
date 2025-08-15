@@ -377,14 +377,27 @@ export default function Admin() {
 
   const handleSelectAnswer = React.useCallback(
     (answer: string) => {
+      console.log("handleSelectAnswer called with:", answer);
+      console.log("Current state:", {
+        isGameActive,
+        gameLoading,
+        isAnswerRevealed,
+        isGameEnded,
+        "lastAnswerResult?.gameWon": lastAnswerResult?.gameWon,
+      });
+
       if (
         !isGameActive ||
         gameLoading ||
         isAnswerRevealed ||
         isGameEnded ||
         lastAnswerResult?.gameWon
-      )
+      ) {
+        console.log("handleSelectAnswer: condition failed, returning early");
         return;
+      }
+
+      console.log("handleSelectAnswer: setting selected answer to:", answer);
       setSelectedAnswer(answer);
     },
     [

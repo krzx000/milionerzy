@@ -285,6 +285,7 @@ export function usePlayerState() {
                     selectedAnswer: null,
                     correctAnswer: null,
                     isAnswerRevealed: false,
+                    hiddenAnswers: newHiddenAnswers, // Zawsze ustaw nowe ukryte odpowiedzi
                     answerLocked: false,
                     showFinalAnswer: false,
                   }));
@@ -309,10 +310,7 @@ export function usePlayerState() {
               selectedAnswer: null,
               correctAnswer: null,
               isAnswerRevealed: false,
-              hiddenAnswers:
-                newHiddenAnswers.length > 0
-                  ? newHiddenAnswers
-                  : prev.hiddenAnswers,
+              hiddenAnswers: newHiddenAnswers, // Zawsze ustaw nowe ukryte odpowiedzi (może być pusta tablica)
               answerLocked: false,
               showFinalAnswer: false,
             }));

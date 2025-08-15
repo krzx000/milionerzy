@@ -49,6 +49,13 @@ export function CurrentQuestionDisplay({
   const isGameEnded = gameSession?.status === "finished";
   const currentQuestionIndex = gameSession?.currentQuestionIndex || 0;
 
+  console.log("CurrentQuestionDisplay render:", {
+    isGameActive,
+    currentQuestion: !!currentQuestion,
+    questionContent: currentQuestion?.content?.substring(0, 50),
+    gameSessionStatus: gameSession?.status,
+  });
+
   return (
     <Card className="h-full">
       <CardHeader>

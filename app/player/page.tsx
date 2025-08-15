@@ -62,6 +62,7 @@ export default function PlayerViewPage() {
 
     // Koła ratunkowe
     lifelinesUsed, // { fiftyFifty: boolean, phoneAFriend: boolean, askAudience: boolean }
+    hiddenAnswers, // Ukryte odpowiedzi (50:50)
     audienceVotingActive, // Czy trwa głosowanie publiczności
 
     // Animacje
@@ -226,27 +227,25 @@ export default function PlayerViewPage() {
     }
   }, [gameStatus, stopAll]);
 
-  // Zarządzanie wynikami koła ratunkowego 50:50
+  // Zarządzanie wynikami koła ratunkowego 50:50 - używamy danych z serwera
   React.useEffect(() => {
-    if (currentQuestion && lifelinesUsed.fiftyFifty) {
-      // Symuluj ukrycie dwóch niepoprawnych odpowiedzi
-      const allAnswers: AnswerKey[] = ["A", "B", "C", "D"];
-      const correctKey = correctAnswer as AnswerKey;
-      const availableIncorrect = allAnswers.filter((key) => key !== correctKey);
-
-      // Wybierz jedną niepoprawną odpowiedź do pokazania (losowo)
-      const randomIncorrect =
-        availableIncorrect[
-          Math.floor(Math.random() * availableIncorrect.length)
-        ];
-      setLifelineResult([correctKey, randomIncorrect]);
-    } else {
-      setLifelineResult(["A", "B", "C", "D"]);
+    if (currentQuestion) {
+      if (lifelinesUsed.fiftyFifty && hiddenAnswers.length > 0) {
+        // Użyj ukrytych odpowiedzi z serwera - pokaż tylko te, które NIE są ukryte
+        const allAnswers: AnswerKey[] = ["A", "B", "C", "D"];
+        const visibleAnswers = allAnswers.filter(
+          (key) => !hiddenAnswers.includes(key)
+        );
+        setLifelineResult(visibleAnswers);
+      } else {
+        // Pokaż wszystkie odpowiedzi
+        setLifelineResult(["A", "B", "C", "D"]);
+      }
     }
   }, [
     currentQuestion,
     lifelinesUsed.fiftyFifty,
-    correctAnswer,
+    hiddenAnswers,
     setLifelineResult,
   ]);
 
