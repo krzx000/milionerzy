@@ -338,6 +338,11 @@ export default function PlayerViewPage() {
 
   // Jeśli gra nie została jeszcze rozpoczęta
   if (gameStatus === "waiting" || !session) {
+    console.log("Player page: Rendering waiting screen", {
+      gameStatus,
+      hasSession: !!session,
+      hasCurrentQuestion: !!currentQuestion,
+    });
     return (
       <div className="min-h-screen flex items-center justify-center flex-col">
         <h1>Milionerzy</h1>
@@ -352,8 +357,17 @@ export default function PlayerViewPage() {
 
   // Jeśli gra się zakończyła
   if (gameStatus === "ended") {
+    console.log("Player page: Game ended, rendering empty component");
     return <></>;
   }
+
+  console.log("Player page: Rendering main game UI", {
+    gameStatus,
+    hasSession: !!session,
+    hasCurrentQuestion: !!currentQuestion,
+    questionIndex,
+    currentPrize,
+  });
 
   // ============== GŁÓWNY WIDOK GRY - TUTAJ ZBUDUJ SWÓJ INTERFEJS ==============
   return (

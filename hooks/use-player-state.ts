@@ -217,6 +217,16 @@ export function usePlayerState() {
           const questionIndex = gameStartData.questionIndex as number;
           const totalQuestions = gameStartData.totalQuestions as number;
 
+          console.log("Player: game-started event received:", {
+            hasSession: !!session,
+            hasCurrentQuestion: !!currentQuestion,
+            questionIndex,
+            totalQuestions,
+            sessionStatus: session?.status,
+            sessionId: session?.id,
+            questionContent: currentQuestion?.content?.substring(0, 50) + "...",
+          });
+
           setState((prev) => ({
             ...prev,
             session,
@@ -288,6 +298,25 @@ export function usePlayerState() {
                     hiddenAnswers: newHiddenAnswers, // Zawsze ustaw nowe ukryte odpowiedzi
                     answerLocked: false,
                     showFinalAnswer: false,
+                    // Reset kół ratunkowych na początku nowej gry (pierwsze pytanie)
+                    lifelinesUsed:
+                      newQuestionIndex === 0
+                        ? {
+                            fiftyFifty: false,
+                            phoneAFriend: false,
+                            askAudience: false,
+                          }
+                        : {
+                            fiftyFifty:
+                              sessionWithQuestions?.usedLifelines?.fiftyFifty ||
+                              false,
+                            phoneAFriend:
+                              sessionWithQuestions?.usedLifelines
+                                ?.phoneAFriend || false,
+                            askAudience:
+                              sessionWithQuestions?.usedLifelines
+                                ?.askAudience || false,
+                          },
                   }));
 
                   triggerAnimation("showQuestionAnimation");
@@ -313,6 +342,15 @@ export function usePlayerState() {
               hiddenAnswers: newHiddenAnswers, // Zawsze ustaw nowe ukryte odpowiedzi (może być pusta tablica)
               answerLocked: false,
               showFinalAnswer: false,
+              // Reset kół ratunkowych na początku nowej gry (pierwsze pytanie)
+              lifelinesUsed:
+                newQuestionIndex === 0
+                  ? {
+                      fiftyFifty: false,
+                      phoneAFriend: false,
+                      askAudience: false,
+                    }
+                  : prev.lifelinesUsed, // Zachowaj obecny stan jeśli to nie pierwsze pytanie
             }));
 
             triggerAnimation("showQuestionAnimation");
@@ -517,6 +555,9 @@ export function usePlayerState() {
           break;
 
         case "game-reset":
+          console.log(
+            "Player: game-reset event received - resetting to initial state"
+          );
           setState(initialState);
           stopTimer();
           break;

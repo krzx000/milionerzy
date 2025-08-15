@@ -33,29 +33,15 @@ export async function POST(request: NextRequest) {
         try {
           console.log("Player API: Przetwarzanie request-current-state...");
 
-          // Najpierw wyślij prosty event testowy
-          console.log("Player API: Wysyłanie eventu testowego...");
-          broadcastEvent(
-            "game-started",
-            {
-              test: true,
-              message: "Test event z player action API",
-              timestamp: new Date().toISOString(),
-            },
-            "player"
-          );
-
-          // Pobierz aktualną sesję gry
+          // Pobierz aktualną sesję gry (tylko aktywne)
           const session = await gameSessionDb.getCurrent();
 
           if (!session) {
-            console.log("Player API: Brak aktywnej sesji gry");
+            console.log("Player API: Brak aktywnej sesji gry - gracz czeka");
             broadcastEvent(
-              "connection-established",
+              "game-reset",
               {
-                clientType: "player",
-                gameStatus: "waiting",
-                message: "Oczekiwanie na rozpoczęcie gry",
+                message: "Resetowanie stanu - oczekiwanie na grę",
               },
               "player"
             );
@@ -64,7 +50,9 @@ export async function POST(request: NextRequest) {
               "Player API: Znaleziona aktywna sesja:",
               session.id,
               "status:",
-              session.status
+              session.status,
+              "pytanie:",
+              session.currentQuestionIndex + 1
             );
 
             // Pobierz pytania powiązane z sesją
@@ -92,10 +80,8 @@ export async function POST(request: NextRequest) {
               session.hiddenAnswers[session.currentQuestionIndex] || [];
 
             console.log(
-              "Player API: Wysyłanie stanu gry - pytanie",
+              "Player API: Wysyłanie aktywnej gry - pytanie",
               session.currentQuestionIndex + 1,
-              "status sesji:",
-              session.status,
               "currentQuestion:",
               currentQuestion ? "TAK" : "NIE"
             );
@@ -109,12 +95,6 @@ export async function POST(request: NextRequest) {
                 questionIndex: session.currentQuestionIndex,
                 totalQuestions: questions.length,
                 hiddenAnswers,
-                gameStatus:
-                  session.status === "active"
-                    ? "active"
-                    : session.status === "finished"
-                    ? "ended"
-                    : "waiting",
               },
               "player"
             );
