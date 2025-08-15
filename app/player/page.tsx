@@ -22,6 +22,8 @@ import {
 import type { ConnectionState } from "@/lib/constants/player";
 import Image from "next/image";
 import useFitText from "use-fit-text";
+import { Badge } from "@/components/ui/badge";
+import { Wifi, WifiOff } from "lucide-react";
 
 const COINY = Coiny({
   subsets: ["latin"],
@@ -344,13 +346,68 @@ export default function PlayerViewPage() {
       hasCurrentQuestion: !!currentQuestion,
     });
     return (
-      <div className="min-h-screen flex items-center justify-center flex-col">
-        <h1>Milionerzy</h1>
-        <p>Oczekiwanie na rozpoczęcie gry...</p>
-        <p>
-          Status: {getConnectionStatusText(connectionStatus)}{" "}
-          {getConnectionStatusEmoji(connectionStatus)}
-        </p>
+      <div
+        className="min-h-screen bg-cover bg-center flex items-center justify-center relative"
+        style={{ backgroundImage: `url(${IMAGES.BACKGROUND})` }}
+      >
+        {/* Status połączenia w prawym górnym rogu */}
+        <div className="fixed top-6 right-6 z-50">
+          {isConnected ? (
+            <Badge variant="default" className="bg-green-500 text-white">
+              <Wifi className="w-4 h-4 mr-1" />
+              Połączono
+            </Badge>
+          ) : (
+            <Badge variant="destructive" className="bg-red-500 text-white">
+              <WifiOff className="w-4 h-4 mr-1" />
+              Rozłączono
+            </Badge>
+          )}
+        </div>
+
+        <div className="flex flex-col items-center justify-center space-y-8 text-center">
+          {/* Logo */}
+          <div className="mb-8">
+            <Image
+              src={IMAGES.LOGO}
+              alt="Milionerzy Logo"
+              width={400}
+              height={200}
+              className="drop-shadow-2xl"
+              priority
+            />
+          </div>
+
+          {/* Tytuł i status */}
+          <div className="space-y-1">
+            <div>
+              <p
+                className="text-2xl text-white font-semibold mb-2"
+                style={INTER.style}
+              >
+                Oczekiwanie na rozpoczęcie kolejnej gry!
+              </p>
+
+              <p className="text-lg text-gray-300" style={INTER.style}>
+                {getConnectionStatusEmoji(connectionStatus)}{" "}
+                {getConnectionStatusText(connectionStatus)}
+              </p>
+            </div>
+          </div>
+
+          {/* Animacja ładowania */}
+          <div className="flex space-x-2">
+            <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+            <div
+              className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"
+              style={{ animationDelay: "0.2s" }}
+            ></div>
+            <div
+              className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"
+              style={{ animationDelay: "0.4s" }}
+            ></div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -372,9 +429,24 @@ export default function PlayerViewPage() {
   // ============== GŁÓWNY WIDOK GRY - TUTAJ ZBUDUJ SWÓJ INTERFEJS ==============
   return (
     <div
-      className="min-h-screen bg-cover bg-center"
+      className="min-h-screen bg-cover bg-center relative"
       style={{ backgroundImage: `url(${IMAGES.BACKGROUND})` }}
     >
+      {/* Status połączenia w prawym górnym rogu */}
+      <div className="fixed top-6 right-6 z-50">
+        {isConnected ? (
+          <Badge variant="default" className="bg-green-500 text-white">
+            <Wifi className="w-4 h-4 mr-1" />
+            Połączono
+          </Badge>
+        ) : (
+          <Badge variant="destructive" className="bg-red-500 text-white">
+            <WifiOff className="w-4 h-4 mr-1" />
+            Rozłączono
+          </Badge>
+        )}
+      </div>
+
       {/* TUTAJ MOŻESZ ZBUDOWAĆ SWÓJ WŁASNY INTERFEJS */}
 
       {/* Przykładowa podstawowa struktura - możesz całkowicie ją zastąpić */}
