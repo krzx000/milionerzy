@@ -148,7 +148,11 @@ export default function PlayerViewPage() {
     React.useState(false);
   const [isBackToWaitingTransition, setIsBackToWaitingTransition] =
     React.useState(false);
+  const [isSessionClosedTransition, setIsSessionClosedTransition] =
+    React.useState(false);
   const [hasShownGameStartTransition, setHasShownGameStartTransition] =
+    React.useState(false);
+  const [hasShownSessionClosedTransition, setHasShownSessionClosedTransition] =
     React.useState(false);
   const [showGameContent, setShowGameContent] = React.useState(true);
 
@@ -252,6 +256,37 @@ export default function PlayerViewPage() {
       return () => clearTimeout(timer);
     }
   }, [gameStatus, finalResult, showWinScreen, isBackToWaitingTransition]);
+
+  // Przejście po zamknięciu sesji przez admina
+  React.useEffect(() => {
+    // Sprawdzamy czy przechodzimy z active/ended do waiting (zamknięcie sesji przez admina)
+    if (
+      gameStatus === "waiting" &&
+      !session &&
+      !isSessionClosedTransition &&
+      !isBackToWaitingTransition && // Nie robimy tego jeśli już jest inne przejście
+      !hasShownGameStartTransition && // Nie robimy tego przy rozpoczęciu nowej gry
+      !hasShownSessionClosedTransition // Nie pokazuj ponownie tego samego przejścia
+    ) {
+      console.log(
+        "Player: Rozpoczynanie przejścia po zamknięciu sesji przez admina"
+      );
+      setHasShownSessionClosedTransition(true); // Ustaw flagę żeby nie powtórzyć
+      setIsSessionClosedTransition(true);
+
+      // Po 2 sekundach ukrywamy przejście
+      setTimeout(() => {
+        setIsSessionClosedTransition(false);
+      }, 2000);
+    }
+  }, [
+    gameStatus,
+    session,
+    isSessionClosedTransition,
+    isBackToWaitingTransition,
+    hasShownGameStartTransition,
+    hasShownSessionClosedTransition,
+  ]);
 
   // Dźwięk startowy przy nowym pytaniu
   React.useEffect(() => {
@@ -448,14 +483,16 @@ export default function PlayerViewPage() {
     }
 
     // Reset stanów przejść przy zmianie stanu gry na waiting (ale tylko jeśli nie ma aktywnego przejścia start)
-    if (gameStatus === "waiting" && !hasShownGameStartTransition) {
+    if (gameStatus === "waiting" && !hasShownGameStartTransition && session) {
       setIsGameStartTransition(false);
       setHasShownGameStartTransition(false); // Reset flagi dla nowej gry
+      setHasShownSessionClosedTransition(false); // Reset flagi zamknięcia sesji dla nowej gry
       setShowGameContent(true); // Pokaż zawartość domyślnie
       setShowWinScreen(false);
       setShowWinTransition(false);
       setIsTransitioning(false);
       setIsBackToWaitingTransition(false); // Reset przejścia z wygranej
+      setIsSessionClosedTransition(false); // Reset przejścia po zamknięciu sesji
     }
 
     if (gameStatus === "ended") {
@@ -466,6 +503,7 @@ export default function PlayerViewPage() {
     gameStatus,
     isGameStartTransition,
     hasShownGameStartTransition,
+    session,
   ]);
 
   // ============== FUNKCJE POMOCNICZE ==============
@@ -514,6 +552,7 @@ export default function PlayerViewPage() {
   if (
     (gameStatus === "waiting" || !session) &&
     !isGameStartTransition &&
+    !isSessionClosedTransition &&
     gameStatus !== "active"
   ) {
     console.log("Player page: Rendering waiting screen", {
@@ -542,8 +581,10 @@ export default function PlayerViewPage() {
         </div>
 
         <div
-          className={`flex flex-col items-center justify-center space-y-8 text-center transition-all duration-500 ${
-            isBackToWaitingTransition ? "opacity-0" : "opacity-100"
+          className={`flex flex-col items-center justify-center space-y-8 text-center transition-opacity duration-500 ${
+            isBackToWaitingTransition || isSessionClosedTransition
+              ? "opacity-0"
+              : "opacity-100"
           }`}
         >
           {/* Logo */}
@@ -553,8 +594,10 @@ export default function PlayerViewPage() {
               alt="Milionerzy Logo"
               width={400}
               height={200}
-              className={`drop-shadow-2xl transition-all duration-500 ${
-                isBackToWaitingTransition ? "opacity-50" : "opacity-100"
+              className={`drop-shadow-2xl transition-opacity duration-500 ${
+                isBackToWaitingTransition || isSessionClosedTransition
+                  ? "opacity-50"
+                  : "opacity-100"
               }`}
               priority
             />
@@ -585,6 +628,24 @@ export default function PlayerViewPage() {
             ></div>
           </div>
         </div>
+
+        {/* Ekran przejściowy po zamknięciu sesji przez admina */}
+        {isSessionClosedTransition && (
+          <div className="fixed inset-0 z-[9999] transition-screen-overlay backdrop-blur-2xl bg-black/20">
+            <div className="min-h-screen flex items-center justify-center">
+              <div className="transition-screen-logo">
+                <Image
+                  src={IMAGES.LOGO}
+                  alt="Logo Milionerzy"
+                  width={600}
+                  height={300}
+                  className="drop-shadow-2xl"
+                  priority
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Ekran przejściowy z powrotem do oczekiwania */}
         {isBackToWaitingTransition && (
@@ -832,7 +893,7 @@ export default function PlayerViewPage() {
       {/* GŁÓWNA ZAWARTOŚĆ GRY */}
       <div
         className={`h-screen flex flex-col justify-end transition-all duration-500 ${
-          isTransitioning || isGameStartTransition
+          isTransitioning || isGameStartTransition || isSessionClosedTransition
             ? "opacity-75"
             : "opacity-100"
         }`}
@@ -846,7 +907,9 @@ export default function PlayerViewPage() {
             height={512}
             draggable={false}
             className={`w-1/4 select-none transition-all duration-500 ${
-              isTransitioning || isGameStartTransition
+              isTransitioning ||
+              isGameStartTransition ||
+              isSessionClosedTransition
                 ? "opacity-50"
                 : "opacity-100"
             }`}
@@ -859,7 +922,9 @@ export default function PlayerViewPage() {
             className={`relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat ${
               !showGameContent
                 ? "opacity-0"
-                : isTransitioning || isGameStartTransition
+                : isTransitioning ||
+                  isGameStartTransition ||
+                  isSessionClosedTransition
                 ? "opacity-75"
                 : "opacity-100"
             }`}
@@ -910,7 +975,8 @@ export default function PlayerViewPage() {
             !showGameContent ||
             showWinScreen ||
             isTransitioning ||
-            isGameStartTransition
+            isGameStartTransition ||
+            isSessionClosedTransition
               ? "opacity-0 pointer-events-none"
               : "opacity-100"
           }`}
@@ -968,7 +1034,8 @@ export default function PlayerViewPage() {
               !showGameContent ||
               showWinScreen ||
               isTransitioning ||
-              isGameStartTransition
+              isGameStartTransition ||
+              isSessionClosedTransition
                 ? "opacity-0 pointer-events-none"
                 : "opacity-100"
             }`}
@@ -1204,6 +1271,24 @@ export default function PlayerViewPage() {
 
       {/* EKRAN PRZEJŚCIOWY - PRZEJŚCIE Z WYGRANEJ DO OCZEKIWANIA */}
       {isBackToWaitingTransition && showWinScreen && (
+        <div className="fixed inset-0 z-[9999] transition-screen-overlay backdrop-blur-2xl bg-black/20">
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="transition-screen-logo">
+              <Image
+                src={IMAGES.LOGO}
+                alt="Logo Milionerzy"
+                width={600}
+                height={300}
+                className="drop-shadow-2xl"
+                priority
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EKRAN PRZEJŚCIOWY - ZAMKNIĘCIE SESJI PRZEZ ADMINA */}
+      {isSessionClosedTransition && !showWinScreen && (
         <div className="fixed inset-0 z-[9999] transition-screen-overlay backdrop-blur-2xl bg-black/20">
           <div className="min-h-screen flex items-center justify-center">
             <div className="transition-screen-logo">
