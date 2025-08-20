@@ -21,8 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Wifi, WifiOff } from "lucide-react";
+import { ConnectionBadge } from "@/components/ui/connection-badge";
 import { useServerSentEvents } from "@/hooks/use-sse";
 import type { GameEventType } from "@/types/events";
 
@@ -591,17 +590,7 @@ export default function Admin() {
       <div className="fixed top-6 right-6 z-50 flex gap-2">
         <ThemeToggle />
         {/* Wskaźnik połączenia SSE */}
-        {isConnected ? (
-          <Badge variant="default" className="bg-green-500 text-white">
-            <Wifi className="w-4 h-4 mr-1" />
-            Połączono
-          </Badge>
-        ) : (
-          <Badge variant="destructive" className="bg-red-500 text-white">
-            <WifiOff className="w-4 h-4 mr-1" />
-            Rozłączono
-          </Badge>
-        )}
+        <ConnectionBadge isConnected={isConnected} />
       </div>
 
       <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 min-h-screen">
