@@ -154,7 +154,11 @@ export default function PlayerViewPage() {
     React.useState(false);
   const [hasShownSessionClosedTransition, setHasShownSessionClosedTransition] =
     React.useState(false);
-  const [showGameContent, setShowGameContent] = React.useState(true);
+  const [showGameContent, setShowGameContent] = React.useState(false);
+
+  // Globalny stan blokady przejść - zapobiega nakładaniu się animacji
+  const [isAnyTransitionActive, setIsAnyTransitionActive] =
+    React.useState(false);
 
   // Tekst wyświetlany w polu pytania: normalne pytanie lub kwota wygranej
   const displayQuestionText = showWinScreen
@@ -164,6 +168,32 @@ export default function PlayerViewPage() {
     : currentQuestion?.content;
 
   // ============== EFEKTY I LOGIKA ==============
+
+  // Monitorowanie globalnej blokady przejść
+  React.useEffect(() => {
+    const anyTransitionActive =
+      isTransitioning ||
+      showWinTransition ||
+      isGameStartTransition ||
+      isBackToWaitingTransition ||
+      isSessionClosedTransition;
+
+    setIsAnyTransitionActive(anyTransitionActive);
+
+    if (anyTransitionActive) {
+      console.log(
+        "Player: Transition lock activated - blocking other transitions"
+      );
+    } else {
+      console.log("Player: Transition lock released - transitions available");
+    }
+  }, [
+    isTransitioning,
+    showWinTransition,
+    isGameStartTransition,
+    isBackToWaitingTransition,
+    isSessionClosedTransition,
+  ]);
 
   // Inicjalizacja połączenia
   React.useEffect(() => {
@@ -211,7 +241,8 @@ export default function PlayerViewPage() {
       gameStatus === "active" &&
       currentQuestion &&
       questionIndex === 0 &&
-      !hasShownGameStartTransition
+      !hasShownGameStartTransition &&
+      !isAnyTransitionActive // Sprawdź czy nie ma aktywnego przejścia
     ) {
       console.log("Player: Rozpoczynanie przejścia do pierwszego pytania");
       setHasShownGameStartTransition(true);
@@ -228,7 +259,13 @@ export default function PlayerViewPage() {
         setIsGameStartTransition(false);
       }, 2000);
     }
-  }, [gameStatus, currentQuestion, questionIndex, hasShownGameStartTransition]);
+  }, [
+    gameStatus,
+    currentQuestion,
+    questionIndex,
+    hasShownGameStartTransition,
+    isAnyTransitionActive,
+  ]);
 
   // Automatyczne przejście z ekranu wygranej do oczekiwania po 5 sekundach
   React.useEffect(() => {
@@ -236,7 +273,8 @@ export default function PlayerViewPage() {
       gameStatus === "ended" &&
       finalResult === "win" &&
       showWinScreen &&
-      !isBackToWaitingTransition
+      !isBackToWaitingTransition &&
+      !isAnyTransitionActive // Sprawdź czy nie ma aktywnego przejścia
     ) {
       console.log(
         "Player: Ustawianie timera przejścia z wygranej do oczekiwania"
@@ -255,7 +293,13 @@ export default function PlayerViewPage() {
 
       return () => clearTimeout(timer);
     }
-  }, [gameStatus, finalResult, showWinScreen, isBackToWaitingTransition]);
+  }, [
+    gameStatus,
+    finalResult,
+    showWinScreen,
+    isBackToWaitingTransition,
+    isAnyTransitionActive,
+  ]);
 
   // Przejście po zamknięciu sesji przez admina
   React.useEffect(() => {
@@ -266,7 +310,8 @@ export default function PlayerViewPage() {
       !isSessionClosedTransition &&
       !isBackToWaitingTransition && // Nie robimy tego jeśli już jest inne przejście
       !hasShownGameStartTransition && // Nie robimy tego przy rozpoczęciu nowej gry
-      !hasShownSessionClosedTransition // Nie pokazuj ponownie tego samego przejścia
+      !hasShownSessionClosedTransition && // Nie pokazuj ponownie tego samego przejścia
+      !isAnyTransitionActive // Sprawdź czy nie ma aktywnego przejścia
     ) {
       console.log(
         "Player: Rozpoczynanie przejścia po zamknięciu sesji przez admina"
@@ -286,6 +331,7 @@ export default function PlayerViewPage() {
     isBackToWaitingTransition,
     hasShownGameStartTransition,
     hasShownSessionClosedTransition,
+    isAnyTransitionActive,
   ]);
 
   // Dźwięk startowy przy nowym pytaniu
@@ -412,10 +458,14 @@ export default function PlayerViewPage() {
       isAnswerRevealed &&
       selectedAnswer &&
       correctAnswer &&
-      selectedAnswer !== correctAnswer
+      selectedAnswer !== correctAnswer &&
+      !isAnyTransitionActive // Sprawdź czy nie ma aktywnego przejścia
     ) {
       // Czekamy 3 sekundy po pokazaniu poprawnej odpowiedzi, potem płynnie przechodzimy
       const timer = setTimeout(() => {
+        console.log(
+          "Player: Rozpoczynanie przejścia do ekranu wygranej (błędna odpowiedź)"
+        );
         // Rozpoczynamy płynne przejście
         setIsTransitioning(true);
 
@@ -438,7 +488,7 @@ export default function PlayerViewPage() {
 
       return () => clearTimeout(timer);
     }
-  }, [isAnswerRevealed, selectedAnswer, correctAnswer]);
+  }, [isAnswerRevealed, selectedAnswer, correctAnswer, isAnyTransitionActive]);
 
   // Przejście do ekranu wygranej po wygranej grze
   React.useEffect(() => {
@@ -448,9 +498,13 @@ export default function PlayerViewPage() {
       selectedAnswer &&
       correctAnswer &&
       gameStatus === "ended" &&
-      selectedAnswer === correctAnswer
+      selectedAnswer === correctAnswer &&
+      !isAnyTransitionActive // Sprawdź czy nie ma aktywnego przejścia
     ) {
       // Płynne przejście dla wygranej
+      console.log(
+        "Player: Rozpoczynanie przejścia do ekranu wygranej (wygrana gra)"
+      );
       setIsTransitioning(true);
 
       setTimeout(() => {
@@ -472,6 +526,7 @@ export default function PlayerViewPage() {
     selectedAnswer,
     correctAnswer,
     gameStatus,
+    isAnyTransitionActive,
   ]);
 
   // Reset stanów przy nowym pytaniu (ale nie przy gameStatus change)
@@ -505,6 +560,44 @@ export default function PlayerViewPage() {
     hasShownGameStartTransition,
     session,
   ]);
+
+  // Ukrywanie zawartości gry na początku (zapobieganie flashowi)
+  React.useEffect(() => {
+    if (
+      gameStatus === "active" &&
+      currentQuestion &&
+      questionIndex === 0 &&
+      !hasShownGameStartTransition &&
+      !isAnyTransitionActive // Sprawdź czy nie ma aktywnego przejścia
+    ) {
+      console.log(
+        "Player: Ukrywanie zawartości przed przejściem (zapobieganie flashowi)"
+      );
+      setShowGameContent(false);
+    }
+  }, [
+    gameStatus,
+    currentQuestion,
+    questionIndex,
+    hasShownGameStartTransition,
+    isAnyTransitionActive,
+  ]);
+
+  // Pokazywanie zawartości dla pytań innych niż pierwsze
+  React.useEffect(() => {
+    if (
+      gameStatus === "active" &&
+      currentQuestion &&
+      questionIndex > 0 &&
+      !isAnyTransitionActive // Sprawdź czy nie ma aktywnego przejścia
+    ) {
+      console.log(
+        "Player: Pokazywanie zawartości dla pytania",
+        questionIndex + 1
+      );
+      setShowGameContent(true);
+    }
+  }, [gameStatus, currentQuestion, questionIndex, isAnyTransitionActive]);
 
   // ============== FUNKCJE POMOCNICZE ==============
 
