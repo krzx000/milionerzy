@@ -141,6 +141,7 @@ export default function PlayerViewPage() {
   // Stan dla automatycznego przejścia do ekranu wygranej po błędnej odpowiedzi
   const [showWinScreen, setShowWinScreen] = React.useState(false);
   const [showWinTransition, setShowWinTransition] = React.useState(false);
+  const [isTransitioning, setIsTransitioning] = React.useState(false);
 
   // Tekst wyświetlany w polu pytania: normalne pytanie lub kwota wygranej
   const displayQuestionText = showWinScreen
@@ -316,13 +317,25 @@ export default function PlayerViewPage() {
       correctAnswer &&
       selectedAnswer !== correctAnswer
     ) {
-      // Czekamy 3 sekundy po pokazaniu poprawnej odpowiedzi, potem pokazujemy przejście
+      // Czekamy 3 sekundy po pokazaniu poprawnej odpowiedzi, potem płynnie przechodzimy
       const timer = setTimeout(() => {
-        setShowWinTransition(true);
-        // Po 3 sekundach przejścia pokazujemy ekran wygranej
+        // Rozpoczynamy płynne przejście
+        setIsTransitioning(true);
+
+        // Po 300ms pokazujemy ekran przejściowy
+        setTimeout(() => {
+          setShowWinTransition(true);
+        }, 300);
+
+        // Po kolejnych 200ms pokazujemy zawartość wygranej
+        setTimeout(() => {
+          setShowWinScreen(true);
+        }, 500);
+
+        // Po zakończeniu animacji (3.2s od początku) ukrywamy nakładkę
         setTimeout(() => {
           setShowWinTransition(false);
-          setShowWinScreen(true);
+          setIsTransitioning(false);
         }, 3200);
       }, 3000);
 
@@ -340,11 +353,20 @@ export default function PlayerViewPage() {
       gameStatus === "ended" &&
       selectedAnswer === correctAnswer
     ) {
-      // Pokazujemy przejście, potem ekran wygranej
-      setShowWinTransition(true);
+      // Płynne przejście dla wygranej
+      setIsTransitioning(true);
+
+      setTimeout(() => {
+        setShowWinTransition(true);
+      }, 300);
+
+      setTimeout(() => {
+        setShowWinScreen(true);
+      }, 500);
+
       setTimeout(() => {
         setShowWinTransition(false);
-        setShowWinScreen(true);
+        setIsTransitioning(false);
       }, 3200);
     }
   }, [
@@ -355,10 +377,13 @@ export default function PlayerViewPage() {
     gameStatus,
   ]);
 
-  // Reset stanów przy nowym pytaniu lub resetowaniu gry
+  // Reset stanów przy nowym pytaniu (ale nie przy gameStatus change)
   React.useEffect(() => {
-    setShowWinScreen(false);
-    setShowWinTransition(false);
+    if (gameStatus === "active") {
+      setShowWinScreen(false);
+      setShowWinTransition(false);
+      setIsTransitioning(false);
+    }
   }, [questionIndex, gameStatus]);
 
   // ============== FUNKCJE POMOCNICZE ==============
@@ -669,9 +694,12 @@ export default function PlayerViewPage() {
       </div>
 
       {/* GŁÓWNA ZAWARTOŚĆ GRY */}
-      <div className="h-screen flex flex-col justify-end">
-        {/* Pytanie */}
-
+      <div
+        className={`h-screen flex flex-col justify-end transition-all duration-500 ${
+          isTransitioning ? "opacity-75 scale-95" : "opacity-100 scale-100"
+        }`}
+      >
+        {/* Logo */}
         <div className="flex justify-center">
           <Image
             src={IMAGES.LOGO}
@@ -679,14 +707,18 @@ export default function PlayerViewPage() {
             width={512}
             height={512}
             draggable={false}
-            className="w-1/4 select-none transition-all duration-500"
+            className={`w-1/4 select-none transition-all duration-500 ${
+              isTransitioning ? "opacity-50" : "opacity-100"
+            }`}
             id="main-logo"
           />
         </div>
 
         {currentQuestion && (
           <div
-            className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
+            className={`relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat ${
+              isTransitioning ? "opacity-75" : "opacity-100"
+            }`}
             style={{
               backgroundImage: `url(${IMAGES.QUESTION_BACKGROUND})`,
             }}
@@ -730,8 +762,10 @@ export default function PlayerViewPage() {
         )}
         {/* Koła ratunkowe (graficzne) */}
         <div
-          className={`flex justify-center gap-4 transition-opacity duration-500 ${
-            showWinScreen ? "opacity-0 pointer-events-none" : "opacity-100"
+          className={`flex justify-center gap-4 transition-all duration-500 ${
+            showWinScreen || isTransitioning
+              ? "opacity-0 pointer-events-none"
+              : "opacity-100"
           }`}
         >
           {/* 50:50 */}
@@ -783,8 +817,10 @@ export default function PlayerViewPage() {
         {/* Odpowiedzi */}
         {currentQuestion && (
           <div
-            className={`-space-y-8 relative transition-opacity duration-500 ${
-              showWinScreen ? "opacity-0 pointer-events-none" : "opacity-100"
+            className={`-space-y-8 relative transition-all duration-500 ${
+              showWinScreen || isTransitioning
+                ? "opacity-0 pointer-events-none"
+                : "opacity-100"
             }`}
           >
             {/* Rząd A i B */}
