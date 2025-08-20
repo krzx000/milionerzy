@@ -27,6 +27,8 @@ import { ConnectionBadge } from "@/components/ui/connection-badge";
 import { WaitingScreen } from "@/components/views/WaitingScreen";
 import { WinScreen } from "@/components/views/WinScreen";
 import { WinTransitionScreen } from "@/components/views/WinTransitionScreen";
+import { LifelinesDisplay } from "@/components/views/LifelinesDisplay";
+import { GameTransitionOverlay } from "@/components/ui/game-transition-overlay";
 
 const COINY = Coiny({
   subsets: ["latin"],
@@ -779,60 +781,14 @@ export default function PlayerViewPage() {
           </div>
         )}
         {/* Koła ratunkowe (graficzne) */}
-        <div
-          className={`flex justify-center gap-4 transition-all duration-500 ${
-            !showGameContent ||
-            showWinScreen ||
-            isTransitioning ||
-            isGameStartTransition ||
-            isSessionClosedTransition
-              ? "opacity-0 pointer-events-none"
-              : "opacity-100"
-          }`}
-        >
-          {/* 50:50 */}
-          <Image
-            src={
-              lifelinesUsed.fiftyFifty
-                ? IMAGES.LIFELINES_BACKGROUND.FIFTY_FIFTY.USED
-                : IMAGES.LIFELINES_BACKGROUND.FIFTY_FIFTY.AVAILABLE
-            }
-            alt="Koło ratunkowe 50:50"
-            width={512}
-            height={512}
-            draggable={false}
-            className="w-[120px] h-auto select-none transition-opacity"
-            priority
-          />
-          {/* Publiczność */}
-          <Image
-            src={
-              lifelinesUsed.askAudience
-                ? IMAGES.LIFELINES_BACKGROUND.VOTING.USED
-                : IMAGES.LIFELINES_BACKGROUND.VOTING.AVAILABLE
-            }
-            alt="Koło ratunkowe - pytanie do publiczności"
-            width={512}
-            height={512}
-            draggable={false}
-            className="w-[120px] h-auto select-none transition-opacity"
-            priority
-          />
-          {/* Telefon */}
-          <Image
-            src={
-              lifelinesUsed.phoneAFriend
-                ? IMAGES.LIFELINES_BACKGROUND.PHONE.USED
-                : IMAGES.LIFELINES_BACKGROUND.PHONE.AVAILABLE
-            }
-            alt="Koło ratunkowe - telefon do przyjaciela"
-            width={512}
-            height={512}
-            draggable={false}
-            className="w-[120px] h-auto select-none transition-opacity"
-            priority
-          />
-        </div>
+        <LifelinesDisplay
+          lifelinesUsed={lifelinesUsed}
+          showGameContent={showGameContent}
+          showWinScreen={showWinScreen}
+          isTransitioning={isTransitioning}
+          isGameStartTransition={isGameStartTransition}
+          isSessionClosedTransition={isSessionClosedTransition}
+        />
 
         <div></div>
 
@@ -1059,78 +1015,23 @@ export default function PlayerViewPage() {
         </div>
       </div>
 
-      {/* EKRAN PRZEJŚCIOWY - NAKŁADKA */}
-      {showTransitionScreen && (
-        <div className="fixed inset-0 z-[9999] transition-screen-overlay backdrop-blur-2xl bg-black/20">
-          {/* Logo animowane - przechodzi z pozycji górnej na środek i pulsuje */}
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="transition-screen-logo">
-              <Image
-                src={IMAGES.LOGO}
-                alt="Logo Milionerzy"
-                width={600}
-                height={300}
-                className="drop-shadow-2xl"
-                priority
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* EKRAN PRZEJŚCIOWY - PRZEJŚCIE Z WYGRANEJ DO OCZEKIWANIA */}
-      {isBackToWaitingTransition && showWinScreen && (
-        <div className="fixed inset-0 z-[9999] transition-screen-overlay backdrop-blur-2xl bg-black/20">
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="transition-screen-logo">
-              <Image
-                src={IMAGES.LOGO}
-                alt="Logo Milionerzy"
-                width={600}
-                height={300}
-                className="drop-shadow-2xl"
-                priority
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* EKRAN PRZEJŚCIOWY - ZAMKNIĘCIE SESJI PRZEZ ADMINA */}
-      {isSessionClosedTransition && !showWinScreen && (
-        <div className="fixed inset-0 z-[9999] transition-screen-overlay backdrop-blur-2xl bg-black/20">
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="transition-screen-logo">
-              <Image
-                src={IMAGES.LOGO}
-                alt="Logo Milionerzy"
-                width={600}
-                height={300}
-                className="drop-shadow-2xl"
-                priority
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* EKRAN PRZEJŚCIOWY - START GRY */}
-      {isGameStartTransition && (
-        <div className="fixed inset-0 z-[9999] transition-screen-overlay backdrop-blur-2xl bg-black/20">
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="transition-screen-logo">
-              <Image
-                src={IMAGES.LOGO}
-                alt="Logo Milionerzy"
-                width={600}
-                height={300}
-                className="drop-shadow-2xl"
-                priority
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* TRANSITION OVERLAYS */}
+      <GameTransitionOverlay
+        isVisible={showTransitionScreen}
+        logoAlt="Logo Milionerzy - Przejście między pytaniami"
+      />
+      <GameTransitionOverlay
+        isVisible={isBackToWaitingTransition && showWinScreen}
+        logoAlt="Logo Milionerzy - Przejście z wygranej"
+      />
+      <GameTransitionOverlay
+        isVisible={isSessionClosedTransition && !showWinScreen}
+        logoAlt="Logo Milionerzy - Zamknięcie sesji"
+      />
+      <GameTransitionOverlay
+        isVisible={isGameStartTransition}
+        logoAlt="Logo Milionerzy - Start gry"
+      />
     </div>
   );
 }
