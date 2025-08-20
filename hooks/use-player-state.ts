@@ -563,27 +563,42 @@ export function usePlayerState() {
 
         case "game-ended":
           const gameEndData = data as Record<string, unknown>;
-          const result = gameEndData.result as "win" | "lose";
+          const reason = gameEndData.reason as string | undefined;
+          const result = gameEndData.result as "win" | "lose" | undefined;
           const finalQuestionIndex =
             (gameEndData.finalQuestionIndex as number) || 0;
 
-          setState((prev) => {
-            const isWin = result === "win";
-            const winnings = isWin
-              ? getWinningPrize(finalQuestionIndex, prev.totalQuestions)
-              : getWinningPrize(
-                  Math.max(0, finalQuestionIndex - 1),
-                  prev.totalQuestions
-                );
+          if (reason === "manual") {
+            // Administrator zamknął sesję po zakończeniu gry – wracamy do ekranu oczekiwania
+            setState((prev) => ({
+              ...initialState,
+              // Zachowaj ewentualne history i wygrane aby można było jeszcze obejrzeć na ekranie admina
+              answerHistory: prev.answerHistory,
+              winnings: prev.winnings,
+            }));
+            stopTimer();
+            break;
+          }
 
-            return {
-              ...prev,
-              gameStatus: "ended",
-              finalResult: result,
-              winnings,
-            };
-          });
-          stopTimer();
+          if (result) {
+            setState((prev) => {
+              const isWin = result === "win";
+              const winnings = isWin
+                ? getWinningPrize(finalQuestionIndex, prev.totalQuestions)
+                : getWinningPrize(
+                    Math.max(0, finalQuestionIndex - 1),
+                    prev.totalQuestions
+                  );
+
+              return {
+                ...prev,
+                gameStatus: "ended",
+                finalResult: result,
+                winnings,
+              };
+            });
+            stopTimer();
+          }
           break;
 
         case "game-paused":
