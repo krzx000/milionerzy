@@ -28,6 +28,8 @@ import { WaitingScreen } from "@/components/views/WaitingScreen";
 import { WinScreen } from "@/components/views/WinScreen";
 import { WinTransitionScreen } from "@/components/views/WinTransitionScreen";
 import { LifelinesDisplay } from "@/components/views/LifelinesDisplay";
+import { AudienceVotingModal } from "@/components/views/AudienceVotingModal";
+import { GamePausedModal } from "@/components/views/GamePausedModal";
 import { GameTransitionOverlay } from "@/components/ui/game-transition-overlay";
 
 const COINY = Coiny({
@@ -940,26 +942,10 @@ export default function PlayerViewPage() {
         )}
 
         {/* Stan głosowania publiczności */}
-        {audienceVotingActive && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white p-8 rounded">
-              <h3 className="text-xl mb-4">
-                🗳️ Trwa głosowanie publiczności...
-              </h3>
-              <div className="animate-pulse bg-blue-500 w-16 h-16 rounded-full mx-auto"></div>
-            </div>
-          </div>
-        )}
+        <AudienceVotingModal isActive={audienceVotingActive} />
 
         {/* Stan pauzy */}
-        {gameStatus === "paused" && (
-          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center">
-            <div className="bg-white p-8 rounded text-center">
-              <h2 className="text-2xl font-bold mb-4">Gra wstrzymana</h2>
-              <p>Oczekiwanie na wznowienie...</p>
-            </div>
-          </div>
-        )}
+        <GamePausedModal isPaused={gameStatus === "paused"} />
 
         {/* Preloadowanie wszystkich obrazków tła odpowiedzi */}
         <div className="hidden">
