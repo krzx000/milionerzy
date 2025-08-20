@@ -143,6 +143,15 @@ export default function PlayerViewPage() {
   const [showWinTransition, setShowWinTransition] = React.useState(false);
   const [isTransitioning, setIsTransitioning] = React.useState(false);
 
+  // Stany dla przejść między ekranami
+  const [isGameStartTransition, setIsGameStartTransition] =
+    React.useState(false);
+  const [isBackToWaitingTransition, setIsBackToWaitingTransition] =
+    React.useState(false);
+  const [hasShownGameStartTransition, setHasShownGameStartTransition] =
+    React.useState(false);
+  const [showGameContent, setShowGameContent] = React.useState(true);
+
   // Tekst wyświetlany w polu pytania: normalne pytanie lub kwota wygranej
   const displayQuestionText = showWinScreen
     ? selectedAnswer === correctAnswer
@@ -190,6 +199,50 @@ export default function PlayerViewPage() {
       setConnectionStatus(PLAYER_CONSTANTS.CONNECTION_STATES.DISCONNECTED);
     }
   }, [isConnected, isInitialized]);
+
+  // Przejście z oczekiwania do pierwszego pytania
+  React.useEffect(() => {
+    // Sprawdzamy czy przechodzimy z waiting do active i mamy pierwsze pytanie
+    if (
+      gameStatus === "active" &&
+      currentQuestion &&
+      questionIndex === 0 &&
+      !hasShownGameStartTransition
+    ) {
+      console.log("Player: Rozpoczynanie przejścia do pierwszego pytania");
+      setHasShownGameStartTransition(true);
+      setShowGameContent(false); // Ukryj zawartość na początku
+      setIsGameStartTransition(true);
+
+      // Po 1.5 sekundy pokazuj zawartość (przed końcem przejścia)
+      setTimeout(() => {
+        setShowGameContent(true);
+      }, 1500);
+
+      // Po 2 sekundach ukrywamy przejście
+      setTimeout(() => {
+        setIsGameStartTransition(false);
+      }, 2000);
+    }
+  }, [gameStatus, currentQuestion, questionIndex, hasShownGameStartTransition]);
+
+  // Przejście z ekranu wygranej do oczekiwania
+  React.useEffect(() => {
+    // Sprawdzamy czy przechodzimy z ended z wygraną do waiting
+    if (
+      gameStatus === "waiting" &&
+      finalResult === "win" &&
+      !isBackToWaitingTransition
+    ) {
+      console.log("Player: Rozpoczynanie przejścia z wygranej do oczekiwania");
+      setIsBackToWaitingTransition(true);
+
+      // Po 2 sekundach ukrywamy przejście
+      setTimeout(() => {
+        setIsBackToWaitingTransition(false);
+      }, 2000);
+    }
+  }, [gameStatus, finalResult, isBackToWaitingTransition]);
 
   // Dźwięk startowy przy nowym pytaniu
   React.useEffect(() => {
@@ -384,6 +437,20 @@ export default function PlayerViewPage() {
       setShowWinTransition(false);
       setIsTransitioning(false);
     }
+
+    // Reset stanów przejść przy zmianie stanu gry
+    if (gameStatus === "waiting") {
+      setIsGameStartTransition(false);
+      setHasShownGameStartTransition(false); // Reset flagi dla nowej gry
+      setShowGameContent(true); // Pokaż zawartość domyślnie
+      setShowWinScreen(false);
+      setShowWinTransition(false);
+      setIsTransitioning(false);
+    }
+
+    if (gameStatus === "ended") {
+      setIsBackToWaitingTransition(false);
+    }
   }, [questionIndex, gameStatus]);
 
   // ============== FUNKCJE POMOCNICZE ==============
@@ -455,7 +522,11 @@ export default function PlayerViewPage() {
           )}
         </div>
 
-        <div className="flex flex-col items-center justify-center space-y-8 text-center">
+        <div
+          className={`flex flex-col items-center justify-center space-y-8 text-center transition-all duration-500 ${
+            isBackToWaitingTransition ? "opacity-0" : "opacity-100"
+          }`}
+        >
           {/* Logo */}
           <div className="mb-8">
             <Image
@@ -463,7 +534,9 @@ export default function PlayerViewPage() {
               alt="Milionerzy Logo"
               width={400}
               height={200}
-              className="drop-shadow-2xl"
+              className={`drop-shadow-2xl transition-all duration-500 ${
+                isBackToWaitingTransition ? "opacity-50" : "opacity-100"
+              }`}
               priority
             />
           </div>
@@ -493,6 +566,24 @@ export default function PlayerViewPage() {
             ></div>
           </div>
         </div>
+
+        {/* Ekran przejściowy z powrotem do oczekiwania */}
+        {isBackToWaitingTransition && (
+          <div className="fixed inset-0 z-[9999] transition-screen-overlay backdrop-blur-2xl bg-black/20">
+            <div className="min-h-screen flex items-center justify-center">
+              <div className="transition-screen-logo">
+                <Image
+                  src={IMAGES.LOGO}
+                  alt="Logo Milionerzy"
+                  width={600}
+                  height={300}
+                  className="drop-shadow-2xl"
+                  priority
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -525,7 +616,11 @@ export default function PlayerViewPage() {
         </div>
 
         {/* EKRAN WYGRANEJ */}
-        <div className="h-screen flex flex-col justify-end">
+        <div
+          className={`h-screen flex flex-col justify-end transition-all duration-500 ${
+            isBackToWaitingTransition ? "opacity-75" : "opacity-100"
+          }`}
+        >
           {/* Logo w tym samym miejscu */}
           <div className="flex justify-center">
             <Image
@@ -534,13 +629,17 @@ export default function PlayerViewPage() {
               width={512}
               height={512}
               draggable={false}
-              className="w-1/4 select-none"
+              className={`w-1/4 select-none transition-all duration-500 ${
+                isBackToWaitingTransition ? "opacity-50" : "opacity-100"
+              }`}
             />
           </div>
 
           {/* Obszar pytania teraz z wygraną */}
           <div
-            className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
+            className={`relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat ${
+              isBackToWaitingTransition ? "opacity-75" : "opacity-100"
+            }`}
             style={{
               backgroundImage: `url(${IMAGES.QUESTION_BACKGROUND})`,
             }}
@@ -641,6 +740,24 @@ export default function PlayerViewPage() {
             </div>
           </div>
         </div>
+
+        {/* Ekran przejściowy z wygranej do oczekiwania */}
+        {isBackToWaitingTransition && (
+          <div className="fixed inset-0 z-[9999] transition-screen-overlay backdrop-blur-2xl bg-black/20">
+            <div className="min-h-screen flex items-center justify-center">
+              <div className="transition-screen-logo">
+                <Image
+                  src={IMAGES.LOGO}
+                  alt="Logo Milionerzy"
+                  width={600}
+                  height={300}
+                  className="drop-shadow-2xl"
+                  priority
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -653,7 +770,7 @@ export default function PlayerViewPage() {
         style={{ backgroundImage: `url(${IMAGES.BACKGROUND})` }}
       >
         {/* EKRAN PRZEJŚCIOWY DO WYGRANEJ */}
-        <div className="fixed inset-0 z-40 transition-screen-overlay backdrop-blur-2xl bg-black/20">
+        <div className="fixed inset-0 z-[9999] transition-screen-overlay backdrop-blur-2xl bg-black/20">
           <div className="min-h-screen flex items-center justify-center">
             <div className="transition-screen-logo">
               <Image
@@ -696,7 +813,9 @@ export default function PlayerViewPage() {
       {/* GŁÓWNA ZAWARTOŚĆ GRY */}
       <div
         className={`h-screen flex flex-col justify-end transition-all duration-500 ${
-          isTransitioning ? "opacity-75 scale-95" : "opacity-100 scale-100"
+          isTransitioning || isGameStartTransition
+            ? "opacity-75"
+            : "opacity-100"
         }`}
       >
         {/* Logo */}
@@ -708,7 +827,9 @@ export default function PlayerViewPage() {
             height={512}
             draggable={false}
             className={`w-1/4 select-none transition-all duration-500 ${
-              isTransitioning ? "opacity-50" : "opacity-100"
+              isTransitioning || isGameStartTransition
+                ? "opacity-50"
+                : "opacity-100"
             }`}
             id="main-logo"
           />
@@ -717,7 +838,11 @@ export default function PlayerViewPage() {
         {currentQuestion && (
           <div
             className={`relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat ${
-              isTransitioning ? "opacity-75" : "opacity-100"
+              !showGameContent
+                ? "opacity-0"
+                : isTransitioning || isGameStartTransition
+                ? "opacity-75"
+                : "opacity-100"
             }`}
             style={{
               backgroundImage: `url(${IMAGES.QUESTION_BACKGROUND})`,
@@ -763,7 +888,10 @@ export default function PlayerViewPage() {
         {/* Koła ratunkowe (graficzne) */}
         <div
           className={`flex justify-center gap-4 transition-all duration-500 ${
-            showWinScreen || isTransitioning
+            !showGameContent ||
+            showWinScreen ||
+            isTransitioning ||
+            isGameStartTransition
               ? "opacity-0 pointer-events-none"
               : "opacity-100"
           }`}
@@ -818,7 +946,10 @@ export default function PlayerViewPage() {
         {currentQuestion && (
           <div
             className={`-space-y-8 relative transition-all duration-500 ${
-              showWinScreen || isTransitioning
+              !showGameContent ||
+              showWinScreen ||
+              isTransitioning ||
+              isGameStartTransition
                 ? "opacity-0 pointer-events-none"
                 : "opacity-100"
             }`}
@@ -1035,8 +1166,26 @@ export default function PlayerViewPage() {
 
       {/* EKRAN PRZEJŚCIOWY - NAKŁADKA */}
       {showTransitionScreen && (
-        <div className="fixed inset-0 z-40 transition-screen-overlay backdrop-blur-2xl bg-black/20">
+        <div className="fixed inset-0 z-[9999] transition-screen-overlay backdrop-blur-2xl bg-black/20">
           {/* Logo animowane - przechodzi z pozycji górnej na środek i pulsuje */}
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="transition-screen-logo">
+              <Image
+                src={IMAGES.LOGO}
+                alt="Logo Milionerzy"
+                width={600}
+                height={300}
+                className="drop-shadow-2xl"
+                priority
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EKRAN PRZEJŚCIOWY - START GRY */}
+      {isGameStartTransition && (
+        <div className="fixed inset-0 z-[9999] transition-screen-overlay backdrop-blur-2xl bg-black/20">
           <div className="min-h-screen flex items-center justify-center">
             <div className="transition-screen-logo">
               <Image
