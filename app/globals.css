@@ -143,3 +143,47 @@
   -webkit-background-clip: text;
   background-clip: text;
 }
+
+.transition-screen-overlay {
+  animation: overlayFadeIn 0.8s ease-out;
+}
+
+.transition-screen-logo {
+  animation: logoTransition 3.2s ease-in-out;
+}
+
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes logoTransition {
+  0% {
+    transform: translateY(-35vh) scale(0.5);
+    opacity: 0.8;
+  }
+  15% {
+    transform: translateY(0) scale(0.8);
+    opacity: 1;
+  }
+  25% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  85% {
+    transform: translateY(0) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-35vh) scale(1);
+    opacity: 1;
+  }
+}

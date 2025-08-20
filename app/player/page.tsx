@@ -138,6 +138,10 @@ export default function PlayerViewPage() {
     "D",
   ]);
 
+  // Stan dla automatycznego przejścia do ekranu wygranej po błędnej odpowiedzi
+  const [showWinScreen, setShowWinScreen] = React.useState(false);
+  const [showWinTransition, setShowWinTransition] = React.useState(false);
+
   // ============== EFEKTY I LOGIKA ==============
 
   // Inicjalizacja połączenia
@@ -297,6 +301,59 @@ export default function PlayerViewPage() {
     }
   }, [isAnswerRevealed, correctAnswer, selectedAnswer, questionIndex]);
 
+  // Automatyczne przejście do ekranu wygranej po pokazaniu poprawnej odpowiedzi (dla błędnych odpowiedzi)
+  React.useEffect(() => {
+    if (
+      isAnswerRevealed &&
+      selectedAnswer &&
+      correctAnswer &&
+      selectedAnswer !== correctAnswer
+    ) {
+      // Czekamy 3 sekundy po pokazaniu poprawnej odpowiedzi, potem pokazujemy przejście
+      const timer = setTimeout(() => {
+        setShowWinTransition(true);
+        // Po 3 sekundach przejścia pokazujemy ekran wygranej
+        setTimeout(() => {
+          setShowWinTransition(false);
+          setShowWinScreen(true);
+        }, 3200);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isAnswerRevealed, selectedAnswer, correctAnswer]);
+
+  // Przejście do ekranu wygranej po wygranej grze
+  React.useEffect(() => {
+    if (
+      isAnswerRevealed &&
+      showFinalAnswer &&
+      selectedAnswer &&
+      correctAnswer &&
+      gameStatus === "ended" &&
+      selectedAnswer === correctAnswer
+    ) {
+      // Pokazujemy przejście, potem ekran wygranej
+      setShowWinTransition(true);
+      setTimeout(() => {
+        setShowWinTransition(false);
+        setShowWinScreen(true);
+      }, 3200);
+    }
+  }, [
+    isAnswerRevealed,
+    showFinalAnswer,
+    selectedAnswer,
+    correctAnswer,
+    gameStatus,
+  ]);
+
+  // Reset stanów przy nowym pytaniu lub resetowaniu gry
+  React.useEffect(() => {
+    setShowWinScreen(false);
+    setShowWinTransition(false);
+  }, [questionIndex, gameStatus]);
+
   // ============== FUNKCJE POMOCNICZE ==============
 
   // Funkcja do sprawdzania czy odpowiedź jest ukryta (50:50)
@@ -386,12 +443,7 @@ export default function PlayerViewPage() {
                 className="text-2xl text-white font-semibold mb-2"
                 style={INTER.style}
               >
-                Oczekiwanie na rozpoczęcie kolejnej gry!
-              </p>
-
-              <p className="text-lg text-gray-300" style={INTER.style}>
-                {getConnectionStatusEmoji(connectionStatus)}{" "}
-                {getConnectionStatusText(connectionStatus)}
+                Oczekiwanie na rozpoczęcie kolejnej gry
               </p>
             </div>
           </div>
@@ -408,38 +460,6 @@ export default function PlayerViewPage() {
               style={{ animationDelay: "0.4s" }}
             ></div>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Jeśli gra się zakończyła przegraniem (tylko gdy gra jest rzeczywiście zakończona)
-  if (finalResult === "lose" && gameStatus === "ended") {
-    console.log("Player page: Game lost, rendering lose screen", {
-      finalResult,
-      gameStatus,
-    });
-
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-600 flex items-center justify-center p-4">
-        <div className="max-w-2xl mx-auto text-center">
-          <div className="mb-8">
-            <Image
-              src={IMAGES.LOGO}
-              alt="Milionerzy"
-              width={128}
-              height={128}
-              className="mx-auto mb-6 opacity-80"
-            />
-          </div>
-
-          <h1 className="text-6xl font-bold text-white mb-6">PRZEGRANA!</h1>
-
-          <p className="text-2xl text-red-100 mb-8">
-            Niestety, twoja przygoda z milionami się kończy...
-          </p>
-
-          <div className="text-lg text-red-200">Dziękujemy za grę!</div>
         </div>
       </div>
     );
@@ -593,19 +613,34 @@ export default function PlayerViewPage() {
     );
   }
 
-  console.log("Player page: Rendering main game UI", {
-    gameStatus,
-    hasSession: !!session,
-    hasCurrentQuestion: !!currentQuestion,
-    questionIndex,
-    currentPrize,
-    isAnswerRevealed,
-    selectedAnswer,
-    correctAnswer,
-  });
+  // Jeśli pokazujemy ekran przejściowy do wygranej
+  if (showWinTransition) {
+    return (
+      <div
+        className="min-h-screen bg-cover bg-center relative"
+        style={{ backgroundImage: `url(${IMAGES.BACKGROUND})` }}
+      >
+        {/* EKRAN PRZEJŚCIOWY DO WYGRANEJ */}
+        <div className="fixed inset-0 z-40 transition-screen-overlay backdrop-blur-2xl bg-black/20">
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="transition-screen-logo">
+              <Image
+                src={IMAGES.LOGO}
+                alt="Logo Milionerzy"
+                width={600}
+                height={300}
+                className="drop-shadow-2xl"
+                priority
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  // Jeśli odpowiedź została ujawniona i pokazać finalne podsumowanie
-  if (isAnswerRevealed && showFinalAnswer && selectedAnswer && correctAnswer) {
+  // Jeśli odpowiedź została ujawniona i pokazać ekran wygranej
+  if (showWinScreen) {
     const isCorrect = selectedAnswer === correctAnswer;
 
     return (
@@ -1118,7 +1153,7 @@ export default function PlayerViewPage() {
 
       {/* EKRAN PRZEJŚCIOWY - NAKŁADKA */}
       {showTransitionScreen && (
-        <div className="fixed inset-0 z-40 transition-screen-overlay backdrop-blur-md bg-black/20">
+        <div className="fixed inset-0 z-40 transition-screen-overlay backdrop-blur-2xl bg-black/20">
           {/* Logo animowane - przechodzi z pozycji górnej na środek i pulsuje */}
           <div className="min-h-screen flex items-center justify-center">
             <div className="transition-screen-logo">
@@ -1132,79 +1167,6 @@ export default function PlayerViewPage() {
               />
             </div>
           </div>
-
-          {/* Style CSS dla animacji */}
-          <style jsx>{`
-            .transition-screen-overlay {
-              animation: overlayFadeIn 0.3s ease-out;
-            }
-
-            .transition-screen-logo {
-              animation: logoTransition 3.2s ease-in-out;
-            }
-
-            @keyframes overlayFadeIn {
-              from {
-                opacity: 0;
-              }
-              to {
-                opacity: 1;
-              }
-            }
-
-            @keyframes logoTransition {
-              0% {
-                /* Zaczynamy z pozycji gdzie logo jest na górze ekranu */
-                transform: translateY(-35vh) scale(0.5);
-                opacity: 0.8;
-              }
-              15% {
-                /* Przesuwamy do środka */
-                transform: translateY(0) scale(0.8);
-                opacity: 1;
-              }
-              25% {
-                /* Logo osiąga środek i zaczyna pulsować */
-                transform: translateY(0) scale(1);
-                opacity: 1;
-              }
-              35% {
-                transform: translateY(0) scale(1.15);
-                opacity: 0.95;
-              }
-              45% {
-                transform: translateY(0) scale(1);
-                opacity: 1;
-              }
-              55% {
-                transform: translateY(0) scale(1.1);
-                opacity: 0.95;
-              }
-              65% {
-                transform: translateY(0) scale(1);
-                opacity: 1;
-              }
-              75% {
-                transform: translateY(0) scale(1.05);
-                opacity: 0.98;
-              }
-              85% {
-                /* Kończy pulsowanie */
-                transform: translateY(0) scale(1);
-                opacity: 1;
-              }
-              95% {
-                /* Delikatnie zaczyna wracać */
-                transform: translateY(-20vh) scale(0.75);
-                opacity: 0.6;
-              }
-              100% {
-                /* Znika */
-                transform: translateY(-25vh) scale(1);
-                opacity: 0;
-              }
-            }
-          `}</style>
         </div>
       )}
     </div>
