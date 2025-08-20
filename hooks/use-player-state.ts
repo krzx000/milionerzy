@@ -479,18 +479,31 @@ export function usePlayerState() {
                 )
               : 0;
 
+            const isCorrect = prev.selectedAnswer === correctAnswer;
+
+            // Oblicz wygraną dla błędnej odpowiedzi używając getWinningPrize
+            let winnings = prev.winnings;
+            if (!isCorrect) {
+              // Jeśli odpowiedź błędna, użyj getWinningPrize do obliczenia gwarantowanej nagrody
+              winnings = getWinningPrize(
+                prev.questionIndex,
+                prev.totalQuestions
+              );
+            }
+
             return {
               ...prev,
               correctAnswer,
               isAnswerRevealed: true,
               showFinalAnswer: true,
+              winnings, // Aktualizuj wygraną
               answerHistory: [
                 ...prev.answerHistory,
                 {
                   questionIndex: prev.questionIndex,
                   selectedAnswer: prev.selectedAnswer || "",
                   correctAnswer,
-                  isCorrect: prev.selectedAnswer === correctAnswer,
+                  isCorrect,
                   timeUsed,
                 },
               ],

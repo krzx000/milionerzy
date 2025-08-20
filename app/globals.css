@@ -184,6 +184,6 @@
   }
   100% {
     transform: translateY(-35vh) scale(1);
-    opacity: 1;
+    opacity: 0;
   }
 }
