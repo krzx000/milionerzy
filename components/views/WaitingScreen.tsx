@@ -2,8 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
-import { Wifi, WifiOff } from "lucide-react";
+import { ConnectionBadge } from "@/components/ui/connection-badge";
 import { IMAGES } from "@/lib/utils/game-assets";
 import { Inter } from "next/font/google";
 
@@ -30,17 +29,7 @@ export function WaitingScreen({
     >
       {/* Status połączenia w prawym górnym rogu */}
       <div className="fixed top-6 right-6 z-50">
-        {isConnected ? (
-          <Badge variant="default" className="bg-green-500 text-white">
-            <Wifi className="w-4 h-4 mr-1" />
-            Połączono
-          </Badge>
-        ) : (
-          <Badge variant="destructive" className="bg-red-500 text-white">
-            <WifiOff className="w-4 h-4 mr-1" />
-            Rozłączono
-          </Badge>
-        )}
+        <ConnectionBadge isConnected={isConnected} />
       </div>
 
       <div
