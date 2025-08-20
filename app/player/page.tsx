@@ -211,8 +211,8 @@ export default function PlayerViewPage() {
     ) {
       console.log("Player: Rozpoczynanie przejścia do pierwszego pytania");
       setHasShownGameStartTransition(true);
-      setShowGameContent(false); // Ukryj zawartość na początku
-      setIsGameStartTransition(true);
+      setShowGameContent(false); // Natychmiast ukryj zawartość
+      setIsGameStartTransition(true); // Natychmiast pokaż przejście
 
       // Po 1.5 sekundy pokazuj zawartość (przed końcem przejścia)
       setTimeout(() => {
@@ -226,23 +226,32 @@ export default function PlayerViewPage() {
     }
   }, [gameStatus, currentQuestion, questionIndex, hasShownGameStartTransition]);
 
-  // Przejście z ekranu wygranej do oczekiwania
+  // Automatyczne przejście z ekranu wygranej do oczekiwania po 5 sekundach
   React.useEffect(() => {
-    // Sprawdzamy czy przechodzimy z ended z wygraną do waiting
     if (
-      gameStatus === "waiting" &&
+      gameStatus === "ended" &&
       finalResult === "win" &&
+      showWinScreen &&
       !isBackToWaitingTransition
     ) {
-      console.log("Player: Rozpoczynanie przejścia z wygranej do oczekiwania");
-      setIsBackToWaitingTransition(true);
+      console.log(
+        "Player: Ustawianie timera przejścia z wygranej do oczekiwania"
+      );
+      const timer = setTimeout(() => {
+        console.log(
+          "Player: Rozpoczynanie przejścia z wygranej do oczekiwania"
+        );
+        setIsBackToWaitingTransition(true);
 
-      // Po 2 sekundach ukrywamy przejście
-      setTimeout(() => {
-        setIsBackToWaitingTransition(false);
-      }, 2000);
+        // Po 2 sekundach ukrywamy przejście
+        setTimeout(() => {
+          setIsBackToWaitingTransition(false);
+        }, 2000);
+      }, 5000); // 5 sekund wyświetlania wyniku
+
+      return () => clearTimeout(timer);
     }
-  }, [gameStatus, finalResult, isBackToWaitingTransition]);
+  }, [gameStatus, finalResult, showWinScreen, isBackToWaitingTransition]);
 
   // Dźwięk startowy przy nowym pytaniu
   React.useEffect(() => {
@@ -438,20 +447,26 @@ export default function PlayerViewPage() {
       setIsTransitioning(false);
     }
 
-    // Reset stanów przejść przy zmianie stanu gry
-    if (gameStatus === "waiting") {
+    // Reset stanów przejść przy zmianie stanu gry na waiting (ale tylko jeśli nie ma aktywnego przejścia start)
+    if (gameStatus === "waiting" && !hasShownGameStartTransition) {
       setIsGameStartTransition(false);
       setHasShownGameStartTransition(false); // Reset flagi dla nowej gry
       setShowGameContent(true); // Pokaż zawartość domyślnie
       setShowWinScreen(false);
       setShowWinTransition(false);
       setIsTransitioning(false);
+      setIsBackToWaitingTransition(false); // Reset przejścia z wygranej
     }
 
     if (gameStatus === "ended") {
       setIsBackToWaitingTransition(false);
     }
-  }, [questionIndex, gameStatus]);
+  }, [
+    questionIndex,
+    gameStatus,
+    isGameStartTransition,
+    hasShownGameStartTransition,
+  ]);
 
   // ============== FUNKCJE POMOCNICZE ==============
 
@@ -495,8 +510,12 @@ export default function PlayerViewPage() {
     );
   }
 
-  // Jeśli gra nie została jeszcze rozpoczęta
-  if (gameStatus === "waiting" || !session) {
+  // Jeśli gra nie została jeszcze rozpoczęta (ale nie podczas przejścia lub gdy gra jest aktywna)
+  if (
+    (gameStatus === "waiting" || !session) &&
+    !isGameStartTransition &&
+    gameStatus !== "active"
+  ) {
     console.log("Player page: Rendering waiting screen", {
       gameStatus,
       hasSession: !!session,
@@ -1168,6 +1187,24 @@ export default function PlayerViewPage() {
       {showTransitionScreen && (
         <div className="fixed inset-0 z-[9999] transition-screen-overlay backdrop-blur-2xl bg-black/20">
           {/* Logo animowane - przechodzi z pozycji górnej na środek i pulsuje */}
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="transition-screen-logo">
+              <Image
+                src={IMAGES.LOGO}
+                alt="Logo Milionerzy"
+                width={600}
+                height={300}
+                className="drop-shadow-2xl"
+                priority
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EKRAN PRZEJŚCIOWY - PRZEJŚCIE Z WYGRANEJ DO OCZEKIWANIA */}
+      {isBackToWaitingTransition && showWinScreen && (
+        <div className="fixed inset-0 z-[9999] transition-screen-overlay backdrop-blur-2xl bg-black/20">
           <div className="min-h-screen flex items-center justify-center">
             <div className="transition-screen-logo">
               <Image
