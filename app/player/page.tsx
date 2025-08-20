@@ -413,10 +413,184 @@ export default function PlayerViewPage() {
     );
   }
 
-  // Jeśli gra się zakończyła
-  if (gameStatus === "ended") {
-    console.log("Player page: Game ended, rendering empty component");
-    return <></>;
+  // Jeśli gra się zakończyła przegraniem (tylko gdy gra jest rzeczywiście zakończona)
+  if (finalResult === "lose" && gameStatus === "ended") {
+    console.log("Player page: Game lost, rendering lose screen", {
+      finalResult,
+      gameStatus,
+    });
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-600 flex items-center justify-center p-4">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="mb-8">
+            <Image
+              src={IMAGES.LOGO}
+              alt="Milionerzy"
+              width={128}
+              height={128}
+              className="mx-auto mb-6 opacity-80"
+            />
+          </div>
+
+          <h1 className="text-6xl font-bold text-white mb-6">PRZEGRANA!</h1>
+
+          <p className="text-2xl text-red-100 mb-8">
+            Niestety, twoja przygoda z milionami się kończy...
+          </p>
+
+          <div className="text-lg text-red-200">Dziękujemy za grę!</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Jeśli gra się zakończyła wygraną (tylko gdy gra jest rzeczywiście zakończona)
+  if (finalResult === "win" && gameStatus === "ended") {
+    console.log("Player page: Game won, rendering win screen", {
+      finalResult,
+      gameStatus,
+    });
+
+    return (
+      <div
+        className="min-h-screen bg-cover bg-center relative"
+        style={{ backgroundImage: `url(${IMAGES.BACKGROUND})` }}
+      >
+        {/* Status połączenia w prawym górnym rogu */}
+        <div className="fixed top-6 right-6 z-50">
+          {isConnected ? (
+            <Badge variant="default" className="bg-green-500 text-white">
+              <Wifi className="w-4 h-4 mr-1" />
+              Połączono
+            </Badge>
+          ) : (
+            <Badge variant="destructive" className="bg-red-500 text-white">
+              <WifiOff className="w-4 h-4 mr-1" />
+              Rozłączono
+            </Badge>
+          )}
+        </div>
+
+        {/* EKRAN WYGRANEJ */}
+        <div className="h-screen flex flex-col justify-end">
+          {/* Logo w tym samym miejscu */}
+          <div className="flex justify-center">
+            <Image
+              src={IMAGES.LOGO}
+              alt="Logo"
+              width={512}
+              height={512}
+              draggable={false}
+              className="w-1/4 select-none"
+            />
+          </div>
+
+          {/* Obszar pytania teraz z wygraną */}
+          <div
+            className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url(${IMAGES.QUESTION_BACKGROUND})`,
+            }}
+          >
+            {/* Niewidoczny obrazek dla wymiarów */}
+            <Image
+              src={IMAGES.QUESTION_BACKGROUND}
+              width={1920}
+              height={400}
+              alt="Wygrana"
+              className="w-full invisible"
+              draggable={false}
+            />
+
+            {/* Napis "WYGRANA" gdzie była nagroda */}
+            <div className="absolute top-[31%] -translate-y-1/2 left-1/2 -translate-x-1/2 w-[9%] h-[15%] flex items-center justify-center">
+              <p
+                style={{ ...COINY.style }}
+                className="text-white text-center text-shadow-bold text-2xl font-bold"
+              >
+                WYGRANA
+              </p>
+            </div>
+
+            {/* Kwota wygranej gdzie było pytanie */}
+            <div
+              ref={questionRef}
+              className="absolute top-[55%] -translate-y-1/2 h-[40%] left-1/2 -translate-x-1/2 w-[76%] flex items-center justify-center"
+            >
+              <p
+                style={{ ...INTER.style, fontSize: questionFontSize }}
+                className="text-white text-center font-bold text-shadow-bold"
+              >
+                {winnings || "1 000 000 zł"}
+              </p>
+            </div>
+          </div>
+
+          {/* Koła ratunkowe (nieaktywne) */}
+          <div className="flex justify-center gap-4">
+            <Image
+              src={IMAGES.LIFELINES_BACKGROUND.FIFTY_FIFTY.USED}
+              alt="Koło ratunkowe 50:50"
+              width={512}
+              height={512}
+              draggable={false}
+              className="w-[120px] h-auto select-none opacity-50"
+              priority
+            />
+            <Image
+              src={IMAGES.LIFELINES_BACKGROUND.VOTING.USED}
+              alt="Koło ratunkowe - pytanie do publiczności"
+              width={512}
+              height={512}
+              draggable={false}
+              className="w-[120px] h-auto select-none opacity-50"
+              priority
+            />
+            <Image
+              src={IMAGES.LIFELINES_BACKGROUND.PHONE.USED}
+              alt="Koło ratunkowe - telefon do przyjaciela"
+              width={512}
+              height={512}
+              draggable={false}
+              className="w-[120px] h-auto select-none opacity-50"
+              priority
+            />
+          </div>
+
+          <div></div>
+
+          {/* Miejsce odpowiedzi - puste lub gratulacje */}
+          <div className="-space-y-8 relative">
+            <div
+              className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
+              style={{
+                backgroundImage: `url(${IMAGES.ANSWER_BACKGROUNDS.DEFAULT_DEFAULT})`,
+              }}
+            >
+              <Image
+                src={IMAGES.ANSWER_BACKGROUNDS.DEFAULT_DEFAULT}
+                width={1920}
+                height={150}
+                alt="Gratulacje"
+                className="w-full invisible"
+                draggable={false}
+              />
+
+              {/* Gratulacje */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <p
+                  style={{ ...INTER.style }}
+                  className="text-white text-4xl font-bold text-shadow-bold text-center"
+                >
+                  🎉 GRATULACJE! 🎉
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   console.log("Player page: Rendering main game UI", {
@@ -425,7 +599,181 @@ export default function PlayerViewPage() {
     hasCurrentQuestion: !!currentQuestion,
     questionIndex,
     currentPrize,
+    isAnswerRevealed,
+    selectedAnswer,
+    correctAnswer,
   });
+
+  // Jeśli odpowiedź została ujawniona i pokazać finalne podsumowanie
+  if (isAnswerRevealed && showFinalAnswer && selectedAnswer && correctAnswer) {
+    const isCorrect = selectedAnswer === correctAnswer;
+
+    return (
+      <div
+        className="min-h-screen bg-cover bg-center relative"
+        style={{ backgroundImage: `url(${IMAGES.BACKGROUND})` }}
+      >
+        {/* Status połączenia w prawym górnym rogu */}
+        <div className="fixed top-6 right-6 z-50">
+          {isConnected ? (
+            <Badge variant="default" className="bg-green-500 text-white">
+              <Wifi className="w-4 h-4 mr-1" />
+              Połączono
+            </Badge>
+          ) : (
+            <Badge variant="destructive" className="bg-red-500 text-white">
+              <WifiOff className="w-4 h-4 mr-1" />
+              Rozłączono
+            </Badge>
+          )}
+        </div>
+
+        {/* EKRAN REZULTATU ODPOWIEDZI */}
+        <div className="h-screen flex flex-col justify-end">
+          {/* Logo w tym samym miejscu */}
+          <div className="flex justify-center">
+            <Image
+              src={IMAGES.LOGO}
+              alt="Logo"
+              width={512}
+              height={512}
+              draggable={false}
+              className="w-1/4 select-none"
+            />
+          </div>
+
+          {/* Obszar pytania z rezultatem */}
+          <div
+            className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url(${IMAGES.QUESTION_BACKGROUND})`,
+            }}
+          >
+            {/* Niewidoczny obrazek dla wymiarów */}
+            <Image
+              src={IMAGES.QUESTION_BACKGROUND}
+              width={1920}
+              height={400}
+              alt="Rezultat"
+              className="w-full invisible"
+              draggable={false}
+            />
+
+            {/* Status rezultatu gdzie była nagroda */}
+            <div className="absolute top-[31%] -translate-y-1/2 left-1/2 -translate-x-1/2 w-[9%] h-[15%] flex items-center justify-center">
+              <p
+                style={{ ...COINY.style }}
+                className="text-center text-shadow-bold text-2xl font-bold text-[#32E685]"
+              >
+                WYGRANA
+              </p>
+            </div>
+
+            {/* Komunikat gdzie było pytanie */}
+            <div
+              ref={questionRef}
+              className="absolute top-[55%] -translate-y-1/2 h-[40%] left-1/2 -translate-x-1/2 w-[76%] flex items-center justify-center"
+            >
+              <p
+                style={{ ...INTER.style, fontSize: questionFontSize }}
+                className="text-center font-bold text-shadow-bold text-white"
+              >
+                {isCorrect ? currentPrize : winnings || "0 zł"}
+              </p>
+            </div>
+          </div>
+
+          {/* Koła ratunkowe - UKRYTE W REZULTACIE */}
+          <div className="flex justify-center gap-4 invisible">
+            <Image
+              src={
+                lifelinesUsed.fiftyFifty
+                  ? IMAGES.LIFELINES_BACKGROUND.FIFTY_FIFTY.USED
+                  : IMAGES.LIFELINES_BACKGROUND.FIFTY_FIFTY.AVAILABLE
+              }
+              alt="Koło ratunkowe 50:50"
+              width={512}
+              height={512}
+              draggable={false}
+              className="w-[120px] h-auto select-none"
+              priority
+            />
+            <Image
+              src={
+                lifelinesUsed.askAudience
+                  ? IMAGES.LIFELINES_BACKGROUND.VOTING.USED
+                  : IMAGES.LIFELINES_BACKGROUND.VOTING.AVAILABLE
+              }
+              alt="Koło ratunkowe - pytanie do publiczności"
+              width={512}
+              height={512}
+              draggable={false}
+              className="w-[120px] h-auto select-none"
+              priority
+            />
+            <Image
+              src={
+                lifelinesUsed.phoneAFriend
+                  ? IMAGES.LIFELINES_BACKGROUND.PHONE.USED
+                  : IMAGES.LIFELINES_BACKGROUND.PHONE.AVAILABLE
+              }
+              alt="Koło ratunkowe - telefon do przyjaciela"
+              width={512}
+              height={512}
+              draggable={false}
+              className="w-[120px] h-auto select-none"
+              priority
+            />
+          </div>
+
+          <div></div>
+
+          {/* Miejsce odpowiedzi z komunikatem - UKRYTE W REZULTACIE */}
+          <div className="-space-y-8 relative invisible">
+            <div
+              className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
+              style={{
+                backgroundImage: `url(${
+                  isCorrect
+                    ? IMAGES.ANSWER_BACKGROUNDS.CORRECT_DEFAULT
+                    : IMAGES.ANSWER_BACKGROUNDS.DEFAULT_DEFAULT
+                })`,
+              }}
+            >
+              <Image
+                src={
+                  isCorrect
+                    ? IMAGES.ANSWER_BACKGROUNDS.CORRECT_DEFAULT
+                    : IMAGES.ANSWER_BACKGROUNDS.DEFAULT_DEFAULT
+                }
+                width={1920}
+                height={150}
+                alt="Rezultat"
+                className="w-full invisible"
+                draggable={false}
+              />
+
+              {/* Komunikat rezultatu */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <p
+                  style={{ ...INTER.style }}
+                  className={`text-3xl font-bold text-shadow-bold text-center ${
+                    isCorrect ? "text-green-300" : "text-red-300"
+                  }`}
+                >
+                  {isCorrect
+                    ? `🎉 Wygrywasz: ${currentPrize}! 🎉`
+                    : `💔 Koniec gry! Końcowa wygrana: ${
+                        winnings || "0 zł"
+                      } 💔`}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ============== GŁÓWNY WIDOK GRY - TUTAJ ZBUDUJ SWÓJ INTERFEJS ==============
 
@@ -460,18 +808,14 @@ export default function PlayerViewPage() {
             width={512}
             height={512}
             draggable={false}
-            className={`w-1/4 select-none transition-all duration-500 ${
-              showTransitionScreen ? "opacity-0" : "opacity-100"
-            }`}
+            className="w-1/4 select-none transition-all duration-500"
             id="main-logo"
           />
         </div>
 
         {currentQuestion && (
           <div
-            className={`relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat ${
-              showTransitionScreen ? "opacity-0" : "opacity-100"
-            }`}
+            className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
             style={{
               backgroundImage: `url(${IMAGES.QUESTION_BACKGROUND})`,
             }}
@@ -512,11 +856,7 @@ export default function PlayerViewPage() {
           </div>
         )}
         {/* Koła ratunkowe (graficzne) */}
-        <div
-          className={`flex justify-center gap-4 transition-opacity duration-500 ${
-            showTransitionScreen ? "opacity-0" : "opacity-100"
-          }`}
-        >
+        <div className="flex justify-center gap-4">
           {/* 50:50 */}
           <Image
             src={
@@ -565,11 +905,7 @@ export default function PlayerViewPage() {
 
         {/* Odpowiedzi */}
         {currentQuestion && (
-          <div
-            className={`-space-y-8 relative transition-opacity duration-500 ${
-              showTransitionScreen ? "opacity-0" : "opacity-100"
-            }`}
-          >
+          <div className="-space-y-8 relative">
             {/* Rząd A i B */}
             <div
               className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
@@ -782,25 +1118,9 @@ export default function PlayerViewPage() {
 
       {/* EKRAN PRZEJŚCIOWY - NAKŁADKA */}
       {showTransitionScreen && (
-        <div className="fixed inset-0 z-40 transition-screen-overlay">
-          {/* Tło z blur */}
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{
-              backgroundImage: `url(${IMAGES.BACKGROUND})`,
-              filter: "blur(3px)",
-              transform: "scale(1.1)", // Żeby uniknąć białych krawędzi przy blur
-            }}
-          ></div>
-
-          {/* Overlay dla kontrastu */}
-          <div
-            className="absolute inset-0"
-            style={{ backgroundColor: "rgba(0, 0, 0, 0.2)" }}
-          ></div>
-
+        <div className="fixed inset-0 z-40 transition-screen-overlay backdrop-blur-md bg-black/20">
           {/* Logo animowane - przechodzi z pozycji górnej na środek i pulsuje */}
-          <div className="relative min-h-screen flex items-center justify-center">
+          <div className="min-h-screen flex items-center justify-center">
             <div className="transition-screen-logo">
               <Image
                 src={IMAGES.LOGO}
@@ -880,7 +1200,7 @@ export default function PlayerViewPage() {
               }
               100% {
                 /* Znika */
-                transform: translateY(-20vh) scale(0.5);
+                transform: translateY(-25vh) scale(1);
                 opacity: 0;
               }
             }

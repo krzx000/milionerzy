@@ -604,9 +604,9 @@ export default function Admin() {
         )}
       </div>
 
-      <div className="w-full flex min-h-screen gap-4 p-4">
-        {/* Lista pytań + edycja i wgrywanie (duży panel po lewej) */}
-        <section className="w-full">
+      <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 min-h-screen">
+        {/* Lista pytań + edycja i wgrywanie (lewa kolumna) */}
+        <section className="md:col-span-2 lg:col-span-1 order-1">
           <QuestionsManagement
             questions={questions}
             loading={questionsLoading}
@@ -620,8 +620,8 @@ export default function Admin() {
           />
         </section>
 
-        {/* Ustawienia gry (obok listy pytań) */}
-        <section className="w-1/2">
+        {/* Ustawienia gry (środkowa kolumna) */}
+        <section className="md:col-span-1 lg:col-span-1 order-2">
           <GameManagement
             gameSession={gameSession}
             gameLoading={gameLoading}
@@ -636,8 +636,8 @@ export default function Admin() {
           />
         </section>
 
-        {/* Podgląd aktualnego pytania + opcje odpowiedzi (prawa kolumna, góra) */}
-        <section className="w-1/2">
+        {/* Podgląd aktualnego pytania + opcje odpowiedzi (prawa kolumna) */}
+        <section className="md:col-span-1 lg:col-span-1 order-3">
           <CurrentQuestionDisplay
             gameSession={gameSession}
             currentQuestion={currentQuestion}

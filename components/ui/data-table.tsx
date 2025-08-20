@@ -186,14 +186,14 @@ export function DataTable<TData>({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-1 items-center space-x-2">
+    <div className="space-y-4 overflow-hidden min-w-0">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex flex-1 items-center space-x-2 min-w-0">
           <Input
             placeholder="Szukaj..."
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
-            className="h-8 w-[150px] lg:w-[250px]"
+            className="h-8 w-[120px] lg:w-[200px] xl:w-[250px] max-w-full"
           />
         </div>
         <DropdownMenu>
@@ -201,7 +201,7 @@ export function DataTable<TData>({
             <Button
               variant="outline"
               size="sm"
-              className="ml-auto hidden h-8 lg:flex"
+              className="ml-auto hidden h-8 lg:flex flex-shrink-0"
             >
               <SettingsIcon className="mr-2 h-4 w-4" />
               Kolumny
@@ -234,8 +234,8 @@ export function DataTable<TData>({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border overflow-x-auto">
+        <Table className="min-w-full">
           <TableHeader>
             <TableRow>
               {enableRowSelection && (
@@ -332,8 +332,51 @@ export function DataTable<TData>({
           </TableBody>
         </Table>
       </div>
-      <div className="flex flex-col space-y-4 px-2 xl:flex-row sm:items-center sm:justify-between sm:space-y-0">
-        <div className="flex-1 text-sm text-muted-foreground order-2 sm:order-1 text-center sm:text-left">
+      <div className="flex flex-col">
+        {/* <div className="flex flex-col space-y-4 px-2 xl:flex-row sm:items-center sm:justify-between sm:space-y-0 overflow-hidden"> */}
+        <div className="flex w-full py-1 items-center justify-center text-xs font-medium sm:w-auto xl:text-sm min-w-0 flex-shrink-0">
+          Strona {state.pagination.pageIndex + 1} z {pageCount}
+        </div>
+        <div className="flex items-center justify-center space-x-1 sm:space-x-1 xl:space-x-2 flex-shrink-0">
+          <Button
+            variant="outline"
+            className="h-7 w-7 p-0 xl:h-8 xl:w-8"
+            onClick={() => handlePageChange(0)}
+            disabled={!canPreviousPage}
+          >
+            <span className="sr-only">Idź do pierwszej strony</span>
+            <ChevronsLeftIcon className="h-3 w-3 xl:h-4 xl:w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="h-7 w-7 p-0 xl:h-8 xl:w-8"
+            onClick={() => handlePageChange(state.pagination.pageIndex - 1)}
+            disabled={!canPreviousPage}
+          >
+            <span className="sr-only">Idź do poprzedniej strony</span>
+            <ChevronLeftIcon className="h-3 w-3 xl:h-4 xl:w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="h-7 w-7 p-0 xl:h-8 xl:w-8"
+            onClick={() => handlePageChange(state.pagination.pageIndex + 1)}
+            disabled={!canNextPage}
+          >
+            <span className="sr-only">Idź do następnej strony</span>
+            <ChevronRightIcon className="h-3 w-3 xl:h-4 xl:w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="h-7 w-7 p-0 xl:h-8 xl:w-8"
+            onClick={() => handlePageChange(pageCount - 1)}
+            disabled={!canNextPage}
+          >
+            <span className="sr-only">Idź do ostatniej strony</span>
+            <ChevronsRightIcon className="h-3 w-3 xl:h-4 xl:w-4" />
+          </Button>
+        </div>
+
+        <div className="flex-1 flex justify-center py-2 text-sm text-muted-foreground text-center sm:text-left min-w-0">
           {enableRowSelection ? (
             <>
               {
@@ -347,73 +390,30 @@ export function DataTable<TData>({
             <>Razem {sortedData.length} wierszy.</>
           )}
         </div>
-        <div className="flex flex-col space-y-3 order-1 sm:order-2 xl:flex-row sm:items-center sm:space-x-4 sm:space-y-0 xl:space-x-6 2xl:space-x-8">
-          <div className="flex items-center justify-center space-x-2 sm:justify-start xl:space-x-3">
-            <p className="text-sm font-medium whitespace-nowrap">
-              Wierszy na stronie
-            </p>
-            <select
-              value={state.pagination.pageSize}
-              onChange={(e) =>
-                setState((prev) => ({
-                  ...prev,
-                  pagination: {
-                    ...prev.pagination,
-                    pageSize: Number(e.target.value),
-                    pageIndex: 0,
-                  },
-                }))
-              }
-              className="h-8 w-[70px] rounded-md border border-input bg-background px-3 py-1 text-sm xl:w-[80px]"
-            >
-              {[10, 20, 30, 40, 50].map((pageSize) => (
-                <option key={pageSize} value={pageSize}>
-                  {pageSize}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex w-full items-center justify-center text-sm font-medium sm:w-[100px] xl:w-[120px] xl:text-base">
-            Strona {state.pagination.pageIndex + 1} z {pageCount}
-          </div>
-          <div className="flex items-center justify-center space-x-1 sm:space-x-2 xl:space-x-3">
-            <Button
-              variant="outline"
-              className="hidden h-8 w-8 p-0 lg:flex xl:h-9 xl:w-9"
-              onClick={() => handlePageChange(0)}
-              disabled={!canPreviousPage}
-            >
-              <span className="sr-only">Idź do pierwszej strony</span>
-              <ChevronsLeftIcon className="h-4 w-4 xl:h-5 xl:w-5" />
-            </Button>
-            <Button
-              variant="outline"
-              className="h-8 w-8 p-0 xl:h-9 xl:w-9"
-              onClick={() => handlePageChange(state.pagination.pageIndex - 1)}
-              disabled={!canPreviousPage}
-            >
-              <span className="sr-only">Idź do poprzedniej strony</span>
-              <ChevronLeftIcon className="h-4 w-4 xl:h-5 xl:w-5" />
-            </Button>
-            <Button
-              variant="outline"
-              className="h-8 w-8 p-0 xl:h-9 xl:w-9"
-              onClick={() => handlePageChange(state.pagination.pageIndex + 1)}
-              disabled={!canNextPage}
-            >
-              <span className="sr-only">Idź do następnej strony</span>
-              <ChevronRightIcon className="h-4 w-4 xl:h-5 xl:w-5" />
-            </Button>
-            <Button
-              variant="outline"
-              className="hidden h-8 w-8 p-0 lg:flex xl:h-9 xl:w-9"
-              onClick={() => handlePageChange(pageCount - 1)}
-              disabled={!canNextPage}
-            >
-              <span className="sr-only">Idź do ostatniej strony</span>
-              <ChevronsRightIcon className="h-4 w-4 xl:h-5 xl:w-5" />
-            </Button>
-          </div>
+        <div className="flex gap-2 justify-center items-center min-w-0 flex-shrink-0">
+          <p className="text-sm font-medium whitespace-nowrap">
+            Wierszy na stronie
+          </p>
+          <select
+            value={state.pagination.pageSize}
+            onChange={(e) =>
+              setState((prev) => ({
+                ...prev,
+                pagination: {
+                  ...prev.pagination,
+                  pageSize: Number(e.target.value),
+                  pageIndex: 0,
+                },
+              }))
+            }
+            className="h-8 w-[60px] rounded-md border border-input bg-background px-2 py-1 text-xs xl:w-[70px] xl:text-sm flex-shrink-0"
+          >
+            {[10, 20, 30, 40, 50].map((pageSize) => (
+              <option key={pageSize} value={pageSize}>
+                {pageSize}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
     </div>

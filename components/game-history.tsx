@@ -31,21 +31,21 @@ export function GameHistory({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+          <div className="flex-1">
             <CardTitle>Historia sesji gry</CardTitle>
             <CardDescription>
               Poprzednie sesje gry z wynikami i statystykami
             </CardDescription>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 lg:flex-shrink-0">
             {onClearAllSessions && gameHistory.length > 0 && (
               <Button
                 variant="destructive"
                 size="sm"
                 onClick={onClearAllSessions}
                 disabled={historyLoading}
-                className="flex items-center gap-2"
+                className="flex items-center justify-center gap-2 w-full sm:w-auto"
               >
                 🗑️ Usuń wszystkie sesje
               </Button>
@@ -54,7 +54,7 @@ export function GameHistory({
               variant="outline"
               size="sm"
               onClick={onToggleHistory}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               {isHistoryVisible ? "Ukryj historię" : "Pokaż historię"}
               <svg
@@ -88,8 +88,8 @@ export function GameHistory({
               Brak poprzednich sesji gry
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <div className="space-y-0">
+            <div className="overflow-x-auto -mx-6 px-6">
+              <div className="space-y-0 min-w-[800px]">
                 {/* Nagłówek tabeli */}
                 <div className="grid grid-cols-7 gap-0 border-b border-gray-200 dark:border-gray-700 pb-2 mb-3">
                   <div className="text-left p-3 whitespace-nowrap font-medium text-sm">
