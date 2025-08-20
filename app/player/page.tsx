@@ -142,6 +142,13 @@ export default function PlayerViewPage() {
   const [showWinScreen, setShowWinScreen] = React.useState(false);
   const [showWinTransition, setShowWinTransition] = React.useState(false);
 
+  // Tekst wyświetlany w polu pytania: normalne pytanie lub kwota wygranej
+  const displayQuestionText = showWinScreen
+    ? selectedAnswer === correctAnswer
+      ? currentPrize
+      : winnings || "0 zł"
+    : currentQuestion?.content;
+
   // ============== EFEKTY I LOGIKA ==============
 
   // Inicjalizacja połączenia
@@ -639,177 +646,6 @@ export default function PlayerViewPage() {
     );
   }
 
-  // Jeśli odpowiedź została ujawniona i pokazać ekran wygranej
-  if (showWinScreen) {
-    const isCorrect = selectedAnswer === correctAnswer;
-
-    return (
-      <div
-        className="min-h-screen bg-cover bg-center relative"
-        style={{ backgroundImage: `url(${IMAGES.BACKGROUND})` }}
-      >
-        {/* Status połączenia w prawym górnym rogu */}
-        <div className="fixed top-6 right-6 z-50">
-          {isConnected ? (
-            <Badge variant="default" className="bg-green-500 text-white">
-              <Wifi className="w-4 h-4 mr-1" />
-              Połączono
-            </Badge>
-          ) : (
-            <Badge variant="destructive" className="bg-red-500 text-white">
-              <WifiOff className="w-4 h-4 mr-1" />
-              Rozłączono
-            </Badge>
-          )}
-        </div>
-
-        {/* EKRAN REZULTATU ODPOWIEDZI */}
-        <div className="h-screen flex flex-col justify-end">
-          {/* Logo w tym samym miejscu */}
-          <div className="flex justify-center">
-            <Image
-              src={IMAGES.LOGO}
-              alt="Logo"
-              width={512}
-              height={512}
-              draggable={false}
-              className="w-1/4 select-none"
-            />
-          </div>
-
-          {/* Obszar pytania z rezultatem */}
-          <div
-            className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: `url(${IMAGES.QUESTION_BACKGROUND})`,
-            }}
-          >
-            {/* Niewidoczny obrazek dla wymiarów */}
-            <Image
-              src={IMAGES.QUESTION_BACKGROUND}
-              width={1920}
-              height={400}
-              alt="Rezultat"
-              className="w-full invisible"
-              draggable={false}
-            />
-
-            {/* Status rezultatu gdzie była nagroda */}
-            <div className="absolute top-[31%] -translate-y-1/2 left-1/2 -translate-x-1/2 w-[9%] h-[15%] flex items-center justify-center">
-              <p
-                style={{ ...COINY.style }}
-                className="text-center text-shadow-bold text-2xl font-bold text-[#32E685]"
-              >
-                WYGRANA
-              </p>
-            </div>
-
-            {/* Komunikat gdzie było pytanie */}
-            <div
-              ref={questionRef}
-              className="absolute top-[55%] -translate-y-1/2 h-[40%] left-1/2 -translate-x-1/2 w-[76%] flex items-center justify-center"
-            >
-              <p
-                style={{ ...INTER.style, fontSize: questionFontSize }}
-                className="text-center font-bold text-shadow-bold text-white"
-              >
-                {isCorrect ? currentPrize : winnings || "0 zł"}
-              </p>
-            </div>
-          </div>
-
-          {/* Koła ratunkowe - UKRYTE W REZULTACIE */}
-          <div className="flex justify-center gap-4 invisible">
-            <Image
-              src={
-                lifelinesUsed.fiftyFifty
-                  ? IMAGES.LIFELINES_BACKGROUND.FIFTY_FIFTY.USED
-                  : IMAGES.LIFELINES_BACKGROUND.FIFTY_FIFTY.AVAILABLE
-              }
-              alt="Koło ratunkowe 50:50"
-              width={512}
-              height={512}
-              draggable={false}
-              className="w-[120px] h-auto select-none"
-              priority
-            />
-            <Image
-              src={
-                lifelinesUsed.askAudience
-                  ? IMAGES.LIFELINES_BACKGROUND.VOTING.USED
-                  : IMAGES.LIFELINES_BACKGROUND.VOTING.AVAILABLE
-              }
-              alt="Koło ratunkowe - pytanie do publiczności"
-              width={512}
-              height={512}
-              draggable={false}
-              className="w-[120px] h-auto select-none"
-              priority
-            />
-            <Image
-              src={
-                lifelinesUsed.phoneAFriend
-                  ? IMAGES.LIFELINES_BACKGROUND.PHONE.USED
-                  : IMAGES.LIFELINES_BACKGROUND.PHONE.AVAILABLE
-              }
-              alt="Koło ratunkowe - telefon do przyjaciela"
-              width={512}
-              height={512}
-              draggable={false}
-              className="w-[120px] h-auto select-none"
-              priority
-            />
-          </div>
-
-          <div></div>
-
-          {/* Miejsce odpowiedzi z komunikatem - UKRYTE W REZULTACIE */}
-          <div className="-space-y-8 relative invisible">
-            <div
-              className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
-              style={{
-                backgroundImage: `url(${
-                  isCorrect
-                    ? IMAGES.ANSWER_BACKGROUNDS.CORRECT_DEFAULT
-                    : IMAGES.ANSWER_BACKGROUNDS.DEFAULT_DEFAULT
-                })`,
-              }}
-            >
-              <Image
-                src={
-                  isCorrect
-                    ? IMAGES.ANSWER_BACKGROUNDS.CORRECT_DEFAULT
-                    : IMAGES.ANSWER_BACKGROUNDS.DEFAULT_DEFAULT
-                }
-                width={1920}
-                height={150}
-                alt="Rezultat"
-                className="w-full invisible"
-                draggable={false}
-              />
-
-              {/* Komunikat rezultatu */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <p
-                  style={{ ...INTER.style }}
-                  className={`text-3xl font-bold text-shadow-bold text-center ${
-                    isCorrect ? "text-green-300" : "text-red-300"
-                  }`}
-                >
-                  {isCorrect
-                    ? `🎉 Wygrywasz: ${currentPrize}! 🎉`
-                    : `💔 Koniec gry! Końcowa wygrana: ${
-                        winnings || "0 zł"
-                      } 💔`}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // ============== GŁÓWNY WIDOK GRY - TUTAJ ZBUDUJ SWÓJ INTERFEJS ==============
 
   return (
@@ -871,9 +707,11 @@ export default function PlayerViewPage() {
             >
               <p
                 style={{ ...COINY.style, fontSize: prizeFontSize }}
-                className="text-white text-center text-shadow-bold"
+                className={`text-center text-shadow-bold ${
+                  showWinScreen ? "text-green-400" : "text-white"
+                }`}
               >
-                {currentPrize}
+                {showWinScreen ? "WYGRANA" : currentPrize}
               </p>
             </div>
 
@@ -885,13 +723,17 @@ export default function PlayerViewPage() {
                 style={{ ...INTER.style, fontSize: questionFontSize }}
                 className="text-white text-center font-bold text-shadow-bold"
               >
-                {currentQuestion.content}
+                {displayQuestionText}
               </p>
             </div>
           </div>
         )}
         {/* Koła ratunkowe (graficzne) */}
-        <div className="flex justify-center gap-4">
+        <div
+          className={`flex justify-center gap-4 transition-opacity duration-500 ${
+            showWinScreen ? "opacity-0 pointer-events-none" : "opacity-100"
+          }`}
+        >
           {/* 50:50 */}
           <Image
             src={
@@ -940,7 +782,11 @@ export default function PlayerViewPage() {
 
         {/* Odpowiedzi */}
         {currentQuestion && (
-          <div className="-space-y-8 relative">
+          <div
+            className={`-space-y-8 relative transition-opacity duration-500 ${
+              showWinScreen ? "opacity-0 pointer-events-none" : "opacity-100"
+            }`}
+          >
             {/* Rząd A i B */}
             <div
               className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
