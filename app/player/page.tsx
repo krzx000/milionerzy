@@ -736,7 +736,7 @@ export default function PlayerViewPage() {
           currentPrize={currentPrize}
           displayQuestionText={displayQuestionText}
         />
-        
+
         {/* Koła ratunkowe (graficzne) */}
         <LifelinesDisplay
           lifelinesUsed={lifelinesUsed}
