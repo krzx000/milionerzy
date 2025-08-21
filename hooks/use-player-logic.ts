@@ -8,7 +8,6 @@ import { PLAYER_CONSTANTS } from "@/lib/constants/player";
 import { formatLogData } from "@/lib/utils/player";
 import { type AnswerKey } from "@/lib/utils/game-assets";
 import type { ConnectionState } from "@/lib/constants/player";
-import useFitText from "use-fit-text";
 
 export function usePlayerLogic() {
   // Hook ze stanem gry
@@ -49,12 +48,6 @@ export function usePlayerLogic() {
     playLightsDown,
     stopAll,
   } = soundControls;
-
-  // Wielkości czcionek
-  const { fontSize: questionFontSize, ref: questionRef } = useFitText({
-    maxFontSize: 270,
-    minFontSize: 50,
-  });
 
   // Stan lokalny dla połączenia
   const [isInitialized, setIsInitialized] = React.useState(false);
@@ -533,10 +526,6 @@ export function usePlayerLogic() {
     isSessionClosedTransition,
     showGameContent,
     displayQuestionText,
-
-    // Utility
-    questionFontSize,
-    questionRef,
 
     // Sound controls
     ...soundControls,

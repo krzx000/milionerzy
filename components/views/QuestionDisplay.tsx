@@ -2,9 +2,9 @@
 
 import * as React from "react";
 import Image from "next/image";
+import { Textfit } from "react-textfit";
 import { IMAGES } from "@/lib/utils/game-assets";
 import { Coiny, Inter } from "next/font/google";
-import useFitText from "use-fit-text";
 import type { Question } from "@/types/question";
 
 const COINY = Coiny({
@@ -38,16 +38,6 @@ export function QuestionDisplay({
   currentPrize,
   displayQuestionText,
 }: QuestionDisplayProps) {
-  const { fontSize: questionFontSize, ref: questionRef } = useFitText({
-    maxFontSize: 270,
-    minFontSize: 50,
-  });
-
-  const { fontSize: prizeFontSize, ref: prizeRef } = useFitText({
-    maxFontSize: 150,
-    minFontSize: 50,
-  });
-
   if (!currentQuestion) return null;
 
   return (
@@ -75,30 +65,46 @@ export function QuestionDisplay({
         draggable={false}
       />
 
-      <div
-        ref={prizeRef}
-        className="absolute top-[31%] -translate-y-1/2 left-1/2 -translate-x-1/2 w-[9%] h-[15%] flex items-center justify-center"
-      >
-        <p
-          style={{ ...COINY.style, fontSize: prizeFontSize }}
-          className={`text-center text-shadow-bold ${
+      <div className="absolute top-[31%] -translate-y-1/2 left-1/2 -translate-x-1/2 w-[9%] h-[15%] flex items-center justify-center">
+        <Textfit
+          mode="single"
+          min={10}
+          max={30}
+          style={{
+            ...COINY.style,
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+          className={`text-shadow-bold ${
             showWinScreen ? "text-green-400" : "text-white"
           }`}
         >
           {showWinScreen ? "WYGRANA" : currentPrize}
-        </p>
+        </Textfit>
       </div>
 
-      <div
-        ref={questionRef}
-        className="absolute top-[55%] -translate-y-1/2 h-[40%] left-1/2 -translate-x-1/2 w-[76%] flex items-center justify-center"
-      >
-        <p
-          style={{ ...INTER.style, fontSize: questionFontSize }}
-          className="text-white text-center font-bold text-shadow-bold"
+      <div className="absolute top-[55%] -translate-y-1/2 h-[40%] left-1/2 -translate-x-1/2 w-[76%] flex items-center justify-center">
+        <Textfit
+          mode="single"
+          min={20}
+          max={50}
+          style={{
+            ...INTER.style,
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+          className="text-white font-bold text-shadow-bold"
         >
           {displayQuestionText}
-        </p>
+        </Textfit>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Inter, Coiny } from "next/font/google";
-import useFitText from "use-fit-text";
+import { Textfit } from "react-textfit";
 import {
   IMAGES,
   getAnswerRowBackground,
@@ -56,24 +56,6 @@ export function AnswersDisplay({
     return "default";
   };
 
-  // useFitText hooks dla każdej odpowiedzi
-  const { fontSize: answerAFontSize, ref: answerARef } = useFitText({
-    maxFontSize: 100,
-    minFontSize: 10,
-  });
-  const { fontSize: answerBFontSize, ref: answerBRef } = useFitText({
-    maxFontSize: 100,
-    minFontSize: 10,
-  });
-  const { fontSize: answerCFontSize, ref: answerCRef } = useFitText({
-    maxFontSize: 100,
-    minFontSize: 10,
-  });
-  const { fontSize: answerDFontSize, ref: answerDRef } = useFitText({
-    maxFontSize: 100,
-    minFontSize: 10,
-  });
-
   return (
     <div
       className={`-space-y-8 relative transition-all duration-500 ${
@@ -108,35 +90,49 @@ export function AnswersDisplay({
 
         {/* Odpowiedź A */}
         {isAnswerVisible("A") && (
-          <div
-            ref={answerARef}
-            className="absolute left-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center"
-          >
-            <p
-              style={{ ...INTER.style, fontSize: answerAFontSize }}
-              className="text-white font-bold px-4 text-shadow-bold flex justify-between items-center w-full"
-            >
-              <span className="font-extrabold">A:</span>
-              <span>{currentQuestion.answers.A}</span>
-              <span className="invisible">A:</span>
-            </p>
+          <div className="absolute left-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center">
+            <div className="text-shadow-bold flex justify-start items-center w-full">
+              <Textfit
+                mode="single"
+                min={30}
+                max={30}
+                style={{
+                  ...INTER.style,
+                }}
+                className="text-white font-bold"
+              >
+                <div className="flex gap-4">
+                  <span style={INTER.style} className="font-extrabold">
+                    A:
+                  </span>
+                  <span>{currentQuestion.answers.A}</span>
+                </div>
+              </Textfit>
+            </div>
           </div>
         )}
 
         {/* Odpowiedź B */}
         {isAnswerVisible("B") && (
-          <div
-            ref={answerBRef}
-            className="absolute right-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center"
-          >
-            <p
-              style={{ ...INTER.style, fontSize: answerBFontSize }}
-              className="text-white font-bold px-4 text-shadow-bold flex justify-between items-center w-full"
-            >
-              <span className="font-extrabold">B:</span>
-              <span>{currentQuestion.answers.B}</span>
-              <span className="invisible">B:</span>
-            </p>
+          <div className="absolute right-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center">
+            <div className="text-shadow-bold flex justify-start items-center w-full">
+              <Textfit
+                mode="single"
+                min={30}
+                max={30}
+                style={{
+                  ...INTER.style,
+                }}
+                className="text-white font-bold"
+              >
+                <div className="flex gap-4">
+                  <span style={INTER.style} className="font-extrabold">
+                    B:
+                  </span>
+                  <span>{currentQuestion.answers.B}</span>
+                </div>
+              </Textfit>
+            </div>
           </div>
         )}
       </div>
@@ -180,35 +176,49 @@ export function AnswersDisplay({
 
         {/* Odpowiedź C */}
         {isAnswerVisible("C") && (
-          <div
-            ref={answerCRef}
-            className="absolute left-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center"
-          >
-            <p
-              style={{ ...INTER.style, fontSize: answerCFontSize }}
-              className="text-white font-bold px-4 text-shadow-bold flex justify-between items-center w-full"
-            >
-              <span className="font-extrabold">C:</span>
-              <span>{currentQuestion.answers.C}</span>
-              <span className="invisible">C:</span>
-            </p>
+          <div className="absolute left-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center">
+            <div className="text-shadow-bold flex justify-start items-center w-full">
+              <Textfit
+                mode="single"
+                min={30}
+                max={30}
+                style={{
+                  ...INTER.style,
+                }}
+                className="text-white font-bold"
+              >
+                <div className="flex gap-4">
+                  <span style={INTER.style} className="font-extrabold">
+                    C:
+                  </span>
+                  <span>{currentQuestion.answers.C}</span>
+                </div>
+              </Textfit>
+            </div>
           </div>
         )}
 
         {/* Odpowiedź D */}
         {isAnswerVisible("D") && (
-          <div
-            ref={answerDRef}
-            className="absolute right-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center"
-          >
-            <p
-              style={{ ...INTER.style, fontSize: answerDFontSize }}
-              className="text-white font-bold px-4 text-shadow-bold flex justify-between items-center w-full"
-            >
-              <span className="font-extrabold">D:</span>
-              <span>{currentQuestion.answers.D}</span>
-              <span className="invisible">D:</span>
-            </p>
+          <div className="absolute right-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center">
+            <div className="text-shadow-bold flex justify-start items-center w-full">
+              <Textfit
+                mode="single"
+                min={30}
+                max={30}
+                style={{
+                  ...INTER.style,
+                }}
+                className="text-white font-bold"
+              >
+                <div className="flex gap-4">
+                  <span style={INTER.style} className="font-extrabold">
+                    D:
+                  </span>
+                  <span>{currentQuestion.answers.D}</span>
+                </div>
+              </Textfit>
+            </div>
           </div>
         )}
       </div>

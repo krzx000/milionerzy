@@ -2,10 +2,10 @@
 
 import * as React from "react";
 import Image from "next/image";
+import { Textfit } from "react-textfit";
 import { ConnectionBadge } from "@/components/ui/connection-badge";
 import { IMAGES } from "@/lib/utils/game-assets";
 import { Coiny, Inter } from "next/font/google";
-import useFitText from "use-fit-text";
 
 const COINY = Coiny({
   subsets: ["latin"],
@@ -28,10 +28,6 @@ export function WinScreen({
   isBackToWaitingTransition,
   winnings,
 }: WinScreenProps) {
-  const { fontSize: questionFontSize, ref: questionRef } = useFitText({
-    maxFontSize: 100,
-  });
-
   return (
     <div
       className="min-h-screen bg-cover bg-center relative"
@@ -92,16 +88,24 @@ export function WinScreen({
           </div>
 
           {/* Kwota wygranej gdzie było pytanie */}
-          <div
-            ref={questionRef}
-            className="absolute top-[55%] -translate-y-1/2 h-[40%] left-1/2 -translate-x-1/2 w-[76%] flex items-center justify-center"
-          >
-            <p
-              style={{ ...INTER.style, fontSize: questionFontSize }}
-              className="text-white text-center font-bold text-shadow-bold"
+          <div className="absolute top-[55%] -translate-y-1/2 h-[40%] left-1/2 -translate-x-1/2 w-[76%] flex items-center justify-center">
+            <Textfit
+              mode="single"
+              min={20}
+              max={50}
+              style={{
+                ...INTER.style,
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+              }}
+              className="text-white font-bold text-shadow-bold"
             >
               {winnings || "1 000 000 zł"}
-            </p>
+            </Textfit>
           </div>
         </div>
 
