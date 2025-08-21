@@ -5,17 +5,8 @@ import { usePlayerState } from "@/hooks/use-player-state";
 import { useSound } from "@/hooks/use-sound";
 import { PlayerAPI } from "@/lib/api/player";
 import { PLAYER_CONSTANTS } from "@/lib/constants/player";
-import {
-  getConnectionStatusText,
-  getConnectionStatusEmoji,
-  formatLogData,
-} from "@/lib/utils/player";
-import {
-  getAnswerRowBackground,
-  IMAGES,
-  type AnswerKey,
-  type LifelineType,
-} from "@/lib/utils/game-assets";
+import { formatLogData } from "@/lib/utils/player";
+import { type AnswerKey } from "@/lib/utils/game-assets";
 import type { ConnectionState } from "@/lib/constants/player";
 import useFitText from "use-fit-text";
 
@@ -27,35 +18,25 @@ export function usePlayerLogic() {
     session,
     currentQuestion,
     questionIndex,
-    totalQuestions,
     currentPrize,
     gameStatus,
     // Stan odpowiedzi
     selectedAnswer,
     correctAnswer,
     isAnswerRevealed,
-    answerLocked,
     showFinalAnswer,
     // Timer
-    timeRemaining,
     // Wyniki
     winnings,
     finalResult,
     // Koła ratunkowe
     lifelinesUsed,
     hiddenAnswers,
-    audienceVotingActive,
     // Animacje
     showQuestionAnimation,
-    showAnswerAnimation,
-    showTransitionScreen,
     // Historia
-    answerHistory,
     // Funkcje pomocnicze
     isConnected,
-    formatTime,
-    isAnswerHidden,
-    getAnswerClass,
   } = playerState;
 
   // Hook do dźwięków

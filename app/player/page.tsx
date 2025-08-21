@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import * as React from "react";
 import { IMAGES } from "@/lib/utils/game-assets";
 import { PLAYER_CONSTANTS } from "@/lib/constants/player";
-import Image from "next/image";
 import { ConnectionBadge } from "@/components/ui/connection-badge";
 import { WaitingScreen } from "@/components/views/WaitingScreen";
 import { WinScreen } from "@/components/views/WinScreen";
