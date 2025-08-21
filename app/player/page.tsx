@@ -6,7 +6,6 @@ import { usePlayerState } from "@/hooks/use-player-state";
 import { useSound } from "@/hooks/use-sound";
 import { PlayerAPI } from "@/lib/api/player";
 import { PLAYER_CONSTANTS } from "@/lib/constants/player";
-import { Coiny, Inter } from "next/font/google";
 
 import {
   getConnectionStatusText,
@@ -31,17 +30,8 @@ import { LifelinesDisplay } from "@/components/views/LifelinesDisplay";
 import { AudienceVotingModal } from "@/components/views/AudienceVotingModal";
 import { GamePausedModal } from "@/components/views/GamePausedModal";
 import { QuestionDisplay } from "@/components/views/QuestionDisplay";
+import { AnswersDisplay } from "@/components/views/AnswersDisplay";
 import { GameTransitionOverlay } from "@/components/ui/game-transition-overlay";
-
-const COINY = Coiny({
-  subsets: ["latin"],
-  weight: ["400"],
-});
-
-const INTER = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
 
 export default function PlayerViewPage() {
   // ============== DOSTĘPNE STATE'Y I ZMIENNE ==============
@@ -103,26 +93,6 @@ export default function PlayerViewPage() {
   // Wielkości czcionek
   const { fontSize: questionFontSize, ref: questionRef } = useFitText({
     maxFontSize: 270,
-    minFontSize: 50,
-  });
-
-  const { fontSize: answerAFontSize, ref: answerARef } = useFitText({
-    maxFontSize: 200,
-    minFontSize: 50,
-  });
-
-  const { fontSize: answerBFontSize, ref: answerBRef } = useFitText({
-    maxFontSize: 200,
-    minFontSize: 50,
-  });
-
-  const { fontSize: answerCFontSize, ref: answerCRef } = useFitText({
-    maxFontSize: 200,
-    minFontSize: 50,
-  });
-
-  const { fontSize: answerDFontSize, ref: answerDRef } = useFitText({
-    maxFontSize: 200,
     minFontSize: 50,
   });
 
@@ -605,21 +575,6 @@ export default function PlayerViewPage() {
   // ============== FUNKCJE POMOCNICZE ==============
 
   // Funkcja do sprawdzania czy odpowiedź jest ukryta (50:50)
-  const isAnswerVisible = (key: AnswerKey): boolean => {
-    return lifelineResult.includes(key);
-  };
-
-  // Funkcja do pobierania stanu odpowiedzi
-  const getAnswerState = (
-    key: AnswerKey
-  ): "default" | "selected" | "correct" => {
-    // Pierwszeństwo ma ujawniona poprawna odpowiedź
-    if (isAnswerRevealed && correctAnswer === key) return "correct";
-    // Jeśli odpowiedź jest zaznaczona (niezależnie od tego czy jest ujawniona czy nie)
-    if (selectedAnswer === key) return "selected";
-    return "default";
-  };
-
   // ============== RENDER - TUTAJ MOŻESZ ZBUDOWAĆ SWÓJ INTERFEJS ==============
 
   // Jeśli nie jest jeszcze zainicjalizowane
@@ -751,149 +706,19 @@ export default function PlayerViewPage() {
 
         {/* Odpowiedzi */}
         {currentQuestion && (
-          <div
-            className={`-space-y-8 relative transition-all duration-500 ${
-              !showGameContent ||
-              showWinScreen ||
-              isTransitioning ||
-              isGameStartTransition ||
-              isSessionClosedTransition
-                ? "opacity-0 pointer-events-none"
-                : "opacity-100"
-            }`}
-          >
-            {/* Rząd A i B */}
-            <div
-              className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
-              style={{
-                backgroundImage: `url(${getAnswerRowBackground(
-                  getAnswerState("A"),
-                  getAnswerState("B")
-                )})`,
-              }}
-            >
-              {/* Niewidoczny obrazek dla wymiarów */}
-              <Image
-                src={getAnswerRowBackground(
-                  getAnswerState("A"),
-                  getAnswerState("B")
-                )}
-                width={1920}
-                height={150}
-                alt="Odpowiedzi A i B"
-                className="w-full invisible"
-                draggable={false}
-              />
-
-              {/* Odpowiedź A */}
-              {isAnswerVisible("A") && (
-                <div
-                  ref={answerARef}
-                  className="absolute left-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center"
-                >
-                  <p
-                    style={{ ...INTER.style, fontSize: answerAFontSize }}
-                    className="text-white font-bold px-4 text-shadow-bold flex justify-between items-center w-full"
-                  >
-                    <span className="font-extrabold">A:</span>
-                    <span>{currentQuestion.answers.A}</span>
-                    <span className="invisible">A:</span>
-                  </p>
-                </div>
-              )}
-
-              {/* Odpowiedź B */}
-              {isAnswerVisible("B") && (
-                <div
-                  ref={answerBRef}
-                  className="absolute right-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center"
-                >
-                  <p
-                    style={{ ...INTER.style, fontSize: answerBFontSize }}
-                    className="text-white font-bold px-4 text-shadow-bold flex justify-between items-center w-full"
-                  >
-                    <span className="font-extrabold">B:</span>
-                    <span>{currentQuestion.answers.B}</span>
-                    <span className="invisible">B:</span>
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-fit h-[55%]">
-              <span
-                style={{ ...COINY.style }}
-                className="absolute left-1/2 top-[52%] -translate-y-1/2 -translate-x-1/2 text-white text-4xl text-shadow-bold"
-              >
-                {questionIndex + 1}
-              </span>
-              <Image
-                src={IMAGES.QUESTION_INDEX_BACKGROUND}
-                alt="Indeks pytania"
-                width={256}
-                height={256}
-                className="h-full w-full"
-              />
-            </div>
-
-            {/* Rząd C i D */}
-            <div
-              className="relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat"
-              style={{
-                backgroundImage: `url(${getAnswerRowBackground(
-                  getAnswerState("C"),
-                  getAnswerState("D")
-                )})`,
-              }}
-            >
-              {/* Niewidoczny obrazek dla wymiarów */}
-              <Image
-                src={getAnswerRowBackground(
-                  getAnswerState("C"),
-                  getAnswerState("D")
-                )}
-                width={1920}
-                height={150}
-                alt="Odpowiedzi C i D"
-                className="w-full invisible"
-                draggable={false}
-              />
-
-              {/* Odpowiedź C */}
-              {isAnswerVisible("C") && (
-                <div
-                  ref={answerCRef}
-                  className="absolute left-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center"
-                >
-                  <p
-                    style={{ ...INTER.style, fontSize: answerCFontSize }}
-                    className="text-white font-bold px-4 text-shadow-bold flex justify-between items-center w-full"
-                  >
-                    <span className="font-extrabold">C:</span>
-                    <span>{currentQuestion.answers.C}</span>
-                    <span className="invisible">C:</span>
-                  </p>
-                </div>
-              )}
-
-              {/* Odpowiedź D */}
-              {isAnswerVisible("D") && (
-                <div
-                  ref={answerDRef}
-                  className="absolute right-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center"
-                >
-                  <p
-                    style={{ ...INTER.style, fontSize: answerDFontSize }}
-                    className="text-white font-bold px-4 text-shadow-bold flex justify-between items-center w-full"
-                  >
-                    <span className="font-extrabold">D:</span>
-                    <span>{currentQuestion.answers.D}</span>
-                    <span className="invisible">D:</span>
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
+          <AnswersDisplay
+            currentQuestion={currentQuestion}
+            questionIndex={questionIndex}
+            showGameContent={showGameContent}
+            showWinScreen={showWinScreen}
+            isTransitioning={isTransitioning}
+            isGameStartTransition={isGameStartTransition}
+            isSessionClosedTransition={isSessionClosedTransition}
+            selectedAnswer={selectedAnswer}
+            correctAnswer={correctAnswer}
+            isAnswerRevealed={isAnswerRevealed}
+            lifelineResult={lifelineResult}
+          />
         )}
 
         {/* Stan głosowania publiczności */}
