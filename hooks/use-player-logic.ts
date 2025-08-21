@@ -69,6 +69,9 @@ export function usePlayerLogic() {
   const [showWinTransition, setShowWinTransition] = React.useState(false);
   const [isTransitioning, setIsTransitioning] = React.useState(false);
 
+  // Ref do śledzenia czy animacja wygranej już została uruchomiona
+  const winAnimationTriggered = React.useRef(false);
+
   // Stany dla przejść między ekranami
   const [isGameStartTransition, setIsGameStartTransition] =
     React.useState(false);
@@ -192,6 +195,14 @@ export function usePlayerLogic() {
 
   // Automatyczne przejście z ekranu wygranej do oczekiwania po 5 sekundach
   React.useEffect(() => {
+    console.log("🔄 AUTO TRANSITION EFFECT:", {
+      gameStatus,
+      finalResult,
+      showWinScreen,
+      isBackToWaitingTransition,
+      isAnyTransitionActive,
+    });
+
     if (
       gameStatus === "ended" &&
       finalResult === "win" &&
@@ -200,11 +211,11 @@ export function usePlayerLogic() {
       !isAnyTransitionActive
     ) {
       console.log(
-        "Player: Ustawianie timera przejścia z wygranej do oczekiwania"
+        "🔄 Player: Ustawianie timera przejścia z wygranej do oczekiwania"
       );
       const timer = setTimeout(() => {
         console.log(
-          "Player: Rozpoczynanie przejścia z wygranej do oczekiwania"
+          "🔄 Player: Rozpoczynanie przejścia z wygranej do oczekiwania"
         );
         setIsBackToWaitingTransition(true);
 
@@ -213,7 +224,10 @@ export function usePlayerLogic() {
         }, 2000);
       }, 5000);
 
-      return () => clearTimeout(timer);
+      return () => {
+        console.log("🔄 Player: Anulowanie timera przejścia");
+        clearTimeout(timer);
+      };
     }
   }, [
     gameStatus,
@@ -354,6 +368,15 @@ export function usePlayerLogic() {
     }
   }, [selectedAnswer, questionIndex]);
 
+  // Reset flagi animacji przy nowym pytaniu
+  React.useEffect(() => {
+    console.log("🔄 Resetting animation flag for new question:", {
+      questionIndex,
+      currentQuestion: !!currentQuestion,
+    });
+    winAnimationTriggered.current = false;
+  }, [questionIndex, currentQuestion]);
+
   React.useEffect(() => {
     if (isAnswerRevealed && correctAnswer) {
       const logData = formatLogData(
@@ -372,17 +395,34 @@ export function usePlayerLogic() {
 
   // Automatyczne przejście do ekranu wygranej po pokazaniu poprawnej odpowiedzi (dla błędnych odpowiedzi)
   React.useEffect(() => {
+    console.log("💥 WRONG ANSWER TRANSITION EFFECT:", {
+      isAnswerRevealed,
+      selectedAnswer,
+      correctAnswer,
+      selectedNotCorrect: selectedAnswer !== correctAnswer,
+      isAnyTransitionActive,
+      showWinScreen,
+      showWinTransition,
+      winAnimationTriggered: winAnimationTriggered.current,
+    });
+
     if (
       isAnswerRevealed &&
       selectedAnswer &&
       correctAnswer &&
       selectedAnswer !== correctAnswer &&
-      !isAnyTransitionActive
+      !isAnyTransitionActive &&
+      !showWinScreen && // Dodajemy warunek żeby nie triggować ponownie
+      !showWinTransition && // Dodajemy warunek żeby nie triggować ponownie
+      !winAnimationTriggered.current // Sprawdzamy czy już nie została uruchomiona
     ) {
+      console.log(
+        "💥 Player: Rozpoczynanie przejścia do ekranu wygranej (błędna odpowiedź)"
+      );
+
+      winAnimationTriggered.current = true; // Oznacz że animacja została uruchomiona
+
       const timer = setTimeout(() => {
-        console.log(
-          "Player: Rozpoczynanie przejścia do ekranu wygranej (błędna odpowiedź)"
-        );
         setIsTransitioning(true);
 
         setTimeout(() => {
@@ -399,12 +439,37 @@ export function usePlayerLogic() {
         }, 3200);
       }, 3000);
 
-      return () => clearTimeout(timer);
+      return () => {
+        console.log(
+          "💥 Player: Anulowanie timera przejścia (błędna odpowiedź)"
+        );
+        clearTimeout(timer);
+      };
     }
-  }, [isAnswerRevealed, selectedAnswer, correctAnswer, isAnyTransitionActive]);
+  }, [
+    isAnswerRevealed,
+    selectedAnswer,
+    correctAnswer,
+    isAnyTransitionActive,
+    showWinScreen,
+    showWinTransition,
+  ]);
 
   // Przejście do ekranu wygranej po wygranej grze
   React.useEffect(() => {
+    console.log("🏆 WIN TRANSITION EFFECT:", {
+      isAnswerRevealed,
+      showFinalAnswer,
+      selectedAnswer,
+      correctAnswer,
+      gameStatus,
+      selectedEqualsCorrect: selectedAnswer === correctAnswer,
+      isAnyTransitionActive,
+      showWinScreen,
+      showWinTransition,
+      winAnimationTriggered: winAnimationTriggered.current,
+    });
+
     if (
       isAnswerRevealed &&
       showFinalAnswer &&
@@ -412,11 +477,16 @@ export function usePlayerLogic() {
       correctAnswer &&
       gameStatus === "ended" &&
       selectedAnswer === correctAnswer &&
-      !isAnyTransitionActive
+      !isAnyTransitionActive &&
+      !showWinScreen && // Dodajemy warunek żeby nie triggować ponownie
+      !showWinTransition && // Dodajemy warunek żeby nie triggować ponownie
+      !winAnimationTriggered.current // Sprawdzamy czy już nie została uruchomiona
     ) {
       console.log(
-        "Player: Rozpoczynanie przejścia do ekranu wygranej (wygrana gra)"
+        "🏆 Player: Rozpoczynanie przejścia do ekranu wygranej (wygrana gra)"
       );
+
+      winAnimationTriggered.current = true; // Oznacz że animacja została uruchomiona
       setIsTransitioning(true);
 
       setTimeout(() => {
@@ -439,6 +509,8 @@ export function usePlayerLogic() {
     correctAnswer,
     gameStatus,
     isAnyTransitionActive,
+    showWinScreen,
+    showWinTransition,
   ]);
 
   // Reset stanów przy nowym pytaniu
@@ -447,6 +519,7 @@ export function usePlayerLogic() {
       setShowWinScreen(false);
       setShowWinTransition(false);
       setIsTransitioning(false);
+      winAnimationTriggered.current = false; // Reset flagi animacji
     }
 
     if (gameStatus === "waiting" && !hasShownGameStartTransition && session) {
@@ -459,6 +532,7 @@ export function usePlayerLogic() {
       setIsTransitioning(false);
       setIsBackToWaitingTransition(false);
       setIsSessionClosedTransition(false);
+      winAnimationTriggered.current = false; // Reset flagi animacji
     }
 
     if (gameStatus === "ended") {
