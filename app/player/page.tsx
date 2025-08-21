@@ -31,7 +31,9 @@ import { AudienceVotingModal } from "@/components/views/AudienceVotingModal";
 import { GamePausedModal } from "@/components/views/GamePausedModal";
 import { QuestionDisplay } from "@/components/views/QuestionDisplay";
 import { AnswersDisplay } from "@/components/views/AnswersDisplay";
+import { GameLogo } from "@/components/views/GameLogo";
 import { GameTransitionOverlay } from "@/components/ui/game-transition-overlay";
+import { ImagePreloader } from "@/components/ui/image-preloader";
 
 export default function PlayerViewPage() {
   // ============== DOSTĘPNE STATE'Y I ZMIENNE ==============
@@ -663,23 +665,11 @@ export default function PlayerViewPage() {
         }`}
       >
         {/* Logo */}
-        <div className="flex justify-center">
-          <Image
-            src={IMAGES.LOGO}
-            alt="Logo"
-            width={512}
-            height={512}
-            draggable={false}
-            className={`w-1/4 select-none transition-all duration-500 ${
-              isTransitioning ||
-              isGameStartTransition ||
-              isSessionClosedTransition
-                ? "opacity-50"
-                : "opacity-100"
-            }`}
-            id="main-logo"
-          />
-        </div>
+        <GameLogo
+          isTransitioning={isTransitioning}
+          isGameStartTransition={isGameStartTransition}
+          isSessionClosedTransition={isSessionClosedTransition}
+        />
 
         <QuestionDisplay
           currentQuestion={currentQuestion}
@@ -728,57 +718,7 @@ export default function PlayerViewPage() {
         <GamePausedModal isPaused={gameStatus === "paused"} />
 
         {/* Preloadowanie wszystkich obrazków tła odpowiedzi */}
-        <div className="hidden">
-          <Image
-            src={IMAGES.ANSWER_BACKGROUNDS.DEFAULT_DEFAULT}
-            width={1920}
-            height={150}
-            alt="Preload"
-            priority
-          />
-          <Image
-            src={IMAGES.ANSWER_BACKGROUNDS.DEFAULT_SELECTED}
-            width={1920}
-            height={150}
-            alt="Preload"
-            priority
-          />
-          <Image
-            src={IMAGES.ANSWER_BACKGROUNDS.DEFAULT_CORRECT}
-            width={1920}
-            height={150}
-            alt="Preload"
-            priority
-          />
-          <Image
-            src={IMAGES.ANSWER_BACKGROUNDS.CORRECT_DEFAULT}
-            width={1920}
-            height={150}
-            alt="Preload"
-            priority
-          />
-          <Image
-            src={IMAGES.ANSWER_BACKGROUNDS.CORRECT_SELECTED}
-            width={1920}
-            height={150}
-            alt="Preload"
-            priority
-          />
-          <Image
-            src={IMAGES.ANSWER_BACKGROUNDS.SELECTED_DEFAULT}
-            width={1920}
-            height={150}
-            alt="Preload"
-            priority
-          />
-          <Image
-            src={IMAGES.ANSWER_BACKGROUNDS.SELECTED_CORRECT}
-            width={1920}
-            height={150}
-            alt="Preload"
-            priority
-          />
-        </div>
+        <ImagePreloader />
       </div>
 
       {/* TRANSITION OVERLAYS */}
