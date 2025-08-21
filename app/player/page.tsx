@@ -32,7 +32,7 @@ import { GamePausedModal } from "@/components/views/GamePausedModal";
 import { QuestionDisplay } from "@/components/views/QuestionDisplay";
 import { AnswersDisplay } from "@/components/views/AnswersDisplay";
 import { GameLogo } from "@/components/views/GameLogo";
-import { GameTransitionOverlay } from "@/components/ui/game-transition-overlay";
+import { TransitionOverlays } from "@/components/views/TransitionOverlays";
 import { ImagePreloader } from "@/components/ui/image-preloader";
 
 export default function PlayerViewPage() {
@@ -722,21 +722,12 @@ export default function PlayerViewPage() {
       </div>
 
       {/* TRANSITION OVERLAYS */}
-      <GameTransitionOverlay
-        isVisible={showTransitionScreen}
-        logoAlt="Logo Milionerzy - Przejście między pytaniami"
-      />
-      <GameTransitionOverlay
-        isVisible={isBackToWaitingTransition && showWinScreen}
-        logoAlt="Logo Milionerzy - Przejście z wygranej"
-      />
-      <GameTransitionOverlay
-        isVisible={isSessionClosedTransition && !showWinScreen}
-        logoAlt="Logo Milionerzy - Zamknięcie sesji"
-      />
-      <GameTransitionOverlay
-        isVisible={isGameStartTransition}
-        logoAlt="Logo Milionerzy - Start gry"
+      <TransitionOverlays
+        showTransitionScreen={showTransitionScreen}
+        isBackToWaitingTransition={isBackToWaitingTransition}
+        showWinScreen={showWinScreen}
+        isSessionClosedTransition={isSessionClosedTransition}
+        isGameStartTransition={isGameStartTransition}
       />
     </div>
   );
