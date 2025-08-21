@@ -108,6 +108,8 @@ export function useServerSentEvents({
         // Event listeners
         eventSource.onopen = () => {
           console.log(`SSE: Połączono jako ${clientType}`);
+          console.log(`SSE: URL połączenia: ${eventSource.url}`);
+          console.log(`SSE: Ready state: ${eventSource.readyState}`);
           setIsConnected(true);
           onConnectRef.current?.();
         };
@@ -137,7 +139,12 @@ export function useServerSentEvents({
         eventSource.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            console.log(`SSE: Otrzymano event:`, event.type || "message", data);
+            console.log(`SSE: Otrzymano event (${clientType}):`, {
+              type: event.type || "message",
+              data,
+              lastEventId: event.lastEventId,
+              origin: event.origin,
+            });
 
             lastEventRef.current = {
               type: (event.type || "admin-message") as GameEventType,

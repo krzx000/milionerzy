@@ -5,9 +5,19 @@ import { sseManager } from "@/lib/sse/manager";
 import { prisma } from "@/lib/db/prisma";
 
 export async function POST() {
+  console.log("🎯 NEXT-QUESTION API: Endpoint called");
   try {
     const session = await gameSessionDb.nextQuestion();
+    console.log("🎯 NEXT-QUESTION API: nextQuestion() result:", {
+      sessionId: session?.id,
+      status: session?.status,
+      currentQuestionIndex: session?.currentQuestionIndex,
+    });
+
     if (!session) {
+      console.log(
+        "🎯 NEXT-QUESTION API: No session returned from nextQuestion()"
+      );
       return NextResponse.json(
         {
           success: false,
@@ -48,18 +58,21 @@ export async function POST() {
       session.hiddenAnswers[session.currentQuestionIndex] || [];
 
     // Broadcast SSE event o zmianie pytania
-    sseManager.broadcast(
-      "question-changed",
-      {
-        questionIndex: session.currentQuestionIndex,
-        totalQuestions: session.totalQuestions,
-        questionId: session.id, // ID sesji, nie pytania
-        status: session.status,
-        currentQuestion: currentQuestionFormatted,
-        hiddenAnswers: hiddenAnswersForCurrentQuestion,
-      },
-      "all"
+    const eventData = {
+      questionIndex: session.currentQuestionIndex,
+      totalQuestions: session.totalQuestions,
+      questionId: session.id, // ID sesji, nie pytania
+      status: session.status,
+      currentQuestion: currentQuestionFormatted,
+      hiddenAnswers: hiddenAnswersForCurrentQuestion,
+    };
+
+    console.log(
+      "🎯 NEXT-QUESTION API: Broadcasting question-changed event:",
+      eventData
     );
+    sseManager.broadcast("question-changed", eventData, "all");
+    console.log("🎯 NEXT-QUESTION API: Broadcast completed");
 
     return NextResponse.json({
       success: true,

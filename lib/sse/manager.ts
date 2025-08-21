@@ -61,7 +61,10 @@ class SSEManager {
   // Wyślij event do konkretnego klienta
   private sendToClient(clientId: string, event: GameEvent): boolean {
     const client = this.clients.get(clientId);
-    if (!client) return false;
+    if (!client) {
+      console.log(`SSE: Próba wysłania do nieistniejącego klienta ${clientId}`);
+      return false;
+    }
 
     try {
       const eventData = `event: ${event.type}\ndata: ${JSON.stringify({
@@ -69,7 +72,16 @@ class SSEManager {
         timestamp: event.timestamp,
       })}\n\n`;
 
-      client.controller.enqueue(eventData);
+      console.log(`SSE: Wysyłanie do ${clientId} (${client.type}):`, {
+        eventType: event.type,
+        targetType: event.targetType,
+        dataSize: JSON.stringify(event.data).length,
+        eventDataPreview: eventData.substring(0, 100) + "...",
+      });
+
+      // Konwertuj string na Uint8Array dla ReadableStream
+      const encoder = new TextEncoder();
+      client.controller.enqueue(encoder.encode(eventData));
       return true;
     } catch (error) {
       console.error(`SSE: Błąd wysyłania do klienta ${clientId}:`, error);
@@ -96,6 +108,9 @@ class SSEManager {
         targetType
       )} clients)`
     );
+
+    // Diagnostyka - pokaż listę klientów
+    this.listClients();
 
     let successCount = 0;
     let failureCount = 0;
@@ -149,6 +164,16 @@ class SSEManager {
     return Array.from(this.clients.values()).filter(
       (client) => client.type === type
     );
+  }
+
+  // Funkcja diagnostyczna - wyświetl listę połączonych klientów
+  listClients(): void {
+    console.log(
+      `SSE: Lista połączonych klientów (${this.clients.size} total):`
+    );
+    this.clients.forEach((client, id) => {
+      console.log(`  - ${id} (${client.type}) - connected ${client.connected}`);
+    });
   }
 
   // Cleanup nieaktywnych połączeń
