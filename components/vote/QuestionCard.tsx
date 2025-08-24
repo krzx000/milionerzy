@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlayCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { PlayCircle, Check, X } from "lucide-react";
 import type { VoteOption, VoteSession, VoteStats } from "@/types/voting";
 import type { GameViewerState } from "@/lib/api/voting";
+import { useState } from "react";
 
 interface QuestionCardProps {
   gameState?: GameViewerState | null;
@@ -28,9 +30,21 @@ export function QuestionCard({
   isAnswerRevealed,
   onVote,
 }: QuestionCardProps) {
+  const [selectedOption, setSelectedOption] = useState<VoteOption | null>(null);
   const question = voteSession?.question || gameState?.currentQuestion;
   const hiddenAnswers =
     voteSession?.hiddenAnswers || gameState?.gameSession?.hiddenAnswers || [];
+
+  const handleConfirmVote = () => {
+    if (selectedOption) {
+      onVote(selectedOption);
+      setSelectedOption(null);
+    }
+  };
+
+  const handleCancelVote = () => {
+    setSelectedOption(null);
+  };
 
   if (!question) return null;
 
@@ -63,6 +77,7 @@ export function QuestionCard({
             {(["A", "B", "C", "D"] as VoteOption[]).map((option, index) => {
               const answerText = question.answers[option];
               const isSelected = userVote === option;
+              const isTempSelected = selectedOption === option;
               const canVoteForThis = canVote && !userVote;
 
               const isHidden = hiddenAnswers.includes(option);
@@ -97,6 +112,10 @@ export function QuestionCard({
                 cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 bg-blue-50 border-blue-400 overflow-hidden`;
               }
 
+              if (isTempSelected) {
+                cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 bg-green-50 border-green-400 overflow-hidden`;
+              }
+
               if (isAdminSelected && !isRevealed) {
                 cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 bg-yellow-50 border-yellow-400 overflow-hidden`;
               }
@@ -113,7 +132,9 @@ export function QuestionCard({
                 <div
                   key={option}
                   className={cardClass}
-                  onClick={() => canVoteForThis && !isHidden && onVote(option)}
+                  onClick={() =>
+                    canVoteForThis && !isHidden && setSelectedOption(option)
+                  }
                 >
                   {showResults && !isHidden && (
                     <div
@@ -154,6 +175,35 @@ export function QuestionCard({
               );
             })}
           </div>
+
+          {/* Przyciski potwierdzenia głosu */}
+          {selectedOption && canVote && !userVote && (
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+              <p className="text-sm text-center text-gray-700 mb-3">
+                Wybrano odpowiedź <strong>{selectedOption}</strong>. Potwierdź
+                swój głos:
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleConfirmVote}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  size="sm"
+                >
+                  <Check className="w-4 h-4 mr-2" />
+                  Potwierdź głos
+                </Button>
+                <Button
+                  onClick={handleCancelVote}
+                  variant="outline"
+                  className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50"
+                  size="sm"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Anuluj
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
