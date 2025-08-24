@@ -21,10 +21,33 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConnectionBadge } from "@/components/ui/connection-badge";
 import { useServerSentEvents } from "@/hooks/use-sse";
 import type { GameEventType } from "@/types/events";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { useAuth } from "@/hooks/use-auth";
+import { LogOut } from "lucide-react";
+
+function LogoutButton() {
+  const { logout } = useAuth();
+
+  return (
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle className="text-center text-lg">
+          Panel administratora
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex justify-center">
+        <Button variant="outline" onClick={logout} className="w-full">
+          <LogOut className="w-4 h-4 mr-2" />
+          Wyloguj się
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
 
 function AdminPanel() {
   const { confirm, dialog } = useConfirmDialog();
@@ -729,6 +752,11 @@ function AdminPanel() {
           onToggleHistory={handleToggleHistory}
           onClearAllSessions={handleClearAllSessions}
         />
+      </div>
+
+      {/* Przycisk wyloguj */}
+      <div className="w-full flex justify-center p-6">
+        <LogoutButton />
       </div>
 
       {dialog}

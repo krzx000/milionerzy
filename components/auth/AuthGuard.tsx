@@ -3,8 +3,6 @@
 import { ReactNode } from "react";
 import { useAuth, UserRole } from "@/hooks/use-auth";
 import { LoginForm } from "./LoginForm";
-import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -12,7 +10,7 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
-  const { isAuthenticated, role, isLoading, login, logout } = useAuth();
+  const { isAuthenticated, role, isLoading, login } = useAuth();
 
   // Pokaż loader podczas sprawdzania autoryzacji
   if (isLoading) {
@@ -28,24 +26,6 @@ export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
     return <LoginForm role={requiredRole} onLogin={login} />;
   }
 
-  // Jeśli jest zalogowany z odpowiednią rolą, pokaż zawartość z przyciskiem wylogowania
-  return (
-    <div className="relative">
-      {/* Przycisk wylogowania */}
-      <div className="absolute top-4 right-4 z-50">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={logout}
-          className="bg-background/80 backdrop-blur-sm"
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          Wyloguj
-        </Button>
-      </div>
-
-      {/* Główna zawartość */}
-      {children}
-    </div>
-  );
+  // Jeśli jest zalogowany z odpowiednią rolą, pokaż zawartość
+  return children;
 }
