@@ -16,8 +16,9 @@ import { GameLogo } from "@/components/views/GameLogo";
 import { TransitionOverlays } from "@/components/views/TransitionOverlays";
 import { ImagePreloader } from "@/components/ui/image-preloader";
 import { usePlayerLogic } from "@/hooks/use-player-logic";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
-export default function PlayerViewPage() {
+function PlayerView() {
   // Cała logika biznesowa w custom hook
   const {
     // Stan gry
@@ -205,5 +206,13 @@ export default function PlayerViewPage() {
         isGameStartTransition={isGameStartTransition}
       />
     </div>
+  );
+}
+
+export default function PlayerViewPage() {
+  return (
+    <AuthGuard requiredRole="player">
+      <PlayerView />
+    </AuthGuard>
   );
 }

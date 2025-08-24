@@ -24,8 +24,9 @@ import { Button } from "@/components/ui/button";
 import { ConnectionBadge } from "@/components/ui/connection-badge";
 import { useServerSentEvents } from "@/hooks/use-sse";
 import type { GameEventType } from "@/types/events";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
-export default function Admin() {
+function AdminPanel() {
   const { confirm, dialog } = useConfirmDialog();
   const [questions, setQuestions] = React.useState<QuestionType[]>([]);
   const [questionsLoading, setQuestionsLoading] = React.useState(true);
@@ -732,5 +733,13 @@ export default function Admin() {
 
       {dialog}
     </div>
+  );
+}
+
+export default function Admin() {
+  return (
+    <AuthGuard requiredRole="admin">
+      <AdminPanel />
+    </AuthGuard>
   );
 }
