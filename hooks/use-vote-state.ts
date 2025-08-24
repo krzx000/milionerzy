@@ -448,31 +448,9 @@ export function useVoteState() {
     votedSessions,
   ]);
 
-  // Initial load effect
+  // Initial load effect - tylko przy pierwszym uruchomieniu
   React.useEffect(() => {
     loadCurrentState();
-  }, [loadCurrentState]);
-
-  // Connection polling effect
-  React.useEffect(() => {
-    if (!isConnected) {
-      console.log("SSE nie połączone - używam backup polling");
-      const pollInterval = setInterval(() => {
-        loadCurrentState();
-      }, 3000);
-
-      return () => clearInterval(pollInterval);
-    }
-  }, [isConnected, loadCurrentState]);
-
-  // Heartbeat effect
-  React.useEffect(() => {
-    const heartbeatInterval = setInterval(() => {
-      console.log("💓 Heartbeat - sprawdzam aktualność stanu");
-      loadCurrentState();
-    }, 10000);
-
-    return () => clearInterval(heartbeatInterval);
   }, [loadCurrentState]);
 
   // Debug logging effect
