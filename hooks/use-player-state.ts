@@ -647,16 +647,6 @@ export function usePlayerState() {
     onConnect: () => {
       console.log("Player: SSE połączone! Testowanie połączenia...");
 
-      // Test SSE - wywołaj endpoint diagnostyczny
-      fetch("/api/sse-test")
-        .then((response) => response.json())
-        .then((data) => {
-          console.log("Player: Test SSE response:", data);
-        })
-        .catch((error) => {
-          console.error("Player: Błąd testu SSE:", error);
-        });
-
       // Krótkie opóźnienie żeby upewnić się że SSE jest w pełni gotowe
       setTimeout(() => {
         // Automatycznie żądaj aktualnego stanu po połączeniu
