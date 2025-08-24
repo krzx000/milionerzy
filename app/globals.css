@@ -145,19 +145,40 @@
 }
 
 .transition-screen-overlay {
-  animation: overlayFadeIn 0.8s ease-out;
+  animation: overlayFadeIn 0.8s ease-out forwards;
+}
+
+.transition-screen-overlay.fade-out {
+  animation: overlayFadeOut 0.8s ease-in forwards;
 }
 
 .transition-screen-logo {
-  animation: logoTransition 3.2s ease-in-out;
+  animation: logoTransition 3.2s ease-in-out forwards;
+}
+
+.transition-screen-logo.fade-out {
+  animation: logoFadeOut 0.8s ease-in forwards;
 }
 
 @keyframes overlayFadeIn {
   from {
     opacity: 0;
+    backdrop-filter: blur(0px);
   }
   to {
     opacity: 1;
+    backdrop-filter: blur(24px);
+  }
+}
+
+@keyframes overlayFadeOut {
+  from {
+    opacity: 1;
+    backdrop-filter: blur(24px);
+  }
+  to {
+    opacity: 0;
+    backdrop-filter: blur(0px);
   }
 }
 
@@ -179,11 +200,22 @@
     opacity: 1;
   }
   85% {
-    transform: translateY(0) scale(1.1);
+    transform: translateY(0) scale(1.05);
     opacity: 1;
   }
   100% {
-    transform: translateY(-35vh) scale(1);
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes logoFadeOut {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(0) scale(0.9);
     opacity: 0;
   }
 }

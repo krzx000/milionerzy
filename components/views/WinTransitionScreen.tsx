@@ -11,7 +11,7 @@ export function WinTransitionScreen() {
       style={{ backgroundImage: `url(${IMAGES.BACKGROUND})` }}
     >
       {/* EKRAN PRZEJŚCIOWY DO WYGRANEJ */}
-      <div className="fixed inset-0 z-[9999] transition-screen-overlay backdrop-blur-2xl bg-black/20">
+      <div className="fixed inset-0 z-[9999] transition-screen-overlay bg-black/20">
         <div className="min-h-screen flex items-center justify-center">
           <div className="transition-screen-logo">
             <Image
