@@ -42,6 +42,17 @@ export function useVoteState() {
 
   const [isLoading, setIsLoading] = React.useState(true);
 
+  // Stany przejść
+  const [isGameStartTransition, setIsGameStartTransition] =
+    React.useState(false);
+  const [isQuestionChangeTransition, setIsQuestionChangeTransition] =
+    React.useState(false);
+  const [isGameEndTransition, setIsGameEndTransition] = React.useState(false);
+  const [isVotingStartTransition, setIsVotingStartTransition] =
+    React.useState(false);
+  const [isVotingEndTransition, setIsVotingEndTransition] =
+    React.useState(false);
+
   // Generuj trwały ID użytkownika oparty na localStorage
   const [userId] = React.useState(() => {
     if (typeof window !== "undefined") {
@@ -174,13 +185,18 @@ export function useVoteState() {
       switch (eventType) {
         case "voting-started":
           console.log("SSE: Głosowanie rozpoczęte");
-          setTimeout(() => loadCurrentState(), 100);
+          setIsVotingStartTransition(true);
+          setTimeout(() => {
+            loadCurrentState();
+            setIsVotingStartTransition(false);
+          }, 2000);
           break;
         case "game-started":
         case "game-reset":
           console.log(
             "SSE: Nowa gra rozpoczęta - czyszczenie sesji głosowania"
           );
+          setIsGameStartTransition(true);
           // Wyczyść informacje o głosowaniu z poprzednich sesji
           setVotedSessions(new Set());
           if (typeof window !== "undefined") {
@@ -189,17 +205,24 @@ export function useVoteState() {
               JSON.stringify([])
             );
           }
-          setTimeout(() => loadCurrentState(), 100);
+          setTimeout(() => {
+            loadCurrentState();
+            setIsGameStartTransition(false);
+          }, 2000);
           break;
         case "voting-ended":
           console.log("SSE: Głosowanie zakończone");
+          setIsVotingEndTransition(true);
           setViewerState((prev) => ({
             ...prev,
             canVote: false,
             showResults: true,
             timeRemaining: 0,
           }));
-          setTimeout(() => loadVoteStats(), 100);
+          setTimeout(() => {
+            loadVoteStats();
+            setIsVotingEndTransition(false);
+          }, 2000);
           break;
         case "lifeline-used":
           console.log("🎯 SSE: Koło ratunkowe użyte:", data);
@@ -211,6 +234,7 @@ export function useVoteState() {
           break;
         case "question-changed":
           console.log("❓ SSE: Zmiana pytania");
+          setIsQuestionChangeTransition(true);
           setViewerState((prev) => ({
             ...prev,
             voteSession: null,
@@ -224,7 +248,10 @@ export function useVoteState() {
             isAnswerRevealed: false,
             gameEnded: false,
           }));
-          setTimeout(() => loadCurrentState(), 200);
+          setTimeout(() => {
+            loadCurrentState();
+            setIsQuestionChangeTransition(false);
+          }, 2000);
           break;
         case "game-ended":
           const endGameWon = data.gameWon as boolean;
@@ -236,41 +263,49 @@ export function useVoteState() {
             reason: endReason,
           });
 
+          setIsGameEndTransition(true);
+
           // Jeśli administrator zamknął sesję manualnie, wyczyść stan i pokaż "brak aktywnej gry"
           if (endReason === "manual") {
             console.log(
               "🔒 Administrator zamknął sesję - powrót do ekranu braku aktywnej gry"
             );
-            setViewerState((prev) => ({
-              ...prev,
-              gameState: null,
-              voteSession: null,
-              stats: null,
-              userVote: null,
-              timeRemaining: 0,
-              canVote: false,
-              showResults: false,
-              selectedAnswer: null,
-              correctAnswer: null,
-              isAnswerRevealed: false,
-              gameEnded: false,
-              gameWon: false,
-              finalAmount: 0,
-            }));
+            setTimeout(() => {
+              setViewerState((prev) => ({
+                ...prev,
+                gameState: null,
+                voteSession: null,
+                stats: null,
+                userVote: null,
+                timeRemaining: 0,
+                canVote: false,
+                showResults: false,
+                selectedAnswer: null,
+                correctAnswer: null,
+                isAnswerRevealed: false,
+                gameEnded: false,
+                gameWon: false,
+                finalAmount: 0,
+              }));
+              setIsGameEndTransition(false);
+            }, 2000);
           } else {
             // W pozostałych przypadkach pokaż ekran końcowy gry
-            setViewerState((prev) => ({
-              ...prev,
-              voteSession: null,
-              canVote: false,
-              showResults: false,
-              selectedAnswer: null,
-              correctAnswer: null,
-              isAnswerRevealed: false,
-              gameEnded: true,
-              gameWon: endGameWon,
-              finalAmount: endFinalAmount || 0,
-            }));
+            setTimeout(() => {
+              setViewerState((prev) => ({
+                ...prev,
+                voteSession: null,
+                canVote: false,
+                showResults: false,
+                selectedAnswer: null,
+                correctAnswer: null,
+                isAnswerRevealed: false,
+                gameEnded: true,
+                gameWon: endGameWon,
+                finalAmount: endFinalAmount || 0,
+              }));
+              setIsGameEndTransition(false);
+            }, 2000);
           }
           break;
         case "vote-stats-updated":
@@ -510,5 +545,11 @@ export function useVoteState() {
     handleVote,
     loadCurrentState,
     loadVoteStats,
+    // Stany przejść
+    isGameStartTransition,
+    isQuestionChangeTransition,
+    isGameEndTransition,
+    isVotingStartTransition,
+    isVotingEndTransition,
   };
 }
