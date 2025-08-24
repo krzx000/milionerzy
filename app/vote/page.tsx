@@ -1,6 +1,7 @@
 "use client";
 
 import { useVoteState } from "@/hooks/use-vote-state";
+import { IMAGES } from "@/lib/utils/game-assets";
 import {
   VoteHeader,
   GameStateCard,
@@ -49,7 +50,10 @@ export default function VotePage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-100 pb-16">
+      <div
+        className="min-h-screen bg-cover bg-center relative pb-16"
+        style={{ backgroundImage: `url(${IMAGES.BACKGROUND})` }}
+      >
         <div className="max-w-md mx-auto">
           {/* Nagłówek */}
           <VoteHeader />

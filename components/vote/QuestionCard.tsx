@@ -50,25 +50,25 @@ export function QuestionCard({
 
   return (
     <div className="px-4 pb-4">
-      <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+      <Card className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-2xl shadow-xl">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between text-base font-semibold text-gray-800">
+          <CardTitle className="flex items-center justify-between text-base font-semibold text-white">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
-                <PlayCircle className="w-4 h-4 text-blue-600" />
+              <div className="w-6 h-6 bg-blue-100/30 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                <PlayCircle className="w-4 h-4 text-blue-200" />
               </div>
               Pytanie
             </div>
             {hiddenAnswers.length > 0 && (
-              <div className="px-2 py-1 rounded-md border-2 bg-red-50 border-red-400">
-                <span className="text-xs font-medium text-red-700">50:50</span>
+              <div className="px-2 py-1 rounded-md border-2 bg-red-500/20 backdrop-blur-sm border-red-300/50">
+                <span className="text-xs font-medium text-red-200">50:50</span>
               </div>
             )}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center mb-4 bg-yellow-50 rounded-xl p-3">
-            <p className="text-lg font-semibold text-gray-800">
+          <div className="text-center mb-4 bg-yellow-500/20 backdrop-blur-sm rounded-xl p-3">
+            <p className="text-lg font-semibold text-white">
               {question.content}
             </p>
           </div>
@@ -102,29 +102,29 @@ export function QuestionCard({
 
               let cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 overflow-hidden ${
                 canVoteForThis && !isHidden
-                  ? "bg-gray-50 border-gray-200 hover:border-gray-300 active:scale-95"
+                  ? "bg-white/10 backdrop-blur-sm border-white/30 hover:border-white/50 hover:bg-white/20 active:scale-95"
                   : isHidden
-                  ? "bg-gray-50 border-gray-200 opacity-20 cursor-not-allowed pointer-events-none"
-                  : "bg-gray-50 border-gray-200"
+                  ? "bg-white/5 backdrop-blur-sm border-white/20 opacity-20 cursor-not-allowed pointer-events-none"
+                  : "bg-white/10 backdrop-blur-sm border-white/30"
               }`;
 
               if (isSelected) {
-                cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 bg-blue-50 border-blue-400 overflow-hidden`;
+                cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 bg-blue-500/30 backdrop-blur-sm border-blue-300/50 overflow-hidden`;
               }
 
               if (isTempSelected) {
-                cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 bg-green-50 border-green-400 overflow-hidden`;
+                cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 bg-green-500/30 backdrop-blur-sm border-green-300/50 overflow-hidden`;
               }
 
               if (isAdminSelected && !isRevealed) {
-                cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 bg-yellow-50 border-yellow-400 overflow-hidden`;
+                cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 bg-yellow-500/30 backdrop-blur-sm border-yellow-300/50 overflow-hidden`;
               }
 
               if (isRevealed) {
                 if (isCorrectAnswer) {
-                  cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 bg-green-50 border-green-400 overflow-hidden`;
+                  cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 bg-green-500/30 backdrop-blur-sm border-green-300/50 overflow-hidden`;
                 } else if (isAdminSelected) {
-                  cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 bg-red-50 border-red-400 overflow-hidden`;
+                  cardClass = `relative flex items-center justify-between p-3 rounded-xl border-2 bg-red-500/30 backdrop-blur-sm border-red-300/50 overflow-hidden`;
                 }
               }
 
@@ -138,7 +138,7 @@ export function QuestionCard({
                 >
                   {showResults && !isHidden && (
                     <div
-                      className="absolute inset-0 bg-blue-200 rounded-xl opacity-60 transition-all duration-500"
+                      className="absolute inset-0 bg-blue-400/40 backdrop-blur-sm rounded-xl opacity-60 transition-all duration-500"
                       style={{ width: `${votePercentage}%` }}
                     />
                   )}
@@ -148,7 +148,7 @@ export function QuestionCard({
                     >
                       {option}
                     </div>
-                    <span className="font-medium text-sm text-gray-800">
+                    <span className="font-medium text-sm text-white">
                       {answerText}
                     </span>
                     {isAdminSelected && !isRevealed && (
@@ -163,10 +163,10 @@ export function QuestionCard({
                   </div>
                   {showResults && !isHidden && (
                     <div className="relative z-10 text-right">
-                      <div className="font-semibold text-base text-gray-800">
+                      <div className="font-semibold text-base text-white">
                         {votePercentage}%
                       </div>
-                      <div className="text-xs text-gray-600">
+                      <div className="text-xs text-white/80">
                         ({voteCount} głosów)
                       </div>
                     </div>
@@ -178,8 +178,8 @@ export function QuestionCard({
 
           {/* Komunikat o tym że użytkownik już głosował w tej sesji */}
           {!canVote && !userVote && !showResults && voteSession?.isActive && (
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-              <p className="text-sm text-center text-blue-800">
+            <div className="mt-4 p-4 bg-blue-500/20 backdrop-blur-sm border border-blue-300/50 rounded-xl">
+              <p className="text-sm text-center text-white">
                 📊 Już oddałeś głos w tej grze. Jeden użytkownik może głosować
                 tylko raz w każdej sesji gry.
               </p>
@@ -188,8 +188,8 @@ export function QuestionCard({
 
           {/* Komunikat o oddanym głosie */}
           {userVote && (
-            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
-              <p className="text-sm text-center text-green-800">
+            <div className="mt-4 p-4 bg-green-500/20 backdrop-blur-sm border border-green-300/50 rounded-xl">
+              <p className="text-sm text-center text-white">
                 ✅ Twój głos na odpowiedź <strong>{userVote}</strong> został
                 zapisany!
               </p>
@@ -198,15 +198,15 @@ export function QuestionCard({
 
           {/* Przyciski potwierdzenia głosu */}
           {selectedOption && canVote && !userVote && (
-            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
-              <p className="text-sm text-center text-gray-700 mb-3">
+            <div className="mt-4 p-4 bg-green-500/20 backdrop-blur-sm border border-green-300/50 rounded-xl">
+              <p className="text-sm text-center text-white mb-3">
                 Wybrano odpowiedź <strong>{selectedOption}</strong>. Potwierdź
                 swój głos:
               </p>
               <div className="flex gap-2">
                 <Button
                   onClick={handleConfirmVote}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  className="flex-1 bg-green-600/80 backdrop-blur-sm hover:bg-green-700/80 text-white border border-green-400/50"
                   size="sm"
                 >
                   <Check className="w-4 h-4 mr-2" />
@@ -215,7 +215,7 @@ export function QuestionCard({
                 <Button
                   onClick={handleCancelVote}
                   variant="outline"
-                  className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50"
+                  className="flex-1 bg-red-500/20 backdrop-blur-sm border-red-300/50 text-white hover:bg-red-500/30"
                   size="sm"
                 >
                   <X className="w-4 h-4 mr-2" />

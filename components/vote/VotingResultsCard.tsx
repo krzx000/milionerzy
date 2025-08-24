@@ -10,18 +10,18 @@ interface VotingResultsCardProps {
 export function VotingResultsCard({ stats, userVote }: VotingResultsCardProps) {
   return (
     <div className="px-4 pb-4">
-      <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+      <Card className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-2xl shadow-xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base font-semibold text-gray-800">
-            <div className="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Users className="w-4 h-4 text-purple-600" />
+          <CardTitle className="flex items-center gap-2 text-base font-semibold text-white">
+            <div className="w-6 h-6 bg-purple-100/30 backdrop-blur-sm rounded-lg flex items-center justify-center">
+              <Users className="w-4 h-4 text-purple-200" />
             </div>
             Wyniki Głosowania
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center mb-4 bg-purple-50 rounded-xl p-3">
-            <p className="text-lg font-semibold text-gray-800">
+          <div className="text-center mb-4 bg-purple-500/20 backdrop-blur-sm rounded-xl p-3">
+            <p className="text-lg font-semibold text-white">
               Łącznie głosów: {stats.totalVotes}
             </p>
           </div>
@@ -43,8 +43,8 @@ export function VotingResultsCard({ stats, userVote }: VotingResultsCardProps) {
                   key={option}
                   className={`flex items-center justify-between p-3 rounded-xl border-2 ${
                     isUserVote
-                      ? "bg-yellow-50 border-yellow-400"
-                      : "bg-gray-50 border-gray-200"
+                      ? "bg-yellow-500/30 backdrop-blur-sm border-yellow-300/50"
+                      : "bg-white/10 backdrop-blur-sm border-white/30"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -53,12 +53,12 @@ export function VotingResultsCard({ stats, userVote }: VotingResultsCardProps) {
                     >
                       {option}
                     </div>
-                    <span className="font-semibold text-base text-gray-800">
+                    <span className="font-semibold text-base text-white">
                       {result.percentage}%
                     </span>
                     {isUserVote && <span className="text-lg">👆</span>}
                   </div>
-                  <span className="font-medium text-gray-600 text-sm">
+                  <span className="font-medium text-white/80 text-sm">
                     ({result.count} głosów)
                   </span>
                 </div>
