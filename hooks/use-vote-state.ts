@@ -41,9 +41,30 @@ export function useVoteState() {
   });
 
   const [isLoading, setIsLoading] = React.useState(true);
-  const [userId] = React.useState(
-    () => `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-  );
+
+  // Generuj trwały ID użytkownika oparty na localStorage
+  const [userId] = React.useState(() => {
+    if (typeof window !== "undefined") {
+      let storedUserId = localStorage.getItem("millionaire_user_id");
+      if (!storedUserId) {
+        storedUserId = `user_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`;
+        localStorage.setItem("millionaire_user_id", storedUserId);
+      }
+      return storedUserId;
+    }
+    return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  });
+
+  // Śledź sesje gry w których użytkownik już głosował
+  const [votedSessions, setVotedSessions] = React.useState<Set<string>>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("millionaire_voted_sessions");
+      return new Set(stored ? JSON.parse(stored) : []);
+    }
+    return new Set();
+  });
 
   const [currentQuestionId, setCurrentQuestionId] = React.useState<
     string | null
@@ -83,13 +104,21 @@ export function useVoteState() {
             voteSession,
             timeRemaining,
           });
+
+          const hasVotedInSession = votedSessions.has(
+            voteSession.gameSessionId
+          );
+
           setViewerState((prev) => ({
             ...prev,
             gameState: null,
             voteSession,
             timeRemaining,
             canVote:
-              voteSession.isActive && timeRemaining > 0 && !prev.userVote,
+              voteSession.isActive &&
+              timeRemaining > 0 &&
+              !prev.userVote &&
+              !hasVotedInSession,
             showResults: !voteSession.isActive || timeRemaining === 0,
             selectedAnswer: null,
             correctAnswer: null,
@@ -136,7 +165,7 @@ export function useVoteState() {
     } finally {
       setIsLoading(false);
     }
-  }, [loadVoteStats]);
+  }, [loadVoteStats, votedSessions]);
 
   const handleSSEEvent = React.useCallback(
     (eventType: GameEventType, data: Record<string, unknown>) => {
@@ -145,6 +174,21 @@ export function useVoteState() {
       switch (eventType) {
         case "voting-started":
           console.log("SSE: Głosowanie rozpoczęte");
+          setTimeout(() => loadCurrentState(), 100);
+          break;
+        case "game-started":
+        case "game-reset":
+          console.log(
+            "SSE: Nowa gra rozpoczęta - czyszczenie sesji głosowania"
+          );
+          // Wyczyść informacje o głosowaniu z poprzednich sesji
+          setVotedSessions(new Set());
+          if (typeof window !== "undefined") {
+            localStorage.setItem(
+              "millionaire_voted_sessions",
+              JSON.stringify([])
+            );
+          }
           setTimeout(() => loadCurrentState(), 100);
           break;
         case "voting-ended":
@@ -330,8 +374,29 @@ export function useVoteState() {
     async (option: VoteOption) => {
       if (!viewerState.canVote || !viewerState.voteSession) return;
 
+      const sessionId = viewerState.voteSession.gameSessionId;
+
+      // Sprawdź czy użytkownik już głosował w tej sesji gry
+      if (votedSessions.has(sessionId)) {
+        console.log("Użytkownik już głosował w tej sesji gry");
+        return;
+      }
+
       const response = await VotingAPI.submitVote(option, userId);
       if (response.success) {
+        // Zapisz informację o głosie w tej sesji
+        const newVotedSessions = new Set(votedSessions);
+        newVotedSessions.add(sessionId);
+        setVotedSessions(newVotedSessions);
+
+        // Zapisz w localStorage
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "millionaire_voted_sessions",
+            JSON.stringify([...newVotedSessions])
+          );
+        }
+
         setViewerState((prev) => ({
           ...prev,
           userVote: option,
@@ -339,7 +404,13 @@ export function useVoteState() {
         }));
       }
     },
-    [viewerState.canVote, viewerState.voteSession, userId]
+    [
+      viewerState.canVote,
+      viewerState.voteSession,
+      userId,
+      votedSessions,
+      setVotedSessions,
+    ]
   );
 
   // Timer effect
@@ -350,10 +421,15 @@ export function useVoteState() {
       viewerState.voteSession.isActive
     ) {
       const timer = setTimeout(() => {
+        const hasVotedInSession = votedSessions.has(
+          viewerState.voteSession!.gameSessionId
+        );
+
         setViewerState((prev) => ({
           ...prev,
           timeRemaining: Math.max(0, prev.timeRemaining - 1),
-          canVote: prev.timeRemaining > 1 && !prev.userVote,
+          canVote:
+            prev.timeRemaining > 1 && !prev.userVote && !hasVotedInSession,
           showResults: prev.timeRemaining <= 1,
         }));
 
@@ -369,6 +445,7 @@ export function useVoteState() {
     viewerState.timeRemaining,
     viewerState.userVote,
     loadVoteStats,
+    votedSessions,
   ]);
 
   // Initial load effect

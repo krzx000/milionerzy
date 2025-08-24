@@ -176,6 +176,26 @@ export function QuestionCard({
             })}
           </div>
 
+          {/* Komunikat o tym że użytkownik już głosował w tej sesji */}
+          {!canVote && !userVote && !showResults && voteSession?.isActive && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+              <p className="text-sm text-center text-blue-800">
+                📊 Już oddałeś głos w tej grze. Jeden użytkownik może głosować
+                tylko raz w każdej sesji gry.
+              </p>
+            </div>
+          )}
+
+          {/* Komunikat o oddanym głosie */}
+          {userVote && (
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+              <p className="text-sm text-center text-green-800">
+                ✅ Twój głos na odpowiedź <strong>{userVote}</strong> został
+                zapisany!
+              </p>
+            </div>
+          )}
+
           {/* Przyciski potwierdzenia głosu */}
           {selectedOption && canVote && !userVote && (
             <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">

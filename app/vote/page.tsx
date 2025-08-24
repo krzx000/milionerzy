@@ -46,17 +46,6 @@ export default function VotePage() {
         {/* Nagłówek */}
         <VoteHeader />
 
-        {/* Stan gry */}
-        {viewerState.gameState && (
-          <GameStateCard
-            gameState={viewerState.gameState}
-            isCollapsed={isGameStateCollapsed}
-            onToggleCollapse={() =>
-              setIsGameStateCollapsed(!isGameStateCollapsed)
-            }
-          />
-        )}
-
         {/* Aktualne pytanie */}
         {(viewerState.gameState?.currentQuestion ||
           viewerState.voteSession?.question) && (
@@ -71,6 +60,16 @@ export default function VotePage() {
             correctAnswer={viewerState.correctAnswer}
             isAnswerRevealed={viewerState.isAnswerRevealed}
             onVote={handleVote}
+          />
+        )}
+        {/* Stan gry */}
+        {viewerState.gameState && (
+          <GameStateCard
+            gameState={viewerState.gameState}
+            isCollapsed={isGameStateCollapsed}
+            onToggleCollapse={() =>
+              setIsGameStateCollapsed(!isGameStateCollapsed)
+            }
           />
         )}
 

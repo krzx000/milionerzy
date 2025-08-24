@@ -60,24 +60,6 @@ export function GameStateCard({
                   </span>
                 </div>
               </div>
-
-              <div className="bg-purple-50 rounded-xl p-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-semibold">
-                        Σ
-                      </span>
-                    </div>
-                    <span className="text-base font-semibold text-gray-800">
-                      Łącznie
-                    </span>
-                  </div>
-                  <span className="text-xl font-semibold text-purple-700">
-                    {gameState.gameSession?.totalQuestions}
-                  </span>
-                </div>
-              </div>
             </div>
 
             {/* Koła ratunkowe */}
