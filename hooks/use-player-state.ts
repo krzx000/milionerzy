@@ -333,32 +333,43 @@ export function usePlayerState() {
             questionContent: currentQuestion?.content?.substring(0, 50) + "...",
           });
 
+          // Pokaż ekran przejściowy przed rozpoczęciem gry
           setState((prev) => ({
             ...prev,
-            session,
-            currentQuestion,
-            questionIndex: questionIndex || session?.currentQuestionIndex || 0,
-            totalQuestions: totalQuestions || 0,
-            currentPrize: getCurrentPrize(
-              questionIndex || session?.currentQuestionIndex || 0
-            ),
-            gameStatus: "active",
-            selectedAnswer: null,
-            correctAnswer: null,
-            isAnswerRevealed: false,
-            finalResult: null,
-            lifelinesUsed: {
-              fiftyFifty: session?.usedLifelines?.fiftyFifty || false,
-              phoneAFriend: session?.usedLifelines?.phoneAFriend || false,
-              askAudience: session?.usedLifelines?.askAudience || false,
-            },
-            hiddenAnswers,
-            answerLocked: false,
-            showFinalAnswer: false,
+            showTransitionScreen: true,
           }));
 
-          triggerAnimation("showQuestionAnimation");
-          startTimer(30); // 30 sekund na pytanie
+          // Po 3.2 sekundach ukryj ekran przejściowy i pokaż grę
+          setTimeout(() => {
+            setState((prev) => ({
+              ...prev,
+              session,
+              currentQuestion,
+              questionIndex:
+                questionIndex || session?.currentQuestionIndex || 0,
+              totalQuestions: totalQuestions || 0,
+              currentPrize: getCurrentPrize(
+                questionIndex || session?.currentQuestionIndex || 0
+              ),
+              gameStatus: "active",
+              selectedAnswer: null,
+              correctAnswer: null,
+              isAnswerRevealed: false,
+              finalResult: null,
+              lifelinesUsed: {
+                fiftyFifty: session?.usedLifelines?.fiftyFifty || false,
+                phoneAFriend: session?.usedLifelines?.phoneAFriend || false,
+                askAudience: session?.usedLifelines?.askAudience || false,
+              },
+              hiddenAnswers,
+              answerLocked: false,
+              showFinalAnswer: false,
+              showTransitionScreen: false,
+            }));
+
+            triggerAnimation("showQuestionAnimation");
+            startTimer(30); // 30 sekund na pytanie
+          }, 3200);
           break;
 
         case "question-changed":
@@ -572,65 +583,114 @@ export function usePlayerState() {
 
           if (reason === "manual") {
             // Administrator zamknął sesję po zakończeniu gry – wracamy do ekranu oczekiwania
+            // Pokaż ekran przejściowy przed zamknięciem sesji
             setState((prev) => ({
-              ...initialState,
-              // Zachowaj ewentualne history i wygrane aby można było jeszcze obejrzeć na ekranie admina
-              answerHistory: prev.answerHistory,
-              winnings: prev.winnings,
+              ...prev,
+              showTransitionScreen: true,
             }));
-            stopTimer();
+
+            // Po 3.2 sekundach ukryj ekran przejściowy i wróć do stanu początkowego
+            setTimeout(() => {
+              setState((prev) => ({
+                ...initialState,
+                // Zachowaj ewentualne history i wygrane aby można było jeszcze obejrzeć na ekranie admina
+                answerHistory: prev.answerHistory,
+                winnings: prev.winnings,
+              }));
+              stopTimer();
+            }, 3200);
             break;
           }
 
           if (result) {
-            setState((prev) => {
-              const isWin = result === "win";
-              const winnings = isWin
-                ? getWinningPrize(finalQuestionIndex, prev.totalQuestions)
-                : getWinningPrize(
-                    Math.max(0, finalQuestionIndex - 1),
-                    prev.totalQuestions
-                  );
+            // Pokaż ekran przejściowy przed zakończeniem gry
+            setState((prev) => ({
+              ...prev,
+              showTransitionScreen: true,
+            }));
 
-              return {
-                ...prev,
-                gameStatus: "ended",
-                finalResult: result,
-                winnings,
-              };
-            });
-            stopTimer();
+            // Po 3.2 sekundach ukryj ekran przejściowy i zakończ grę
+            setTimeout(() => {
+              setState((prev) => {
+                const isWin = result === "win";
+                const winnings = isWin
+                  ? getWinningPrize(finalQuestionIndex, prev.totalQuestions)
+                  : getWinningPrize(
+                      Math.max(0, finalQuestionIndex - 1),
+                      prev.totalQuestions
+                    );
+
+                return {
+                  ...prev,
+                  gameStatus: "ended",
+                  finalResult: result,
+                  winnings,
+                  showTransitionScreen: false,
+                };
+              });
+              stopTimer();
+            }, 3200);
           }
           break;
 
         case "game-paused":
+          // Pokaż ekran przejściowy przed pauzą
           setState((prev) => ({
             ...prev,
-            gameStatus: "paused",
+            showTransitionScreen: true,
           }));
-          stopTimer();
+
+          // Po 1.5 sekundach ukryj ekran przejściowy i pokaż pauzę
+          setTimeout(() => {
+            setState((prev) => ({
+              ...prev,
+              gameStatus: "paused",
+              showTransitionScreen: false,
+            }));
+            stopTimer();
+          }, 1500);
           break;
 
         case "game-resumed":
+          // Pokaż ekran przejściowy przed wznowieniem
           setState((prev) => ({
             ...prev,
-            gameStatus: "active",
+            showTransitionScreen: true,
           }));
 
-          setState((prevState) => {
-            if (prevState.timeRemaining > 0) {
-              startTimer(prevState.timeRemaining);
-            }
-            return prevState;
-          });
+          // Po 1.5 sekundach ukryj ekran przejściowy i wznów grę
+          setTimeout(() => {
+            setState((prev) => ({
+              ...prev,
+              gameStatus: "active",
+              showTransitionScreen: false,
+            }));
+
+            setState((prevState) => {
+              if (prevState.timeRemaining > 0) {
+                startTimer(prevState.timeRemaining);
+              }
+              return prevState;
+            });
+          }, 1500);
           break;
 
         case "game-reset":
           console.log(
             "Player: game-reset event received - resetting to initial state"
           );
-          setState(initialState);
-          stopTimer();
+
+          // Pokaż ekran przejściowy przed resetem
+          setState((prev) => ({
+            ...prev,
+            showTransitionScreen: true,
+          }));
+
+          // Po 3.2 sekundach ukryj ekran przejściowy i zresetuj stan
+          setTimeout(() => {
+            setState(initialState);
+            stopTimer();
+          }, 3200);
           break;
 
         default:
