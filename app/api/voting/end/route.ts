@@ -19,11 +19,39 @@ export async function POST() {
     console.log(`Zakończono głosowanie: ${currentVoteSession.id}`);
 
     const votes = getVotes();
-    // 🔥 SSE: Powiadom o ręcznym zakończeniu głosowania
+
+    // Policz wyniki głosowania
+    const voteCounts: Record<string, number> = {
+      A: 0,
+      B: 0,
+      C: 0,
+      D: 0,
+    };
+
+    Object.values(votes).forEach((vote) => {
+      if (vote.option in voteCounts) {
+        voteCounts[vote.option]++;
+      }
+    });
+
+    const totalVotes = Object.values(voteCounts).reduce(
+      (sum, count) => sum + count,
+      0
+    );
+
+    // Oblicz procenty
+    const results: Record<string, number> = {};
+    Object.entries(voteCounts).forEach(([option, count]) => {
+      results[option] =
+        totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+    });
+
+    // 🔥 SSE: Powiadom o ręcznym zakończeniu głosowania z wynikami
     broadcastEvent("voting-ended", {
       voteSessionId: currentVoteSession.id,
       endTime: currentVoteSession.endTime,
-      totalVotes: Object.keys(votes).length,
+      totalVotes,
+      results, // Dodajemy wyniki głosowania
       reason: "manual", // Ręcznie zakończone przez admina
     });
 

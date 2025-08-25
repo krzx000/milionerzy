@@ -8,7 +8,7 @@ import { WaitingScreen } from "@/components/views/WaitingScreen";
 import { WinScreen } from "@/components/views/WinScreen";
 import { WinTransitionScreen } from "@/components/views/WinTransitionScreen";
 import { LifelinesDisplay } from "@/components/views/LifelinesDisplay";
-import { AudienceVotingModal } from "@/components/views/AudienceVotingModal";
+import { AudienceVotingDisplay } from "@/components/views/AudienceVotingDisplay";
 import { GamePausedModal } from "@/components/views/GamePausedModal";
 import { QuestionDisplay } from "@/components/views/QuestionDisplay";
 import { AnswersDisplay } from "@/components/views/AnswersDisplay";
@@ -36,7 +36,10 @@ function PlayerView() {
     finalResult,
     // Koła ratunkowe
     lifelinesUsed,
+    hiddenAnswers,
     audienceVotingActive,
+    audienceVotingResults,
+    showVotingResults,
     // Animacje
     showTransitionScreen,
     // Stan połączenia
@@ -188,7 +191,13 @@ function PlayerView() {
         )}
 
         {/* Stan głosowania publiczności */}
-        <AudienceVotingModal isActive={audienceVotingActive} />
+        <AudienceVotingDisplay
+          isActive={audienceVotingActive}
+          showResults={showVotingResults}
+          results={audienceVotingResults}
+          currentQuestion={currentQuestion}
+          hiddenAnswers={hiddenAnswers}
+        />
 
         {/* Stan pauzy */}
         <GamePausedModal isPaused={gameStatus === "paused"} />

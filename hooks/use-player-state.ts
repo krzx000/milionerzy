@@ -40,6 +40,8 @@ export interface PlayerGameState {
   };
   hiddenAnswers: string[];
   audienceVotingActive: boolean;
+  audienceVotingResults: Record<string, number> | null;
+  showVotingResults: boolean;
 
   // Animacje i efekty
   showQuestionAnimation: boolean;
@@ -89,6 +91,8 @@ const initialState: PlayerGameState = {
   },
   hiddenAnswers: [],
   audienceVotingActive: false,
+  audienceVotingResults: null,
+  showVotingResults: false,
   showQuestionAnimation: false,
   showAnswerAnimation: false,
   showPrizeAnimation: false,
@@ -568,10 +572,38 @@ export function usePlayerState() {
           break;
 
         case "voting-ended":
+          const votingEndData = data as Record<string, unknown>;
+          const votingResults = votingEndData.results as
+            | Record<string, number>
+            | undefined;
+
           setState((prev) => ({
             ...prev,
             audienceVotingActive: false,
+            audienceVotingResults: votingResults || null,
+            showVotingResults: !!votingResults,
           }));
+
+          // Po 5 sekundach ukryj wyniki głosowania z płynnym przejściem
+          if (votingResults) {
+            setTimeout(() => {
+              // Najpierw pokaż transition
+              setState((prev) => ({
+                ...prev,
+                showTransitionScreen: true,
+              }));
+
+              // Po 1.5 sekundach ukryj wyniki i transition
+              setTimeout(() => {
+                setState((prev) => ({
+                  ...prev,
+                  showVotingResults: false,
+                  audienceVotingResults: null,
+                  showTransitionScreen: false,
+                }));
+              }, 1500);
+            }, 5000);
+          }
           break;
 
         case "game-ended":
