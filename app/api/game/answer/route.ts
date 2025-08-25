@@ -106,6 +106,20 @@ export async function POST(request: NextRequest) {
         "all"
       );
 
+      // Wysyłamy również event game-ended z informacją o wygranej
+      setTimeout(() => {
+        sseManager.broadcast(
+          "game-ended",
+          {
+            reason: "completed",
+            result: "win",
+            finalQuestionIndex: session.currentQuestionIndex,
+            timestamp: new Date(),
+          },
+          "all"
+        );
+      }, 3000); // 3 sekundy opóźnienia, żeby użytkownik zobaczył poprawną odpowiedź
+
       return NextResponse.json({
         success: true,
         data: {

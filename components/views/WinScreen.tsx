@@ -3,6 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { Textfit } from "react-textfit";
+import Confetti from "react-confetti";
 import { ConnectionBadge } from "@/components/ui/connection-badge";
 import { IMAGES } from "@/lib/utils/game-assets";
 import { Coiny, Inter } from "next/font/google";
@@ -28,11 +29,47 @@ export function WinScreen({
   isBackToWaitingTransition,
   winnings,
 }: WinScreenProps) {
+  const [windowDimensions, setWindowDimensions] = React.useState({
+    width: 0,
+    height: 0,
+  });
+
+  React.useEffect(() => {
+    function getWindowDimensions() {
+      const { innerWidth: width, innerHeight: height } = window;
+      return { width, height };
+    }
+
+    function handleResize() {
+      setWindowDimensions(getWindowDimensions());
+    }
+
+    setWindowDimensions(getWindowDimensions());
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <div
       className="min-h-screen bg-cover bg-center relative"
       style={{ backgroundImage: `url(${IMAGES.BACKGROUND})` }}
     >
+      {/* Efekt konfetti */}
+      <Confetti
+        width={windowDimensions.width}
+        height={windowDimensions.height}
+        numberOfPieces={200}
+        recycle={true}
+        colors={[
+          "#FFD700",
+          "#FFA500",
+          "#FF6347",
+          "#32CD32",
+          "#00BFFF",
+          "#FF1493",
+        ]}
+      />
+
       {/* Status połączenia w prawym górnym rogu */}
       <div className="fixed top-6 right-6 z-50">
         <ConnectionBadge isConnected={isConnected} />
