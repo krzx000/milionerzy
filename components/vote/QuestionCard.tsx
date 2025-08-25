@@ -147,15 +147,6 @@ export function QuestionCard({
                     <span className="font-medium text-sm text-white">
                       {answerText}
                     </span>
-                    {isAdminSelected && !isRevealed && (
-                      <span className="text-lg animate-bounce">👆</span>
-                    )}
-                    {isRevealed && isCorrectAnswer && (
-                      <span className="text-lg overflow-hidden">✅</span>
-                    )}
-                    {isRevealed && isAdminSelected && !isCorrectAnswer && (
-                      <span className="text-lg">❌</span>
-                    )}
                   </div>
                   {showResults && !isHidden && (
                     <div className="relative z-10 text-right">
@@ -176,7 +167,7 @@ export function QuestionCard({
           {!canVote && !userVote && !showResults && voteSession?.isActive && (
             <div className="mt-4 p-4 bg-blue-500/20 backdrop-blur-sm border border-blue-300/50 rounded-xl">
               <p className="text-sm text-center text-white">
-                📊 Już oddałeś głos w tej grze. Jeden użytkownik może głosować
+                Już oddałeś głos w tej grze. Jeden użytkownik może głosować
                 tylko raz w każdej sesji gry.
               </p>
             </div>
@@ -186,7 +177,7 @@ export function QuestionCard({
           {userVote && (
             <div className="mt-4 p-4 bg-green-500/20 backdrop-blur-sm border border-green-300/50 rounded-xl">
               <p className="text-sm text-center text-white">
-                ✅ Twój głos na odpowiedź <strong>{userVote}</strong> został
+                Twój głos na odpowiedź <strong>{userVote}</strong> został
                 zapisany!
               </p>
             </div>
