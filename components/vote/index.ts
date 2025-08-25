@@ -7,4 +7,3 @@ export { GameEndCard } from "./GameEndCard";
 export { NoActiveGameCard } from "./NoActiveGameCard";
 export { VoteFooter } from "./VoteFooter";
 export { VoteLoadingCard } from "./VoteLoadingCard";
-export { VoteTransitionOverlays } from "./VoteTransitionOverlays";

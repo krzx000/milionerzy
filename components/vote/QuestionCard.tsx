@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, Check, X } from "lucide-react";
+import { PlayCircle, Check } from "lucide-react";
 import type { VoteOption, VoteSession, VoteStats } from "@/types/voting";
 import type { GameViewerState } from "@/lib/api/voting";
 import { useState } from "react";
@@ -40,10 +40,6 @@ export function QuestionCard({
       onVote(selectedOption);
       setSelectedOption(null);
     }
-  };
-
-  const handleCancelVote = () => {
-    setSelectedOption(null);
   };
 
   if (!question) return null;
@@ -203,23 +199,14 @@ export function QuestionCard({
                 Wybrano odpowiedź <strong>{selectedOption}</strong>. Potwierdź
                 swój głos:
               </p>
-              <div className="flex gap-2">
+              <div className="flex justify-center">
                 <Button
                   onClick={handleConfirmVote}
-                  className="flex-1 bg-green-600/80 backdrop-blur-sm hover:bg-green-700/80 text-white border border-green-400/50"
+                  className="bg-green-600/80 backdrop-blur-sm hover:bg-green-700/80 text-white border border-green-400/50"
                   size="sm"
                 >
                   <Check className="w-4 h-4 mr-2" />
                   Potwierdź głos
-                </Button>
-                <Button
-                  onClick={handleCancelVote}
-                  variant="outline"
-                  className="flex-1 bg-red-500/20 backdrop-blur-sm border-red-300/50 text-white hover:bg-red-500/30"
-                  size="sm"
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  Anuluj
                 </Button>
               </div>
             </div>

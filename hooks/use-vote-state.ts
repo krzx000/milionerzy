@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import type { VoteSession, VoteStats, VoteOption } from "@/types/voting";
+import type { Question } from "@/types/question";
 import { VotingAPI, type GameViewerState } from "@/lib/api/voting";
 import { getWinningPrize } from "@/lib/utils/prize";
 import { useServerSentEvents } from "@/hooks/use-sse";
@@ -117,7 +118,7 @@ export function useVoteState() {
           });
 
           const hasVotedInSession = votedSessions.has(
-            voteSession.gameSessionId
+            voteSession.id // Sprawdzaj sesję głosowania, nie sesję gry
           );
 
           setViewerState((prev) => ({
@@ -184,10 +185,47 @@ export function useVoteState() {
 
       switch (eventType) {
         case "voting-started":
-          console.log("SSE: Głosowanie rozpoczęte");
+          console.log("SSE: Głosowanie rozpoczęte", data);
           setIsVotingStartTransition(true);
+
+          // Stwórz sesję głosowania z danych SSE
+          const voteSessionData = {
+            id: data.voteSessionId as string,
+            gameSessionId: "", // Nie jest potrzebne dla głosowania
+            questionId: data.questionId as string,
+            question: data.question as Question,
+            hiddenAnswers: (data.hiddenAnswers as string[]) || [],
+            isActive: true,
+            startTime: new Date(data.startTime as string),
+            endTime: new Date(data.endTime as string),
+            timeLimit: data.timeLimit as number,
+          };
+
+          const now = new Date();
+          const endTime = new Date(data.endTime as string);
+          const timeRemaining = Math.max(
+            0,
+            Math.floor((endTime.getTime() - now.getTime()) / 1000)
+          );
+
+          // Sprawdź czy użytkownik już głosował w tej sesji głosowania
+          const hasVotedInSession = votedSessions.has(voteSessionData.id);
+
+          // Natychmiast ustaw pełny stan głosowania
+          setViewerState((prev) => ({
+            ...prev,
+            gameState: null,
+            voteSession: voteSessionData,
+            userVote: null,
+            timeRemaining,
+            canVote: !hasVotedInSession && timeRemaining > 0,
+            showResults: false,
+            selectedAnswer: null,
+            correctAnswer: null,
+            isAnswerRevealed: false,
+          }));
+
           setTimeout(() => {
-            loadCurrentState();
             setIsVotingStartTransition(false);
           }, 2000);
           break;
@@ -385,7 +423,7 @@ export function useVoteState() {
           break;
       }
     },
-    [loadCurrentState, loadVoteStats]
+    [loadCurrentState, loadVoteStats, votedSessions]
   );
 
   const { isConnected } = useServerSentEvents({
@@ -409,19 +447,19 @@ export function useVoteState() {
     async (option: VoteOption) => {
       if (!viewerState.canVote || !viewerState.voteSession) return;
 
-      const sessionId = viewerState.voteSession.gameSessionId;
+      const voteSessionId = viewerState.voteSession.id;
 
-      // Sprawdź czy użytkownik już głosował w tej sesji gry
-      if (votedSessions.has(sessionId)) {
-        console.log("Użytkownik już głosował w tej sesji gry");
+      // Sprawdź czy użytkownik już głosował w tej sesji głosowania
+      if (votedSessions.has(voteSessionId)) {
+        console.log("Użytkownik już głosował w tej sesji głosowania");
         return;
       }
 
       const response = await VotingAPI.submitVote(option, userId);
       if (response.success) {
-        // Zapisz informację o głosie w tej sesji
+        // Zapisz informację o głosie w tej sesji głosowania
         const newVotedSessions = new Set(votedSessions);
-        newVotedSessions.add(sessionId);
+        newVotedSessions.add(voteSessionId);
         setVotedSessions(newVotedSessions);
 
         // Zapisz w localStorage
@@ -487,25 +525,6 @@ export function useVoteState() {
   React.useEffect(() => {
     loadCurrentState();
   }, [loadCurrentState]);
-
-  // Debug logging effect
-  React.useEffect(() => {
-    console.log("📊 ViewerState changed:", {
-      gameState: !!viewerState.gameState,
-      voteSession: !!viewerState.voteSession,
-      showResults: viewerState.showResults,
-      stats: !!viewerState.stats,
-      userVote: viewerState.userVote,
-      canVote: viewerState.canVote,
-      timeRemaining: viewerState.timeRemaining,
-      isLoading: isLoading,
-      currentQuestionId: currentQuestionId,
-      selectedAnswer: viewerState.selectedAnswer,
-      correctAnswer: viewerState.correctAnswer,
-      isAnswerRevealed: viewerState.isAnswerRevealed,
-      isConnected: isConnected,
-    });
-  }, [viewerState, isLoading, currentQuestionId, isConnected]);
 
   // Question change effect
   React.useEffect(() => {

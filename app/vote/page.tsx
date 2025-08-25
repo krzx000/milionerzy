@@ -12,7 +12,6 @@ import {
   NoActiveGameCard,
   VoteFooter,
   VoteLoadingCard,
-  VoteTransitionOverlays,
 } from "@/components/vote";
 
 export default function VotePage() {
@@ -23,12 +22,6 @@ export default function VotePage() {
     setIsGameStateCollapsed,
     isConnected,
     handleVote,
-    // Stany przejść
-    isGameStartTransition,
-    isQuestionChangeTransition,
-    isGameEndTransition,
-    isVotingStartTransition,
-    isVotingEndTransition,
   } = useVoteState();
 
   if (isLoading) {
@@ -125,15 +118,6 @@ export default function VotePage() {
           />
         )}
       </div>
-
-      {/* Przejścia */}
-      <VoteTransitionOverlays
-        isGameStartTransition={isGameStartTransition}
-        isQuestionChangeTransition={isQuestionChangeTransition}
-        isGameEndTransition={isGameEndTransition}
-        isVotingStartTransition={isVotingStartTransition}
-        isVotingEndTransition={isVotingEndTransition}
-      />
     </>
   );
 }
