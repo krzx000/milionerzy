@@ -57,7 +57,7 @@ export function useGameLogic(
       await loadGameSession();
       resetGameState();
       loadGameHistory();
-      showSuccessMessage("🎮 Gra rozpoczęta!");
+      showSuccessMessage("Gra rozpoczęta!");
     } else {
       showErrorMessage(response.error || "Błąd rozpoczynania gry");
     }

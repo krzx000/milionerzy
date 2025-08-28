@@ -172,9 +172,9 @@ function AdminPanel() {
           if (reason === "timeout") {
             showGameStatusMessage("⏰ Głosowanie zakończone - upłynął czas");
           } else if (reason === "manual") {
-            showGameStatusMessage("⏹️ Głosowanie zakończone ręcznie");
+            showGameStatusMessage("Głosowanie zakończone ręcznie");
           } else {
-            showGameStatusMessage("✅ Głosowanie zakończone");
+            showGameStatusMessage("Głosowanie zakończone");
           }
           // Odśwież sesję gry aby zaktualizować stan
           loadGameSession();
@@ -262,7 +262,7 @@ function AdminPanel() {
       setIsAnswerRevealed(false);
       setLastAnswerResult(null);
       loadGameHistory();
-      showSuccessMessage("🎮 Gra rozpoczęta!");
+      showSuccessMessage("Gra rozpoczęta!");
     } else {
       showErrorMessage(response.error || "Błąd rozpoczynania gry");
     }
@@ -342,7 +342,7 @@ function AdminPanel() {
           setLastAnswerResult(null);
           setGameEndReason(null);
           const deletedCount = response.data?.deletedCount || 0;
-          showSuccessMessage(`🗑️ Usunięto ${deletedCount} sesji z bazy danych`);
+          showSuccessMessage(`Usunięto ${deletedCount} sesji z bazy danych`);
         } else {
           showErrorMessage(response.error || "Błąd usuwania sesji");
         }
@@ -389,7 +389,7 @@ function AdminPanel() {
               setIsVotingActive(true);
             }
 
-            showGameStatusMessage(`✅ Użyto koła ratunkowego: ${lifelineName}`);
+            showGameStatusMessage(`Użyto koła ratunkowego: ${lifelineName}`);
           } else {
             showErrorMessage(response.error || "Błąd użycia koła ratunkowego");
           }
@@ -569,7 +569,7 @@ function AdminPanel() {
 
       if (response.ok) {
         setIsVotingActive(false);
-        showGameStatusMessage("⏹️ Głosowanie zostało zakończone");
+        showGameStatusMessage("Głosowanie zostało zakończone");
       } else {
         const error = await response.json();
         showErrorMessage(error.error || "Błąd kończenia głosowania");

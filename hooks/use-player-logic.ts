@@ -285,7 +285,7 @@ export function usePlayerLogic() {
 
   // Reset flagi animacji przy nowym pytaniu
   React.useEffect(() => {
-    console.log("🔄 Resetting animation flag for new question:", {
+    console.log("Resetting animation flag for new question:", {
       questionIndex,
       currentQuestion: !!currentQuestion,
     });
@@ -319,7 +319,7 @@ export function usePlayerLogic() {
       !winAnimationTriggered.current // Sprawdzamy czy już nie została uruchomiona
     ) {
       console.log(
-        "💥 Player: Rozpoczynanie przejścia do ekranu wygranej (błędna odpowiedź)"
+        "Player: Rozpoczynanie przejścia do ekranu wygranej (błędna odpowiedź)"
       );
 
       winAnimationTriggered.current = true; // Oznacz że animacja została uruchomiona
@@ -332,9 +332,7 @@ export function usePlayerLogic() {
       }, 3000);
 
       return () => {
-        console.log(
-          "💥 Player: Anulowanie timera przejścia (błędna odpowiedź)"
-        );
+        console.log("Player: Anulowanie timera przejścia (błędna odpowiedź)");
         clearTimeout(timer);
       };
     }
@@ -359,7 +357,7 @@ export function usePlayerLogic() {
       !winAnimationTriggered.current // Sprawdzamy czy już nie została uruchomiona
     ) {
       console.log(
-        "🏆 Player: Rozpoczynanie przejścia do ekranu wygranej (wygrana gra)"
+        "Player: Rozpoczynanie przejścia do ekranu wygranej (wygrana gra)"
       );
 
       winAnimationTriggered.current = true; // Oznacz że animacja została uruchomiona

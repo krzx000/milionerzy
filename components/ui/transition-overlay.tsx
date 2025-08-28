@@ -14,7 +14,7 @@ export function TransitionOverlay() {
     const showCleanup = TransitionAPI.addEventListener(
       "show-transition",
       (data: TransitionEventData) => {
-        console.log("🎬 Transition: Showing overlay", data);
+        console.log("Transition: Showing overlay", data);
         setIsVisible(true);
 
         // Rozpocznij animację po krótkim delay
@@ -29,7 +29,7 @@ export function TransitionOverlay() {
     const hideCleanup = TransitionAPI.addEventListener(
       "hide-transition",
       (data: TransitionEventData) => {
-        console.log("🎬 Transition: Hiding overlay", data);
+        console.log("Transition: Hiding overlay", data);
         setIsAnimating(false);
 
         // Po animacji fade-out ukryj element

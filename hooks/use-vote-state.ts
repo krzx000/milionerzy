@@ -96,9 +96,9 @@ export function useVoteState() {
 
   const loadCurrentState = React.useCallback(async () => {
     try {
-      console.log("🔄 Ładowanie aktualnego stanu...");
+      console.log("Ładowanie aktualnego stanu...");
       const response = await VotingAPI.getCurrentVoteSession();
-      console.log("📡 API Response:", response);
+      console.log("API Response:", response);
 
       if (response.success && response.data) {
         const data = response.data as VoteSession | GameViewerState;
@@ -181,7 +181,7 @@ export function useVoteState() {
 
   const handleSSEEvent = React.useCallback(
     (eventType: GameEventType, data: Record<string, unknown>) => {
-      console.log("📡 SSE Event received:", eventType, data);
+      console.log("SSE Event received:", eventType, data);
 
       switch (eventType) {
         case "voting-started":
@@ -263,10 +263,10 @@ export function useVoteState() {
           }, 2000);
           break;
         case "lifeline-used":
-          console.log("🎯 SSE: Koło ratunkowe użyte:", data);
+          console.log("SSE: Koło ratunkowe użyte:", data);
           const lifelineName = data.lifelineName as string;
           if (lifelineName) {
-            console.log(`📢 Użyto koła ratunkowego: ${lifelineName}`);
+            console.log(`Użyto koła ratunkowego: ${lifelineName}`);
           }
           setTimeout(() => loadCurrentState(), 100);
           break;
@@ -410,7 +410,7 @@ export function useVoteState() {
           if (gameWon) {
             setTimeout(() => {
               console.log(
-                "🏆 Automatyczne przejście do ekranu zakończenia gry po wygraniu"
+                "Automatyczne przejście do ekranu zakończenia gry po wygraniu"
               );
               setViewerState((prev) => ({
                 ...prev,

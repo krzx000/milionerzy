@@ -137,7 +137,7 @@ export async function startVotingSession(sessionId: string): Promise<{
             totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
         });
 
-        // 🔥 SSE: Powiadom o automatycznym zakończeniu głosowania z wynikami
+        // SSE: Powiadom o automatycznym zakończeniu głosowania z wynikami
         broadcastEvent("voting-ended", {
           voteSessionId: currentVoteSession.id,
           endTime: currentVoteSession.endTime,
@@ -150,7 +150,7 @@ export async function startVotingSession(sessionId: string): Promise<{
 
     console.log(`Rozpoczęto głosowanie: ${currentVoteSession.id}`);
 
-    // 🔥 SSE: Powiadom o rozpoczęciu głosowania
+    // SSE: Powiadom o rozpoczęciu głosowania
     sendToVoters("voting-started", {
       voteSessionId: currentVoteSession.id,
       questionId: currentQuestion.id,

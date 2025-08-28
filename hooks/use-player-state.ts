@@ -315,11 +315,11 @@ export function usePlayerState() {
   // Obsługa eventów SSE
   const handleGameEvent = React.useCallback(
     (event: GameEventType, data: Record<string, unknown>) => {
-      console.log("🎮 PLAYER: Received SSE event:", event, data);
+      console.log("PLAYER: Received SSE event:", event, data);
 
       switch (event) {
         case "game-started":
-          console.log("🎮 PLAYER: Processing game-started event");
+          console.log("PLAYER: Processing game-started event");
           const gameStartData = data as Record<string, unknown>;
           const session = gameStartData.session as GameSession;
           const currentQuestion = gameStartData.currentQuestion as Question;
@@ -327,7 +327,7 @@ export function usePlayerState() {
           const questionIndex = gameStartData.questionIndex as number;
           const totalQuestions = gameStartData.totalQuestions as number;
 
-          console.log("🎮 PLAYER: game-started event data:", {
+          console.log("PLAYER: game-started event data:", {
             hasSession: !!session,
             hasCurrentQuestion: !!currentQuestion,
             questionIndex,
@@ -367,7 +367,7 @@ export function usePlayerState() {
           break;
 
         case "question-changed":
-          console.log("🎮 PLAYER: Processing question-changed event");
+          console.log("PLAYER: Processing question-changed event");
           const questionData = data as Record<string, unknown>;
           const newQuestion = questionData.currentQuestion as Question;
           const newQuestionIndex = (questionData.questionIndex as number) || 0;
@@ -377,7 +377,7 @@ export function usePlayerState() {
             (questionData.hiddenAnswers as string[]) || [];
 
           console.log(
-            "🎮 PLAYER: question-changed - aktualizacja stanu do aktywnego"
+            "PLAYER: question-changed - aktualizacja stanu do aktywnego"
           );
 
           // Jeśli to nie pierwsze pytanie, najpierw pokaż ekran przejściowy

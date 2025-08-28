@@ -5,19 +5,17 @@ import { sseManager } from "@/lib/sse/manager";
 import { prisma } from "@/lib/db/prisma";
 
 export async function POST() {
-  console.log("🎯 NEXT-QUESTION API: Endpoint called");
+  console.log("NEXT-QUESTION API: Endpoint called");
   try {
     const session = await gameSessionDb.nextQuestion();
-    console.log("🎯 NEXT-QUESTION API: nextQuestion() result:", {
+    console.log("NEXT-QUESTION API: nextQuestion() result:", {
       sessionId: session?.id,
       status: session?.status,
       currentQuestionIndex: session?.currentQuestionIndex,
     });
 
     if (!session) {
-      console.log(
-        "🎯 NEXT-QUESTION API: No session returned from nextQuestion()"
-      );
+      console.log("NEXT-QUESTION API: No session returned from nextQuestion()");
       return NextResponse.json(
         {
           success: false,
@@ -68,11 +66,11 @@ export async function POST() {
     };
 
     console.log(
-      "🎯 NEXT-QUESTION API: Broadcasting question-changed event:",
+      "NEXT-QUESTION API: Broadcasting question-changed event:",
       eventData
     );
     sseManager.broadcast("question-changed", eventData, "all");
-    console.log("🎯 NEXT-QUESTION API: Broadcast completed");
+    console.log("NEXT-QUESTION API: Broadcast completed");
 
     return NextResponse.json({
       success: true,

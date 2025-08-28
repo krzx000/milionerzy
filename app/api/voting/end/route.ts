@@ -46,7 +46,7 @@ export async function POST() {
         totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
     });
 
-    // 🔥 SSE: Powiadom o ręcznym zakończeniu głosowania z wynikami
+    // SSE: Powiadom o ręcznym zakończeniu głosowania z wynikami
     broadcastEvent("voting-ended", {
       voteSessionId: currentVoteSession.id,
       endTime: currentVoteSession.endTime,
