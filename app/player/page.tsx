@@ -13,13 +13,12 @@ import { GamePausedModal } from "@/components/views/GamePausedModal";
 import { QuestionDisplay } from "@/components/views/QuestionDisplay";
 import { AnswersDisplay } from "@/components/views/AnswersDisplay";
 import { GameLogo } from "@/components/views/GameLogo";
-import { TransitionOverlays } from "@/components/views/TransitionOverlays";
+import { TransitionOverlay } from "@/components/ui/transition-overlay";
 import { ImagePreloader } from "@/components/ui/image-preloader";
 import { usePlayerLogic } from "@/hooks/use-player-logic";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 
 function PlayerView() {
-  // Cała logika biznesowa w custom hook
   const {
     // Stan gry
     session,
@@ -40,8 +39,6 @@ function PlayerView() {
     audienceVotingActive,
     audienceVotingResults,
     showVotingResults,
-    // Animacje
-    showTransitionScreen,
     // Stan połączenia
     isInitialized,
     connectionStatus,
@@ -51,9 +48,6 @@ function PlayerView() {
     showWinScreen,
     showWinTransition,
     isTransitioning,
-    isGameStartTransition,
-    isBackToWaitingTransition,
-    isSessionClosedTransition,
     showGameContent,
     displayQuestionText,
   } = usePlayerLogic();
@@ -80,26 +74,15 @@ function PlayerView() {
     );
   }
 
-  // Jeśli gra nie została jeszcze rozpoczęta (ale nie podczas przejścia lub gdy gra jest aktywna)
-  if (
-    (gameStatus === "waiting" || !session) &&
-    !isGameStartTransition &&
-    !isSessionClosedTransition &&
-    gameStatus !== "active"
-  ) {
+  // Jeśli gra nie została jeszcze rozpoczęta
+  if ((gameStatus === "waiting" || !session) && gameStatus !== "active") {
     console.log("Player page: Rendering waiting screen", {
       gameStatus,
       hasSession: !!session,
       hasCurrentQuestion: !!currentQuestion,
     });
 
-    return (
-      <WaitingScreen
-        isConnected={isConnected}
-        isBackToWaitingTransition={isBackToWaitingTransition}
-        isSessionClosedTransition={isSessionClosedTransition}
-      />
-    );
+    return <WaitingScreen isConnected={isConnected} />;
   }
 
   // Jeśli gra się zakończyła wygraną (tylko gdy gra jest rzeczywiście zakończona)
@@ -109,21 +92,13 @@ function PlayerView() {
       gameStatus,
     });
 
-    return (
-      <WinScreen
-        isConnected={isConnected}
-        isBackToWaitingTransition={isBackToWaitingTransition}
-        winnings={winnings}
-      />
-    );
+    return <WinScreen isConnected={isConnected} winnings={winnings} />;
   }
 
   // Jeśli pokazujemy ekran przejściowy do wygranej
   if (showWinTransition) {
     return <WinTransitionScreen />;
   }
-
-  // ============== GŁÓWNY WIDOK GRY - TUTAJ ZBUDUJ SWÓJ INTERFEJS ==============
 
   return (
     <div
@@ -138,24 +113,16 @@ function PlayerView() {
       {/* GŁÓWNA ZAWARTOŚĆ GRY */}
       <div
         className={`h-screen flex flex-col justify-end transition-all duration-500 ${
-          isTransitioning || isGameStartTransition || isSessionClosedTransition
-            ? "opacity-75"
-            : "opacity-100"
+          isTransitioning ? "opacity-75" : "opacity-100"
         }`}
       >
         {/* Logo */}
-        <GameLogo
-          isTransitioning={isTransitioning}
-          isGameStartTransition={isGameStartTransition}
-          isSessionClosedTransition={isSessionClosedTransition}
-        />
+        <GameLogo isTransitioning={isTransitioning} />
 
         <QuestionDisplay
           currentQuestion={currentQuestion}
           showGameContent={showGameContent}
           isTransitioning={isTransitioning}
-          isGameStartTransition={isGameStartTransition}
-          isSessionClosedTransition={isSessionClosedTransition}
           showWinScreen={showWinScreen}
           currentPrize={currentPrize}
           displayQuestionText={displayQuestionText}
@@ -167,8 +134,6 @@ function PlayerView() {
           showGameContent={showGameContent}
           showWinScreen={showWinScreen}
           isTransitioning={isTransitioning}
-          isGameStartTransition={isGameStartTransition}
-          isSessionClosedTransition={isSessionClosedTransition}
         />
 
         <div></div>
@@ -181,8 +146,6 @@ function PlayerView() {
             showGameContent={showGameContent}
             showWinScreen={showWinScreen}
             isTransitioning={isTransitioning}
-            isGameStartTransition={isGameStartTransition}
-            isSessionClosedTransition={isSessionClosedTransition}
             selectedAnswer={selectedAnswer}
             correctAnswer={correctAnswer}
             isAnswerRevealed={isAnswerRevealed}
@@ -206,14 +169,8 @@ function PlayerView() {
         <ImagePreloader />
       </div>
 
-      {/* TRANSITION OVERLAYS */}
-      <TransitionOverlays
-        showTransitionScreen={showTransitionScreen}
-        isBackToWaitingTransition={isBackToWaitingTransition}
-        showWinScreen={showWinScreen}
-        isSessionClosedTransition={isSessionClosedTransition}
-        isGameStartTransition={isGameStartTransition}
-      />
+      {/* TRANSITION OVERLAY */}
+      <TransitionOverlay />
     </div>
   );
 }

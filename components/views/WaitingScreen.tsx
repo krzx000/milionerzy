@@ -13,15 +13,9 @@ const INTER = Inter({
 
 export interface WaitingScreenProps {
   isConnected: boolean;
-  isBackToWaitingTransition?: boolean;
-  isSessionClosedTransition?: boolean;
 }
 
-export function WaitingScreen({
-  isConnected,
-  isBackToWaitingTransition = false,
-  isSessionClosedTransition = false,
-}: WaitingScreenProps) {
+export function WaitingScreen({ isConnected }: WaitingScreenProps) {
   return (
     <div
       className="min-h-screen bg-cover bg-center flex items-center justify-center relative"
@@ -32,13 +26,7 @@ export function WaitingScreen({
         <ConnectionBadge isConnected={isConnected} />
       </div>
 
-      <div
-        className={`flex flex-col items-center justify-center space-y-8 text-center transition-opacity duration-500 ${
-          isBackToWaitingTransition || isSessionClosedTransition
-            ? "opacity-0"
-            : "opacity-100"
-        }`}
-      >
+      <div className="flex flex-col items-center justify-center space-y-8 text-center transition-opacity duration-500 opacity-100">
         {/* Logo */}
         <div className="mb-8">
           <Image
@@ -46,11 +34,7 @@ export function WaitingScreen({
             alt="Milionerzy Logo"
             width={400}
             height={200}
-            className={`drop-shadow-2xl transition-opacity duration-500 ${
-              isBackToWaitingTransition || isSessionClosedTransition
-                ? "opacity-50"
-                : "opacity-100"
-            }`}
+            className="drop-shadow-2xl transition-opacity duration-500 opacity-100"
             priority
           />
         </div>
@@ -80,42 +64,6 @@ export function WaitingScreen({
           ></div>
         </div>
       </div>
-
-      {/* Ekran przejściowy po zamknięciu sesji przez admina */}
-      {isSessionClosedTransition && (
-        <div className="fixed inset-0 z-[9999] transition-screen-overlay backdrop-blur-2xl bg-black/20">
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="transition-screen-logo">
-              <Image
-                src={IMAGES.LOGO}
-                alt="Logo Milionerzy"
-                width={600}
-                height={300}
-                className="drop-shadow-2xl"
-                priority
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Ekran przejściowy z powrotem do oczekiwania */}
-      {isBackToWaitingTransition && (
-        <div className="fixed inset-0 z-[9999] transition-screen-overlay backdrop-blur-2xl bg-black/20">
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="transition-screen-logo">
-              <Image
-                src={IMAGES.LOGO}
-                alt="Logo Milionerzy"
-                width={600}
-                height={300}
-                className="drop-shadow-2xl"
-                priority
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

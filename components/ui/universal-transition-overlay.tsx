@@ -37,7 +37,7 @@ export function TransitionOverlay() {
           setIsVisible(false);
           // Emit event że transition się ukrył
           TransitionAPI.emit("transition-hidden", data);
-        }, 800); // animacja fade-out trwa 0.8s
+        }, 1500); // animacja fade-out trwa 1.5s
       }
     );
 
@@ -54,9 +54,9 @@ export function TransitionOverlay() {
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] bg-black/20 transition-all duration-800 ease-in-out ${
+      className={`fixed inset-0 z-[9999] bg-black/20 transition-all duration-[1500ms] ease-in-out ${
         isAnimating
-          ? "opacity-100 backdrop-blur-md"
+          ? "opacity-100 backdrop-blur-2xl"
           : "opacity-0 backdrop-blur-none"
       }`}
     >

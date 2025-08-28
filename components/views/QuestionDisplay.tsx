@@ -21,8 +21,6 @@ export interface QuestionDisplayProps {
   currentQuestion: Question | null;
   showGameContent: boolean;
   isTransitioning: boolean;
-  isGameStartTransition: boolean;
-  isSessionClosedTransition: boolean;
   showWinScreen: boolean;
   currentPrize?: string;
   displayQuestionText?: string;
@@ -32,8 +30,6 @@ export function QuestionDisplay({
   currentQuestion,
   showGameContent,
   isTransitioning,
-  isGameStartTransition,
-  isSessionClosedTransition,
   showWinScreen,
   currentPrize,
   displayQuestionText,
@@ -45,9 +41,7 @@ export function QuestionDisplay({
       className={`relative transition-all duration-500 ease-in-out bg-cover bg-center bg-no-repeat ${
         !showGameContent
           ? "opacity-0"
-          : isTransitioning ||
-            isGameStartTransition ||
-            isSessionClosedTransition
+          : isTransitioning
           ? "opacity-75"
           : "opacity-100"
       }`}

@@ -19,8 +19,6 @@ interface AnswersDisplayProps {
   showGameContent: boolean;
   showWinScreen: boolean;
   isTransitioning: boolean;
-  isGameStartTransition: boolean;
-  isSessionClosedTransition: boolean;
   selectedAnswer: string | null;
   correctAnswer: string | null;
   isAnswerRevealed: boolean;
@@ -33,8 +31,6 @@ export function AnswersDisplay({
   showGameContent,
   showWinScreen,
   isTransitioning,
-  isGameStartTransition,
-  isSessionClosedTransition,
   selectedAnswer,
   correctAnswer,
   isAnswerRevealed,
@@ -59,11 +55,7 @@ export function AnswersDisplay({
   return (
     <div
       className={`-space-y-8 relative transition-all duration-500 ${
-        !showGameContent ||
-        showWinScreen ||
-        isTransitioning ||
-        isGameStartTransition ||
-        isSessionClosedTransition
+        !showGameContent || showWinScreen || isTransitioning
           ? "opacity-0 pointer-events-none"
           : "opacity-100"
       }`}

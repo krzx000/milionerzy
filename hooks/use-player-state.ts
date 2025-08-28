@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useServerSentEvents } from "@/hooks/use-sse";
+import { useTransitions } from "@/hooks/use-transitions";
 import type { GameEventType } from "@/types/events";
 import type { GameSession } from "@/lib/db/game-session";
 import type { Question } from "@/types/question";
@@ -47,7 +48,6 @@ export interface PlayerGameState {
   showQuestionAnimation: boolean;
   showAnswerAnimation: boolean;
   showPrizeAnimation: boolean;
-  showTransitionScreen: boolean;
 
   // Historia odpowiedzi
   answerHistory: Array<{
@@ -96,7 +96,6 @@ const initialState: PlayerGameState = {
   showQuestionAnimation: false,
   showAnswerAnimation: false,
   showPrizeAnimation: false,
-  showTransitionScreen: false,
   answerHistory: [],
 };
 
@@ -104,6 +103,9 @@ export function usePlayerState() {
   const [state, setState] = React.useState<PlayerGameState>(initialState);
   const timeIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const animationTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Use new transition system
+  const transitions = useTransitions();
 
   // Funkcje animacji
   const triggerAnimation = React.useCallback(
@@ -247,7 +249,6 @@ export function usePlayerState() {
                 hiddenAnswers: newHiddenAnswers,
                 answerLocked: false,
                 showFinalAnswer: false,
-                showTransitionScreen: false,
                 // Reset kół ratunkowych na początku nowej gry (pierwsze pytanie)
                 lifelinesUsed:
                   newQuestionIndex === 0
@@ -292,7 +293,6 @@ export function usePlayerState() {
           hiddenAnswers: newHiddenAnswers,
           answerLocked: false,
           showFinalAnswer: false,
-          showTransitionScreen: false,
           // Reset kół ratunkowych na początku nowej gry (pierwsze pytanie)
           lifelinesUsed:
             newQuestionIndex === 0
@@ -338,10 +338,7 @@ export function usePlayerState() {
           });
 
           // Pokaż ekran przejściowy przed rozpoczęciem gry
-          setState((prev) => ({
-            ...prev,
-            showTransitionScreen: true,
-          }));
+          transitions.showGameStartTransition();
 
           // Po 3.2 sekundach ukryj ekran przejściowy i pokaż grę
           setTimeout(() => {
@@ -368,7 +365,6 @@ export function usePlayerState() {
               hiddenAnswers,
               answerLocked: false,
               showFinalAnswer: false,
-              showTransitionScreen: false,
             }));
 
             triggerAnimation("showQuestionAnimation");
@@ -392,20 +388,14 @@ export function usePlayerState() {
 
           // Jeśli to nie pierwsze pytanie, najpierw pokaż ekran przejściowy
           if (newQuestionIndex > 0) {
-            setState((prev) => ({
-              ...prev,
-              showTransitionScreen: true,
-            }));
-
-            // Po 3.2 sekundach ukryj ekran przejściowy i pokaż nowe pytanie
-            setTimeout(() => {
+            transitions.showTransitionWithCallback(() => {
               handleNewQuestion(
                 newQuestion,
                 newQuestionIndex,
                 newTotalQuestions,
                 newHiddenAnswers
               );
-            }, 3200);
+            }, "Przygotuj się na następne pytanie...");
           } else {
             // Pierwsze pytanie - pokaż od razu
             handleNewQuestion(
@@ -588,20 +578,13 @@ export function usePlayerState() {
           if (votingResults) {
             setTimeout(() => {
               // Najpierw pokaż transition
-              setState((prev) => ({
-                ...prev,
-                showTransitionScreen: true,
-              }));
-
-              // Po 1.5 sekundach ukryj wyniki i transition
-              setTimeout(() => {
+              transitions.showVotingResultsTransition(() => {
                 setState((prev) => ({
                   ...prev,
                   showVotingResults: false,
                   audienceVotingResults: null,
-                  showTransitionScreen: false,
                 }));
-              }, 1500);
+              });
             }, 5000);
           }
           break;
@@ -616,13 +599,7 @@ export function usePlayerState() {
           if (reason === "manual") {
             // Administrator zamknął sesję po zakończeniu gry – wracamy do ekranu oczekiwania
             // Pokaż ekran przejściowy przed zamknięciem sesji
-            setState((prev) => ({
-              ...prev,
-              showTransitionScreen: true,
-            }));
-
-            // Po 3.2 sekundach ukryj ekran przejściowy i wróć do stanu początkowego
-            setTimeout(() => {
+            transitions.showTransitionWithCallback(() => {
               setState((prev) => ({
                 ...initialState,
                 // Zachowaj ewentualne history i wygrane aby można było jeszcze obejrzeć na ekranie admina
@@ -630,19 +607,13 @@ export function usePlayerState() {
                 winnings: prev.winnings,
               }));
               stopTimer();
-            }, 3200);
+            }, "Sesja została zamknięta");
             break;
           }
 
           if (result) {
             // Pokaż ekran przejściowy przed zakończeniem gry
-            setState((prev) => ({
-              ...prev,
-              showTransitionScreen: true,
-            }));
-
-            // Po 3.2 sekundach ukryj ekran przejściowy i zakończ grę
-            setTimeout(() => {
+            transitions.showTransitionWithCallback(() => {
               setState((prev) => {
                 const isWin = result === "win";
                 const winnings = isWin
@@ -657,45 +628,30 @@ export function usePlayerState() {
                   gameStatus: "ended",
                   finalResult: result,
                   winnings,
-                  showTransitionScreen: false,
                 };
               });
               stopTimer();
-            }, 3200);
+            }, "Gra zakończona");
           }
           break;
 
         case "game-paused":
           // Pokaż ekran przejściowy przed pauzą
-          setState((prev) => ({
-            ...prev,
-            showTransitionScreen: true,
-          }));
-
-          // Po 1.5 sekundach ukryj ekran przejściowy i pokaż pauzę
-          setTimeout(() => {
+          transitions.showGamePausedTransition(() => {
             setState((prev) => ({
               ...prev,
               gameStatus: "paused",
-              showTransitionScreen: false,
             }));
             stopTimer();
-          }, 1500);
+          });
           break;
 
         case "game-resumed":
           // Pokaż ekran przejściowy przed wznowieniem
-          setState((prev) => ({
-            ...prev,
-            showTransitionScreen: true,
-          }));
-
-          // Po 1.5 sekundach ukryj ekran przejściowy i wznów grę
-          setTimeout(() => {
+          transitions.showGameResumedTransition(() => {
             setState((prev) => ({
               ...prev,
               gameStatus: "active",
-              showTransitionScreen: false,
             }));
 
             setState((prevState) => {
@@ -704,7 +660,7 @@ export function usePlayerState() {
               }
               return prevState;
             });
-          }, 1500);
+          });
           break;
 
         case "game-reset":
@@ -713,23 +669,17 @@ export function usePlayerState() {
           );
 
           // Pokaż ekran przejściowy przed resetem
-          setState((prev) => ({
-            ...prev,
-            showTransitionScreen: true,
-          }));
-
-          // Po 3.2 sekundach ukryj ekran przejściowy i zresetuj stan
-          setTimeout(() => {
+          transitions.showGameResetTransition(() => {
             setState(initialState);
             stopTimer();
-          }, 3200);
+          });
           break;
 
         default:
           break;
       }
     },
-    [startTimer, stopTimer, triggerAnimation, handleNewQuestion]
+    [startTimer, stopTimer, triggerAnimation, handleNewQuestion, transitions]
   );
 
   // Hook SSE

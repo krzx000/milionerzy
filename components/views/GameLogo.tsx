@@ -5,15 +5,9 @@ import { IMAGES } from "@/lib/utils/game-assets";
 
 interface GameLogoProps {
   isTransitioning: boolean;
-  isGameStartTransition: boolean;
-  isSessionClosedTransition: boolean;
 }
 
-export function GameLogo({
-  isTransitioning,
-  isGameStartTransition,
-  isSessionClosedTransition,
-}: GameLogoProps) {
+export function GameLogo({ isTransitioning }: GameLogoProps) {
   return (
     <div className="flex justify-center">
       <Image
@@ -23,9 +17,7 @@ export function GameLogo({
         height={512}
         draggable={false}
         className={`w-1/4 select-none transition-all duration-500 ${
-          isTransitioning || isGameStartTransition || isSessionClosedTransition
-            ? "opacity-50"
-            : "opacity-100"
+          isTransitioning ? "opacity-50" : "opacity-100"
         }`}
         id="main-logo"
       />

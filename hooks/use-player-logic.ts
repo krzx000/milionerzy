@@ -3,6 +3,7 @@
 import * as React from "react";
 import { usePlayerState } from "@/hooks/use-player-state";
 import { useSound } from "@/hooks/use-sound";
+import { useTransitions } from "@/hooks/use-transitions";
 import { PlayerAPI } from "@/lib/api/player";
 import { PLAYER_CONSTANTS } from "@/lib/constants/player";
 import { formatLogData } from "@/lib/utils/player";
@@ -12,6 +13,8 @@ import type { ConnectionState } from "@/lib/constants/player";
 export function usePlayerLogic() {
   // Hook ze stanem gry
   const playerState = usePlayerState();
+  // Hook do zarządzania transitions
+  const transitions = useTransitions();
   const {
     // Stan gry
     session,
@@ -72,22 +75,12 @@ export function usePlayerLogic() {
   // Ref do śledzenia czy animacja wygranej już została uruchomiona
   const winAnimationTriggered = React.useRef(false);
 
-  // Stany dla przejść między ekranami
-  const [isGameStartTransition, setIsGameStartTransition] =
-    React.useState(false);
-  const [isBackToWaitingTransition, setIsBackToWaitingTransition] =
-    React.useState(false);
-  const [isSessionClosedTransition, setIsSessionClosedTransition] =
-    React.useState(false);
+  // Flags for tracking shown transitions
   const [hasShownGameStartTransition, setHasShownGameStartTransition] =
     React.useState(false);
   const [hasShownSessionClosedTransition, setHasShownSessionClosedTransition] =
     React.useState(false);
   const [showGameContent, setShowGameContent] = React.useState(false);
-
-  // Globalny stan blokady przejść - zapobiega nakładaniu się animacji
-  const [isAnyTransitionActive, setIsAnyTransitionActive] =
-    React.useState(false);
 
   // Tekst wyświetlany w polu pytania: normalne pytanie lub kwota wygranej
   const displayQuestionText = showWinScreen
@@ -97,32 +90,6 @@ export function usePlayerLogic() {
     : currentQuestion?.content;
 
   // ============== EFEKTY I LOGIKA ==============
-
-  // Monitorowanie globalnej blokady przejść
-  React.useEffect(() => {
-    const anyTransitionActive =
-      isTransitioning ||
-      showWinTransition ||
-      isGameStartTransition ||
-      isBackToWaitingTransition ||
-      isSessionClosedTransition;
-
-    setIsAnyTransitionActive(anyTransitionActive);
-
-    if (anyTransitionActive) {
-      console.log(
-        "Player: Transition lock activated - blocking other transitions"
-      );
-    } else {
-      console.log("Player: Transition lock released - transitions available");
-    }
-  }, [
-    isTransitioning,
-    showWinTransition,
-    isGameStartTransition,
-    isBackToWaitingTransition,
-    isSessionClosedTransition,
-  ]);
 
   // Inicjalizacja połączenia
   React.useEffect(() => {
@@ -169,28 +136,23 @@ export function usePlayerLogic() {
       gameStatus === "active" &&
       currentQuestion &&
       questionIndex === 0 &&
-      !hasShownGameStartTransition &&
-      !isAnyTransitionActive
+      !hasShownGameStartTransition
     ) {
       console.log("Player: Rozpoczynanie przejścia do pierwszego pytania");
       setHasShownGameStartTransition(true);
       setShowGameContent(false);
-      setIsGameStartTransition(true);
 
-      setTimeout(() => {
+      // Show game start transition with new API
+      transitions.showTransitionWithCallback(() => {
         setShowGameContent(true);
-      }, 1500);
-
-      setTimeout(() => {
-        setIsGameStartTransition(false);
-      }, 2000);
+      }, "Gra się rozpoczyna!");
     }
   }, [
     gameStatus,
     currentQuestion,
     questionIndex,
     hasShownGameStartTransition,
-    isAnyTransitionActive,
+    transitions,
   ]);
 
   // Automatyczne przejście z ekranu wygranej do oczekiwania po 5 sekundach
@@ -199,17 +161,9 @@ export function usePlayerLogic() {
       gameStatus,
       finalResult,
       showWinScreen,
-      isBackToWaitingTransition,
-      isAnyTransitionActive,
     });
 
-    if (
-      gameStatus === "ended" &&
-      finalResult === "win" &&
-      showWinScreen &&
-      !isBackToWaitingTransition &&
-      !isAnyTransitionActive
-    ) {
+    if (gameStatus === "ended" && finalResult === "win" && showWinScreen) {
       console.log(
         "🔄 Player: Ustawianie timera przejścia z wygranej do oczekiwania"
       );
@@ -217,11 +171,7 @@ export function usePlayerLogic() {
         console.log(
           "🔄 Player: Rozpoczynanie przejścia z wygranej do oczekiwania"
         );
-        setIsBackToWaitingTransition(true);
-
-        setTimeout(() => {
-          setIsBackToWaitingTransition(false);
-        }, 2000);
+        transitions.showBackToWaitingTransition();
       }, 5000);
 
       return () => {
@@ -229,43 +179,28 @@ export function usePlayerLogic() {
         clearTimeout(timer);
       };
     }
-  }, [
-    gameStatus,
-    finalResult,
-    showWinScreen,
-    isBackToWaitingTransition,
-    isAnyTransitionActive,
-  ]);
+  }, [gameStatus, finalResult, showWinScreen, transitions]);
 
   // Przejście po zamknięciu sesji przez admina
   React.useEffect(() => {
     if (
       gameStatus === "waiting" &&
       !session &&
-      !isSessionClosedTransition &&
-      !isBackToWaitingTransition &&
       !hasShownGameStartTransition &&
-      !hasShownSessionClosedTransition &&
-      !isAnyTransitionActive
+      !hasShownSessionClosedTransition
     ) {
       console.log(
         "Player: Rozpoczynanie przejścia po zamknięciu sesji przez admina"
       );
       setHasShownSessionClosedTransition(true);
-      setIsSessionClosedTransition(true);
-
-      setTimeout(() => {
-        setIsSessionClosedTransition(false);
-      }, 2000);
+      transitions.showSessionClosedTransition();
     }
   }, [
     gameStatus,
     session,
-    isSessionClosedTransition,
-    isBackToWaitingTransition,
     hasShownGameStartTransition,
     hasShownSessionClosedTransition,
-    isAnyTransitionActive,
+    transitions,
   ]);
 
   // Dźwięk startowy przy nowym pytaniu
@@ -400,7 +335,6 @@ export function usePlayerLogic() {
       selectedAnswer,
       correctAnswer,
       selectedNotCorrect: selectedAnswer !== correctAnswer,
-      isAnyTransitionActive,
       showWinScreen,
       showWinTransition,
       winAnimationTriggered: winAnimationTriggered.current,
@@ -411,7 +345,6 @@ export function usePlayerLogic() {
       selectedAnswer &&
       correctAnswer &&
       selectedAnswer !== correctAnswer &&
-      !isAnyTransitionActive &&
       !showWinScreen && // Dodajemy warunek żeby nie triggować ponownie
       !showWinTransition && // Dodajemy warunek żeby nie triggować ponownie
       !winAnimationTriggered.current // Sprawdzamy czy już nie została uruchomiona
@@ -450,7 +383,6 @@ export function usePlayerLogic() {
     isAnswerRevealed,
     selectedAnswer,
     correctAnswer,
-    isAnyTransitionActive,
     showWinScreen,
     showWinTransition,
   ]);
@@ -464,7 +396,6 @@ export function usePlayerLogic() {
       correctAnswer,
       gameStatus,
       selectedEqualsCorrect: selectedAnswer === correctAnswer,
-      isAnyTransitionActive,
       showWinScreen,
       showWinTransition,
       winAnimationTriggered: winAnimationTriggered.current,
@@ -477,7 +408,6 @@ export function usePlayerLogic() {
       correctAnswer &&
       gameStatus === "ended" &&
       selectedAnswer === correctAnswer &&
-      !isAnyTransitionActive &&
       !showWinScreen && // Dodajemy warunek żeby nie triggować ponownie
       !showWinTransition && // Dodajemy warunek żeby nie triggować ponownie
       !winAnimationTriggered.current // Sprawdzamy czy już nie została uruchomiona
@@ -508,7 +438,6 @@ export function usePlayerLogic() {
     selectedAnswer,
     correctAnswer,
     gameStatus,
-    isAnyTransitionActive,
     showWinScreen,
     showWinTransition,
   ]);
@@ -523,28 +452,15 @@ export function usePlayerLogic() {
     }
 
     if (gameStatus === "waiting" && !hasShownGameStartTransition && session) {
-      setIsGameStartTransition(false);
       setHasShownGameStartTransition(false);
       setHasShownSessionClosedTransition(false);
       setShowGameContent(true);
       setShowWinScreen(false);
       setShowWinTransition(false);
       setIsTransitioning(false);
-      setIsBackToWaitingTransition(false);
-      setIsSessionClosedTransition(false);
       winAnimationTriggered.current = false; // Reset flagi animacji
     }
-
-    if (gameStatus === "ended") {
-      setIsBackToWaitingTransition(false);
-    }
-  }, [
-    questionIndex,
-    gameStatus,
-    isGameStartTransition,
-    hasShownGameStartTransition,
-    session,
-  ]);
+  }, [questionIndex, gameStatus, hasShownGameStartTransition, session]);
 
   // Ukrywanie zawartości gry na początku (zapobieganie flashowi)
   React.useEffect(() => {
@@ -552,37 +468,25 @@ export function usePlayerLogic() {
       gameStatus === "active" &&
       currentQuestion &&
       questionIndex === 0 &&
-      !hasShownGameStartTransition &&
-      !isAnyTransitionActive
+      !hasShownGameStartTransition
     ) {
       console.log(
         "Player: Ukrywanie zawartości przed przejściem (zapobieganie flashowi)"
       );
       setShowGameContent(false);
     }
-  }, [
-    gameStatus,
-    currentQuestion,
-    questionIndex,
-    hasShownGameStartTransition,
-    isAnyTransitionActive,
-  ]);
+  }, [gameStatus, currentQuestion, questionIndex, hasShownGameStartTransition]);
 
   // Pokazywanie zawartości dla pytań innych niż pierwsze
   React.useEffect(() => {
-    if (
-      gameStatus === "active" &&
-      currentQuestion &&
-      questionIndex > 0 &&
-      !isAnyTransitionActive
-    ) {
+    if (gameStatus === "active" && currentQuestion && questionIndex > 0) {
       console.log(
         "Player: Pokazywanie zawartości dla pytania",
         questionIndex + 1
       );
       setShowGameContent(true);
     }
-  }, [gameStatus, currentQuestion, questionIndex, isAnyTransitionActive]);
+  }, [gameStatus, currentQuestion, questionIndex]);
 
   return {
     // Stan z usePlayerState
@@ -595,9 +499,6 @@ export function usePlayerLogic() {
     showWinScreen,
     showWinTransition,
     isTransitioning,
-    isGameStartTransition,
-    isBackToWaitingTransition,
-    isSessionClosedTransition,
     showGameContent,
     displayQuestionText,
 

@@ -13,8 +13,6 @@ export interface LifelinesDisplayProps {
   showGameContent: boolean;
   showWinScreen: boolean;
   isTransitioning: boolean;
-  isGameStartTransition: boolean;
-  isSessionClosedTransition: boolean;
 }
 
 export function LifelinesDisplay({
@@ -22,17 +20,11 @@ export function LifelinesDisplay({
   showGameContent,
   showWinScreen,
   isTransitioning,
-  isGameStartTransition,
-  isSessionClosedTransition,
 }: LifelinesDisplayProps) {
   return (
     <div
       className={`flex justify-center gap-4 transition-all duration-500 ${
-        !showGameContent ||
-        showWinScreen ||
-        isTransitioning ||
-        isGameStartTransition ||
-        isSessionClosedTransition
+        !showGameContent || showWinScreen || isTransitioning
           ? "opacity-0 pointer-events-none"
           : "opacity-100"
       }`}
