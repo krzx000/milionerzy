@@ -337,39 +337,33 @@ export function usePlayerState() {
             questionContent: currentQuestion?.content?.substring(0, 50) + "...",
           });
 
-          // Pokaż ekran przejściowy przed rozpoczęciem gry
-          transitions.showGameStartTransition();
+          // Ustaw stan gry bezpośrednio - transition będzie obsługiwany w use-player-logic
+          setState((prev) => ({
+            ...prev,
+            session,
+            currentQuestion,
+            questionIndex: questionIndex || session?.currentQuestionIndex || 0,
+            totalQuestions: totalQuestions || 0,
+            currentPrize: getCurrentPrize(
+              questionIndex || session?.currentQuestionIndex || 0
+            ),
+            gameStatus: "active",
+            selectedAnswer: null,
+            correctAnswer: null,
+            isAnswerRevealed: false,
+            finalResult: null,
+            lifelinesUsed: {
+              fiftyFifty: session?.usedLifelines?.fiftyFifty || false,
+              phoneAFriend: session?.usedLifelines?.phoneAFriend || false,
+              askAudience: session?.usedLifelines?.askAudience || false,
+            },
+            hiddenAnswers,
+            answerLocked: false,
+            showFinalAnswer: false,
+          }));
 
-          // Po 3.2 sekundach ukryj ekran przejściowy i pokaż grę
-          setTimeout(() => {
-            setState((prev) => ({
-              ...prev,
-              session,
-              currentQuestion,
-              questionIndex:
-                questionIndex || session?.currentQuestionIndex || 0,
-              totalQuestions: totalQuestions || 0,
-              currentPrize: getCurrentPrize(
-                questionIndex || session?.currentQuestionIndex || 0
-              ),
-              gameStatus: "active",
-              selectedAnswer: null,
-              correctAnswer: null,
-              isAnswerRevealed: false,
-              finalResult: null,
-              lifelinesUsed: {
-                fiftyFifty: session?.usedLifelines?.fiftyFifty || false,
-                phoneAFriend: session?.usedLifelines?.phoneAFriend || false,
-                askAudience: session?.usedLifelines?.askAudience || false,
-              },
-              hiddenAnswers,
-              answerLocked: false,
-              showFinalAnswer: false,
-            }));
-
-            triggerAnimation("showQuestionAnimation");
-            startTimer(30); // 30 sekund na pytanie
-          }, 3200);
+          triggerAnimation("showQuestionAnimation");
+          startTimer(30); // 30 sekund na pytanie
           break;
 
         case "question-changed":
@@ -598,16 +592,14 @@ export function usePlayerState() {
 
           if (reason === "manual") {
             // Administrator zamknął sesję po zakończeniu gry – wracamy do ekranu oczekiwania
-            // Pokaż ekran przejściowy przed zamknięciem sesji
-            transitions.showTransitionWithCallback(() => {
-              setState((prev) => ({
-                ...initialState,
-                // Zachowaj ewentualne history i wygrane aby można było jeszcze obejrzeć na ekranie admina
-                answerHistory: prev.answerHistory,
-                winnings: prev.winnings,
-              }));
-              stopTimer();
-            }, "Sesja została zamknięta");
+            // Ustawiamy stan bezpośrednio - transition będzie obsługiwany automatycznie przez player/page.tsx
+            setState((prev) => ({
+              ...initialState,
+              // Zachowaj ewentualne history i wygrane aby można było jeszcze obejrzeć na ekranie admina
+              answerHistory: prev.answerHistory,
+              winnings: prev.winnings,
+            }));
+            stopTimer();
             break;
           }
 

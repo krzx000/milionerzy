@@ -80,10 +80,14 @@ function PlayerView() {
     const newView = determineCurrentView();
 
     if (newView !== currentView) {
-      // Pokaż transition przed zmianą widoku
-      transitions.showTransitionWithCallback(() => {
-        setCurrentView(newView);
-      });
+      // Pokaż transition przed zmianą widoku - używamy dłuższego czasu dla płynniejszego przejścia
+      transitions.showTransitionWithCallback(
+        () => {
+          setCurrentView(newView);
+        },
+        undefined, // brak custom tekstu
+        2400 // 2400ms total transition, callback po 1200ms
+      );
     }
   }, [
     connectionStatus,

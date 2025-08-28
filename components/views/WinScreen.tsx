@@ -27,21 +27,21 @@ export function WinScreen({ isConnected, winnings }: WinScreenProps) {
         <ConnectionBadge isConnected={isConnected} />
       </div>
 
-      <div className="flex flex-col items-center justify-center space-y-8 text-center transition-opacity duration-500 opacity-100">
+      <div className="flex flex-col items-center justify-center space-y-8 text-center transition-all duration-700 ease-in-out opacity-100">
         {/* Logo */}
-        <div className="mb-8">
+        <div className="mb-8 transition-all duration-700 ease-in-out">
           <Image
             src={IMAGES.LOGO}
             alt="Milionerzy Logo"
             width={400}
             height={200}
-            className="drop-shadow-2xl"
+            className="drop-shadow-2xl transition-all duration-700 ease-in-out"
             priority
           />
         </div>
 
         {/* Win Message */}
-        <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-8 border border-gold/20">
+        <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-8 border border-gold/20 transition-all duration-700 ease-in-out delay-200">
           <h1
             className={`${INTER.className} text-4xl md:text-6xl font-bold text-gold mb-4 drop-shadow-lg`}
           >

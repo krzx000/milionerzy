@@ -30,7 +30,6 @@ export function usePlayerLogic() {
     // Timer
     // Wyniki
     winnings,
-    finalResult,
     // Koła ratunkowe
     lifelinesUsed,
     hiddenAnswers,
@@ -141,10 +140,18 @@ export function usePlayerLogic() {
       setHasShownGameStartTransition(true);
       setShowGameContent(false);
 
-      // Show game start transition with new API
-      transitions.showTransitionWithCallback(() => {
-        setShowGameContent(true);
-      }, "Gra się rozpoczyna!");
+      // Rozpocznij transition z czasem 3200ms
+      // Callback wykona się po 1600ms (w połowie), transition kończy się po 3200ms
+      transitions.showTransitionWithCallback(
+        () => {
+          console.log(
+            "Player: Callback w połowie transition - pokazywanie pytania"
+          );
+          setShowGameContent(true);
+        },
+        "Gra się rozpoczyna!",
+        3200
+      );
     }
   }, [
     gameStatus,
@@ -153,26 +160,6 @@ export function usePlayerLogic() {
     hasShownGameStartTransition,
     transitions,
   ]);
-
-  // Automatyczne przejście z ekranu wygranej do oczekiwania po 5 sekundach
-  React.useEffect(() => {
-    if (gameStatus === "ended" && finalResult === "win" && showWinScreen) {
-      console.log(
-        "🔄 Player: Ustawianie timera przejścia z wygranej do oczekiwania"
-      );
-      const timer = setTimeout(() => {
-        console.log(
-          "🔄 Player: Rozpoczynanie przejścia z wygranej do oczekiwania"
-        );
-        transitions.showBackToWaitingTransition();
-      }, 5000);
-
-      return () => {
-        console.log("🔄 Player: Anulowanie timera przejścia");
-        clearTimeout(timer);
-      };
-    }
-  }, [gameStatus, finalResult, showWinScreen, transitions]);
 
   // Przejście po zamknięciu sesji przez admina
   React.useEffect(() => {
@@ -409,21 +396,6 @@ export function usePlayerLogic() {
       winAnimationTriggered.current = false; // Reset flagi animacji
     }
   }, [questionIndex, gameStatus, hasShownGameStartTransition, session]);
-
-  // Ukrywanie zawartości gry na początku (zapobieganie flashowi)
-  React.useEffect(() => {
-    if (
-      gameStatus === "active" &&
-      currentQuestion &&
-      questionIndex === 0 &&
-      !hasShownGameStartTransition
-    ) {
-      console.log(
-        "Player: Ukrywanie zawartości przed przejściem (zapobieganie flashowi)"
-      );
-      setShowGameContent(false);
-    }
-  }, [gameStatus, currentQuestion, questionIndex, hasShownGameStartTransition]);
 
   // Pokazywanie zawartości dla pytań innych niż pierwsze
   React.useEffect(() => {

@@ -87,8 +87,13 @@ class TransitionAPI {
   ): void {
     this.show(data);
 
+    // Callback wykonuje się w połowie trwania transition
     setTimeout(async () => {
       await callback();
+    }, showDuration / 2);
+
+    // Transition kończy się po pełnym czasie showDuration
+    setTimeout(() => {
       this.hide(data);
     }, showDuration);
   }

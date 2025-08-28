@@ -26,24 +26,24 @@ export function WaitingScreen({ isConnected }: WaitingScreenProps) {
         <ConnectionBadge isConnected={isConnected} />
       </div>
 
-      <div className="flex flex-col items-center justify-center space-y-8 text-center transition-opacity duration-500 opacity-100">
+      <div className="flex flex-col items-center justify-center space-y-8 text-center transition-all duration-700 ease-in-out opacity-100">
         {/* Logo */}
-        <div className="mb-8">
+        <div className="mb-8 transition-all duration-700 ease-in-out">
           <Image
             src={IMAGES.LOGO}
             alt="Milionerzy Logo"
             width={400}
             height={200}
-            className="drop-shadow-2xl transition-opacity duration-500 opacity-100"
+            className="drop-shadow-2xl transition-all duration-700 ease-in-out opacity-100"
             priority
           />
         </div>
 
         {/* Tytuł i status */}
-        <div className="space-y-1">
+        <div className="space-y-1 transition-all duration-700 ease-in-out delay-200">
           <div>
             <p
-              className="text-2xl text-white font-semibold mb-2"
+              className="text-2xl text-white font-semibold mb-2 transition-all duration-700 ease-in-out delay-300"
               style={INTER.style}
             >
               Oczekiwanie na rozpoczęcie kolejnej gry
@@ -52,7 +52,7 @@ export function WaitingScreen({ isConnected }: WaitingScreenProps) {
         </div>
 
         {/* Animacja ładowania */}
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 transition-all duration-700 ease-in-out delay-400">
           <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
           <div
             className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"
