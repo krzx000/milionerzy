@@ -156,12 +156,6 @@ export function usePlayerLogic() {
 
   // Automatyczne przejście z ekranu wygranej do oczekiwania po 5 sekundach
   React.useEffect(() => {
-    console.log("🔄 AUTO TRANSITION EFFECT:", {
-      gameStatus,
-      finalResult,
-      showWinScreen,
-    });
-
     if (gameStatus === "ended" && finalResult === "win" && showWinScreen) {
       console.log(
         "🔄 Player: Ustawianie timera przejścia z wygranej do oczekiwania"
@@ -329,15 +323,6 @@ export function usePlayerLogic() {
 
   // Automatyczne przejście do ekranu wygranej po pokazaniu poprawnej odpowiedzi (dla błędnych odpowiedzi)
   React.useEffect(() => {
-    console.log("💥 WRONG ANSWER TRANSITION EFFECT:", {
-      isAnswerRevealed,
-      selectedAnswer,
-      correctAnswer,
-      selectedNotCorrect: selectedAnswer !== correctAnswer,
-      showWinScreen,
-      winAnimationTriggered: winAnimationTriggered.current,
-    });
-
     if (
       isAnswerRevealed &&
       selectedAnswer &&
@@ -376,17 +361,6 @@ export function usePlayerLogic() {
 
   // Przejście do ekranu wygranej po wygranej grze
   React.useEffect(() => {
-    console.log("🏆 WIN TRANSITION EFFECT:", {
-      isAnswerRevealed,
-      showFinalAnswer,
-      selectedAnswer,
-      correctAnswer,
-      gameStatus,
-      selectedEqualsCorrect: selectedAnswer === correctAnswer,
-      showWinScreen,
-      winAnimationTriggered: winAnimationTriggered.current,
-    });
-
     if (
       isAnswerRevealed &&
       showFinalAnswer &&

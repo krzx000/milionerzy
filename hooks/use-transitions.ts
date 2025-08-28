@@ -235,21 +235,40 @@ export function useTransitions() {
     });
   }, []);
 
-  return {
-    showQuestionTransition,
-    showGameStartTransition,
-    showGameEndTransition,
-    showBackToWaitingTransition,
-    showSessionClosedTransition,
-    showPauseTransition,
-    showResumeTransition,
-    showGamePausedTransition,
-    showGameResumedTransition,
-    showVotingResultsTransition,
-    showGameResetTransition,
-    showCustomTransition,
-    showTransitionWithCallback,
-    showTransition,
-    hideTransition,
-  };
+  return React.useMemo(
+    () => ({
+      showQuestionTransition,
+      showGameStartTransition,
+      showGameEndTransition,
+      showBackToWaitingTransition,
+      showSessionClosedTransition,
+      showPauseTransition,
+      showResumeTransition,
+      showGamePausedTransition,
+      showGameResumedTransition,
+      showVotingResultsTransition,
+      showGameResetTransition,
+      showCustomTransition,
+      showTransitionWithCallback,
+      showTransition,
+      hideTransition,
+    }),
+    [
+      showQuestionTransition,
+      showGameStartTransition,
+      showGameEndTransition,
+      showBackToWaitingTransition,
+      showSessionClosedTransition,
+      showPauseTransition,
+      showResumeTransition,
+      showGamePausedTransition,
+      showGameResumedTransition,
+      showVotingResultsTransition,
+      showGameResetTransition,
+      showCustomTransition,
+      showTransitionWithCallback,
+      showTransition,
+      hideTransition,
+    ]
+  );
 }
