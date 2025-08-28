@@ -187,15 +187,28 @@ function AdminPanel() {
           loadGameSession();
           break;
         case "game-ended":
-          // Gra się skończyła
+          // Gra się skończyła - wyczyść stan bez ładowania sesji
           setIsVotingActive(false);
           setVoteResults(null);
           setShowVoteResults(false);
-          loadGameSession();
+          setGameSession(null);
+          setSelectedAnswer(null);
+          setIsAnswerRevealed(false);
+          setLastAnswerResult(null);
+          setGameEndReason(null);
+          showGameStatusMessage("🛑 Sesja gry została zamknięta!");
           break;
       }
     },
-    [showGameStatusMessage, loadGameSession]
+    [
+      showGameStatusMessage,
+      loadGameSession,
+      setGameSession,
+      setSelectedAnswer,
+      setIsAnswerRevealed,
+      setLastAnswerResult,
+      setGameEndReason,
+    ]
   );
 
   // Konfiguracja SSE

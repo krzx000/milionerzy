@@ -69,7 +69,6 @@ export function usePlayerLogic() {
 
   // Stan dla automatycznego przejścia do ekranu wygranej po błędnej odpowiedzi
   const [showWinScreen, setShowWinScreen] = React.useState(false);
-  const [showWinTransition, setShowWinTransition] = React.useState(false);
   const [isTransitioning, setIsTransitioning] = React.useState(false);
 
   // Ref do śledzenia czy animacja wygranej już została uruchomiona
@@ -336,7 +335,6 @@ export function usePlayerLogic() {
       correctAnswer,
       selectedNotCorrect: selectedAnswer !== correctAnswer,
       showWinScreen,
-      showWinTransition,
       winAnimationTriggered: winAnimationTriggered.current,
     });
 
@@ -346,7 +344,6 @@ export function usePlayerLogic() {
       correctAnswer &&
       selectedAnswer !== correctAnswer &&
       !showWinScreen && // Dodajemy warunek żeby nie triggować ponownie
-      !showWinTransition && // Dodajemy warunek żeby nie triggować ponownie
       !winAnimationTriggered.current // Sprawdzamy czy już nie została uruchomiona
     ) {
       console.log(
@@ -356,20 +353,10 @@ export function usePlayerLogic() {
       winAnimationTriggered.current = true; // Oznacz że animacja została uruchomiona
 
       const timer = setTimeout(() => {
-        setIsTransitioning(true);
-
-        setTimeout(() => {
-          setShowWinTransition(true);
-        }, 300);
-
-        setTimeout(() => {
+        // Użyj nowego transition API
+        transitions.showTransitionWithCallback(() => {
           setShowWinScreen(true);
-        }, 500);
-
-        setTimeout(() => {
-          setShowWinTransition(false);
-          setIsTransitioning(false);
-        }, 3200);
+        });
       }, 3000);
 
       return () => {
@@ -384,7 +371,7 @@ export function usePlayerLogic() {
     selectedAnswer,
     correctAnswer,
     showWinScreen,
-    showWinTransition,
+    transitions,
   ]);
 
   // Przejście do ekranu wygranej po wygranej grze
@@ -397,7 +384,6 @@ export function usePlayerLogic() {
       gameStatus,
       selectedEqualsCorrect: selectedAnswer === correctAnswer,
       showWinScreen,
-      showWinTransition,
       winAnimationTriggered: winAnimationTriggered.current,
     });
 
@@ -409,7 +395,6 @@ export function usePlayerLogic() {
       gameStatus === "ended" &&
       selectedAnswer === correctAnswer &&
       !showWinScreen && // Dodajemy warunek żeby nie triggować ponownie
-      !showWinTransition && // Dodajemy warunek żeby nie triggować ponownie
       !winAnimationTriggered.current // Sprawdzamy czy już nie została uruchomiona
     ) {
       console.log(
@@ -417,20 +402,11 @@ export function usePlayerLogic() {
       );
 
       winAnimationTriggered.current = true; // Oznacz że animacja została uruchomiona
-      setIsTransitioning(true);
 
-      setTimeout(() => {
-        setShowWinTransition(true);
-      }, 300);
-
-      setTimeout(() => {
+      // Użyj nowego transition API
+      transitions.showTransitionWithCallback(() => {
         setShowWinScreen(true);
-      }, 500);
-
-      setTimeout(() => {
-        setShowWinTransition(false);
-        setIsTransitioning(false);
-      }, 3200);
+      });
     }
   }, [
     isAnswerRevealed,
@@ -439,14 +415,13 @@ export function usePlayerLogic() {
     correctAnswer,
     gameStatus,
     showWinScreen,
-    showWinTransition,
+    transitions,
   ]);
 
   // Reset stanów przy nowym pytaniu
   React.useEffect(() => {
     if (gameStatus === "active") {
       setShowWinScreen(false);
-      setShowWinTransition(false);
       setIsTransitioning(false);
       winAnimationTriggered.current = false; // Reset flagi animacji
     }
@@ -456,7 +431,6 @@ export function usePlayerLogic() {
       setHasShownSessionClosedTransition(false);
       setShowGameContent(true);
       setShowWinScreen(false);
-      setShowWinTransition(false);
       setIsTransitioning(false);
       winAnimationTriggered.current = false; // Reset flagi animacji
     }
@@ -497,7 +471,6 @@ export function usePlayerLogic() {
     connectionStatus,
     lifelineResult,
     showWinScreen,
-    showWinTransition,
     isTransitioning,
     showGameContent,
     displayQuestionText,
