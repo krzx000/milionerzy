@@ -43,10 +43,10 @@ export function usePlayerLogic() {
   // Hook do dźwięków
   const soundControls = useSound();
   const {
-    playAnswerSound,
-    playWinSound,
-    playLoseSound,
-    playStartSound,
+    playAnswerSoundWithFade,
+    playWinSoundWithFade,
+    playLoseSoundWithFade,
+    playStartSoundWithFade,
     playLightsDown,
     stopAll,
   } = soundControls;
@@ -186,18 +186,23 @@ export function usePlayerLogic() {
   // Dźwięk startowy przy nowym pytaniu
   React.useEffect(() => {
     if (currentQuestion && showQuestionAnimation && questionIndex >= 0) {
-      console.log("Nowe pytanie - odtwarzanie dźwięku startowego");
-      playStartSound(questionIndex + 1);
+      console.log("Nowe pytanie - odtwarzanie dźwięku startowego z fade");
+      playStartSoundWithFade(questionIndex + 1);
     }
-  }, [currentQuestion, showQuestionAnimation, questionIndex, playStartSound]);
+  }, [
+    currentQuestion,
+    showQuestionAnimation,
+    questionIndex,
+    playStartSoundWithFade,
+  ]);
 
   // Dźwięk wyboru odpowiedzi
   React.useEffect(() => {
     if (selectedAnswer && !isAnswerRevealed) {
-      console.log("Wybrano odpowiedź - odtwarzanie dźwięku");
-      playAnswerSound();
+      console.log("Wybrano odpowiedź - odtwarzanie dźwięku z fade");
+      playAnswerSoundWithFade();
     }
-  }, [selectedAnswer, isAnswerRevealed, playAnswerSound]);
+  }, [selectedAnswer, isAnswerRevealed, playAnswerSoundWithFade]);
 
   // Dźwięki wyników
   React.useEffect(() => {
@@ -209,11 +214,11 @@ export function usePlayerLogic() {
 
       setTimeout(() => {
         if (isCorrect) {
-          console.log("Poprawna odpowiedź - dźwięk wygranej");
-          playWinSound();
+          console.log("Poprawna odpowiedź - dźwięk wygranej z fade");
+          playWinSoundWithFade(questionIndex + 1);
         } else {
-          console.log("Niepoprawna odpowiedź - dźwięk przegranej");
-          playLoseSound();
+          console.log("Niepoprawna odpowiedź - dźwięk przegranej z fade");
+          playLoseSoundWithFade(questionIndex + 1);
         }
       }, 1000);
     }
@@ -221,8 +226,9 @@ export function usePlayerLogic() {
     isAnswerRevealed,
     selectedAnswer,
     correctAnswer,
-    playWinSound,
-    playLoseSound,
+    questionIndex,
+    playWinSoundWithFade,
+    playLoseSoundWithFade,
     playLightsDown,
   ]);
 

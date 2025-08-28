@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { AudioProvider } from "@/components/providers/audio-provider";
 
 const interSans = Inter({
   subsets: ["latin"],
@@ -46,8 +47,10 @@ export default function RootLayout({
   return (
     <html lang="pl">
       <body className={`${interSans.variable} antialiased`}>
-        {children}
-        <Toaster />
+        <AudioProvider>
+          {children}
+          <Toaster />
+        </AudioProvider>
       </body>
     </html>
   );
