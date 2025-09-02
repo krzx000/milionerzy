@@ -37,7 +37,6 @@ const lose11 = "/assets/sounds/lose/11 lose.mp3";
 const lose12 = "/assets/sounds/lose/12 lose.mp3";
 
 const answer = "/assets/sounds/answer/answer.wav";
-const lightsDown = "/assets/sounds/lightsdown/start lights down.wav";
 
 // Stałe czasu trwania dźwięków (w sekundach)
 export const DURATION = {
@@ -45,12 +44,10 @@ export const DURATION = {
   start: [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8],
   lose: [5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6],
   answer: 5, // czas trwania dźwięku odpowiedzi
-  lightsDown: 3, // czas trwania dźwięku wygaszania świateł
 };
 
 // Tablice dźwięków
 export const SOUND = {
-  lightsDown,
   answer,
   win: [
     n1to3win,
@@ -96,16 +93,21 @@ export const SOUND = {
   ],
 };
 
+export type SoundType = "start" | "answer" | "win" | "lose";
+
 export interface SoundManager {
   // Podstawowe funkcje odtwarzania
   playAnswerSound: () => void;
   playWinSound: (questionLevel: number) => void;
   playLoseSound: (questionLevel: number) => void;
   playStartSound: (questionLevel: number) => void;
-  playLightsDown: () => void;
 
   // Funkcje z fade
-  playWithFade: (soundPath: string, fadeDuration?: number) => void;
+  playWithFade: (
+    soundPath: string,
+    type: SoundType,
+    fadeDuration?: number
+  ) => void;
   playWinSoundWithFade: (questionLevel: number) => void;
   playLoseSoundWithFade: (questionLevel: number) => void;
   playStartSoundWithFade: (questionLevel: number) => void;
@@ -116,40 +118,90 @@ export interface SoundManager {
   stopCurrentAudio: () => void;
   fadeOut: (duration?: number) => void;
   isPlaying: () => boolean;
-  forcePlay: (soundPath: string, fadeDuration?: number) => void;
+  forcePlay: (
+    soundPath: string,
+    type: SoundType,
+    fadeDuration?: number
+  ) => void;
 }
 export function useSound(): SoundManager {
   const { load, stop } = useAudioPlayer();
-  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
-  const fadeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const fadeIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Oddzielne referencje dla różnych typów dźwięków
+  const audioRefs = useRef<{
+    start: HTMLAudioElement | null;
+    answer: HTMLAudioElement | null;
+    win: HTMLAudioElement | null;
+    lose: HTMLAudioElement | null;
+  }>({
+    start: null,
+    answer: null,
+    win: null,
+    lose: null,
+  });
+
+  // Oddzielne timeouty/intervaly dla każdego typu dźwięku
+  const fadeTimeouts = useRef<{
+    start: NodeJS.Timeout | null;
+    answer: NodeJS.Timeout | null;
+    win: NodeJS.Timeout | null;
+    lose: NodeJS.Timeout | null;
+  }>({
+    start: null,
+    answer: null,
+    win: null,
+    lose: null,
+  });
+
+  const fadeIntervals = useRef<{
+    start: NodeJS.Timeout | null;
+    answer: NodeJS.Timeout | null;
+    win: NodeJS.Timeout | null;
+    lose: NodeJS.Timeout | null;
+  }>({
+    start: null,
+    answer: null,
+    win: null,
+    lose: null,
+  });
+
   const isPlayingRef = useRef<boolean>(false);
+
+  // Funkcja do zatrzymania konkretnego typu dźwięku
+  const stopSpecificAudio = useCallback(
+    (type: keyof typeof audioRefs.current) => {
+      if (audioRefs.current[type]) {
+        audioRefs.current[type]!.pause();
+        audioRefs.current[type]!.currentTime = 0;
+        audioRefs.current[type] = null;
+      }
+
+      // Wyczyść timeouty dla tego typu
+      if (fadeTimeouts.current[type]) {
+        clearTimeout(fadeTimeouts.current[type]!);
+        fadeTimeouts.current[type] = null;
+      }
+
+      if (fadeIntervals.current[type]) {
+        clearInterval(fadeIntervals.current[type]!);
+        fadeIntervals.current[type] = null;
+      }
+    },
+    []
+  );
 
   // Funkcja do zatrzymania wszystkich aktualnie odtwarzanych dźwięków
   const stopCurrentAudio = useCallback(() => {
     // Zatrzymaj react-use-audio-player
     stop();
 
-    // Zatrzymaj custom audio
-    if (currentAudioRef.current) {
-      currentAudioRef.current.pause();
-      currentAudioRef.current.currentTime = 0;
-      currentAudioRef.current = null;
-    }
-
-    // Wyczyść timeouty i intervale
-    if (fadeTimeoutRef.current) {
-      clearTimeout(fadeTimeoutRef.current);
-      fadeTimeoutRef.current = null;
-    }
-
-    if (fadeIntervalRef.current) {
-      clearInterval(fadeIntervalRef.current);
-      fadeIntervalRef.current = null;
-    }
+    // Zatrzymaj wszystkie custom audio
+    Object.keys(audioRefs.current).forEach((type) => {
+      stopSpecificAudio(type as keyof typeof audioRefs.current);
+    });
 
     isPlayingRef.current = false;
-  }, [stop]);
+  }, [stop, stopSpecificAudio]);
 
   const playSound = useCallback(
     (src: string) => {
@@ -166,9 +218,14 @@ export function useSound(): SoundManager {
   );
 
   const createAudioWithFade = useCallback(
-    (src: string, fadeDuration: number) => {
+    (
+      src: string,
+      fadeDuration: number,
+      type: keyof typeof audioRefs.current
+    ) => {
       return new Promise<void>((resolve) => {
-        stopCurrentAudio(); // Zatrzymaj poprzednie dźwięki
+        // Zatrzymaj tylko ten sam typ dźwięku
+        stopSpecificAudio(type);
 
         const audio = new Audio(src);
         audio.volume = 1;
@@ -178,25 +235,25 @@ export function useSound(): SoundManager {
           audio
             .play()
             .then(() => {
-              currentAudioRef.current = audio;
+              audioRefs.current[type] = audio;
 
               // Scheduj fade out na 95% czasu trwania
               const fadeStartTime = fadeDuration * 0.05;
               const fadeDuration95 = fadeDuration * 0.9; // 90% total duration for fade
 
-              fadeTimeoutRef.current = setTimeout(() => {
+              fadeTimeouts.current[type] = setTimeout(() => {
                 const fadeSteps = 50;
                 const fadeInterval = fadeDuration95 / fadeSteps;
                 const volumeStep = audio.volume / fadeSteps;
 
-                fadeIntervalRef.current = setInterval(() => {
+                fadeIntervals.current[type] = setInterval(() => {
                   if (audio.volume > volumeStep) {
                     audio.volume -= volumeStep;
                   } else {
                     audio.volume = 0;
-                    clearInterval(fadeIntervalRef.current!);
-                    fadeIntervalRef.current = null;
-                    isPlayingRef.current = false;
+                    clearInterval(fadeIntervals.current[type]!);
+                    fadeIntervals.current[type] = null;
+                    audioRefs.current[type] = null;
                     resolve();
                   }
                 }, fadeInterval);
@@ -216,22 +273,21 @@ export function useSound(): SoundManager {
         });
       });
     },
-    [stopCurrentAudio]
+    [stopSpecificAudio]
   );
 
   const playWithFade = useCallback(
-    (soundPath: string, fadeDuration: number = 1000) => {
-      // Sprawdź czy już gra jakiś dźwięk
-      if (isPlayingRef.current) {
+    (soundPath: string, type: SoundType, fadeDuration: number = 1000) => {
+      // Sprawdź czy już gra jakiś dźwięk tego samego typu
+      if (audioRefs.current[type]) {
         console.log(
-          "Dźwięk już jest odtwarzany, pomijam nowy dźwięk:",
+          `Dźwięk typu ${type} już jest odtwarzany, zatrzymuję go i odtwarzam nowy:`,
           soundPath
         );
-        return;
       }
 
       try {
-        createAudioWithFade(soundPath, fadeDuration);
+        createAudioWithFade(soundPath, fadeDuration, type);
       } catch (error) {
         console.error("Błąd odtwarzania dźwięku z fade:", error);
         isPlayingRef.current = false;
@@ -277,13 +333,9 @@ export function useSound(): SoundManager {
     [playSound]
   );
 
-  const playLightsDown = useCallback(() => {
-    playSound(SOUND.lightsDown);
-  }, [playSound]);
-
   // Funkcje z automatycznym fade out
   const playAnswerSoundWithFade = useCallback(() => {
-    playWithFade(SOUND.answer, DURATION.answer * 1000);
+    playWithFade(SOUND.answer, "answer", DURATION.answer * 1000);
   }, [playWithFade]);
 
   const playWinSoundWithFade = useCallback(
@@ -293,7 +345,7 @@ export function useSound(): SoundManager {
         Math.min(questionLevel - 1, SOUND.win.length - 1)
       );
       const duration = DURATION.win[soundIndex];
-      playWithFade(SOUND.win[soundIndex], duration * 1000);
+      playWithFade(SOUND.win[soundIndex], "win", duration * 1000);
     },
     [playWithFade]
   );
@@ -305,7 +357,7 @@ export function useSound(): SoundManager {
         Math.min(questionLevel - 1, SOUND.lose.length - 1)
       );
       const duration = DURATION.lose[soundIndex];
-      playWithFade(SOUND.lose[soundIndex], duration * 1000);
+      playWithFade(SOUND.lose[soundIndex], "lose", duration * 1000);
     },
     [playWithFade]
   );
@@ -317,34 +369,32 @@ export function useSound(): SoundManager {
         Math.min(questionLevel - 1, SOUND.start.length - 1)
       );
       const duration = DURATION.start[soundIndex];
-      playWithFade(SOUND.start[soundIndex], duration * 1000);
+      playWithFade(SOUND.start[soundIndex], "start", duration * 1000);
     },
     [playWithFade]
   );
 
   const fadeOut = useCallback((duration: number = 1000) => {
-    if (currentAudioRef.current) {
-      const audio = currentAudioRef.current;
-      const fadeSteps = 50;
-      const fadeInterval = duration / fadeSteps;
-      const volumeStep = audio.volume / fadeSteps;
+    // Fade out wszystkich aktywnych dźwięków
+    Object.entries(audioRefs.current).forEach(([type, audio]) => {
+      if (audio) {
+        const fadeSteps = 50;
+        const fadeInterval = duration / fadeSteps;
+        const volumeStep = audio.volume / fadeSteps;
 
-      if (fadeIntervalRef.current) {
-        clearInterval(fadeIntervalRef.current);
+        const fadeIntervalId = setInterval(() => {
+          if (audio.volume > volumeStep) {
+            audio.volume -= volumeStep;
+          } else {
+            audio.volume = 0;
+            audio.pause();
+            clearInterval(fadeIntervalId);
+            audioRefs.current[type as keyof typeof audioRefs.current] = null;
+            isPlayingRef.current = false;
+          }
+        }, fadeInterval);
       }
-
-      fadeIntervalRef.current = setInterval(() => {
-        if (audio.volume > volumeStep) {
-          audio.volume -= volumeStep;
-        } else {
-          audio.volume = 0;
-          audio.pause();
-          clearInterval(fadeIntervalRef.current!);
-          fadeIntervalRef.current = null;
-          isPlayingRef.current = false;
-        }
-      }, fadeInterval);
-    }
+    });
   }, []);
 
   const stopAll = useCallback(() => {
@@ -358,10 +408,10 @@ export function useSound(): SoundManager {
 
   // Funkcja do wymuszenia odtworzenia nowego dźwięku
   const forcePlay = useCallback(
-    (soundPath: string, fadeDuration?: number) => {
+    (soundPath: string, type: SoundType, fadeDuration?: number) => {
       stopCurrentAudio(); // Zawsze zatrzymaj przed nowym
       if (fadeDuration) {
-        createAudioWithFade(soundPath, fadeDuration);
+        createAudioWithFade(soundPath, fadeDuration, type);
       } else {
         playSound(soundPath);
       }
@@ -405,9 +455,7 @@ export function useSound(): SoundManager {
             playAnswerSound();
           }
           break;
-        case "lightsdown":
-          playLightsDown();
-          break;
+
         default:
           console.warn("Unknown sound type:", type);
       }
@@ -437,7 +485,6 @@ export function useSound(): SoundManager {
     playLoseSound,
     playStartSound,
     playAnswerSound,
-    playLightsDown,
     playWinSoundWithFade,
     playLoseSoundWithFade,
     playStartSoundWithFade,
@@ -450,7 +497,6 @@ export function useSound(): SoundManager {
     playWinSound,
     playLoseSound,
     playStartSound,
-    playLightsDown,
     playWithFade,
     playWinSoundWithFade,
     playLoseSoundWithFade,

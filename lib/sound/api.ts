@@ -9,7 +9,7 @@ export type SoundEventType =
   | "sound-ended";
 
 export interface SoundEventData {
-  type?: string; // rodzaj dźwięku (win, lose, start, answer, lightsdown)
+  type?: string; // rodzaj dźwięku (win, lose, start, answer)
   soundPath?: string; // ścieżka do pliku dźwiękowego
   questionLevel?: number; // poziom pytania (1-12)
   fadeDuration?: number; // czas fade (opcjonalne)
@@ -124,15 +124,6 @@ class SoundAPI {
   }
 
   /**
-   * Odtwórz dźwięk ściemniania świateł
-   */
-  static playLightsDown(): void {
-    this.play({
-      type: "lightsdown",
-    });
-  }
-
-  /**
    * Odtwórz sekwencję dźwięków wyników (lights down → win/lose)
    */
   static playResultSequence(
@@ -143,17 +134,12 @@ class SoundAPI {
     // Zatrzymaj wszystkie dźwięki
     this.stopAll();
 
-    // Odtwórz lights down
-    this.playLightsDown();
-
-    // Po 1 sekundzie odtwórz wynik
-    setTimeout(() => {
-      if (isCorrect) {
-        this.playWin(questionLevel, fadeDuration);
-      } else {
-        this.playLose(questionLevel, fadeDuration);
-      }
-    }, 1000);
+    // Natychmiast odtwórz wynik (bez lights down)
+    if (isCorrect) {
+      this.playWin(questionLevel, fadeDuration);
+    } else {
+      this.playLose(questionLevel, fadeDuration);
+    }
   }
 }
 

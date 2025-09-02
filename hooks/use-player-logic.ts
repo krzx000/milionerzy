@@ -19,7 +19,8 @@ export function usePlayerLogic() {
 
   // Hook do dźwięków (event-based)
   const sounds = useSounds();
-  const { playResultSequence, stopAllSounds } = sounds;
+  const { playResultSequence, stopAllSounds, playStartSound, playAnswerSound } =
+    sounds;
 
   // Hook do dźwięków (legacy - nadal potrzebny dla komponentu)
   useSound();
@@ -42,8 +43,6 @@ export function usePlayerLogic() {
     // Koła ratunkowe
     lifelinesUsed,
     hiddenAnswers,
-    // Animacje
-    showQuestionAnimation,
     // Historia
     // Funkcje pomocnicze
     isConnected,
@@ -183,30 +182,19 @@ export function usePlayerLogic() {
 
   // Dźwięk startowy przy nowym pytaniu
   React.useEffect(() => {
-    if (
-      currentQuestion &&
-      showQuestionAnimation &&
-      questionIndex >= 0 &&
-      gameStatus === "active"
-    ) {
+    if (currentQuestion && questionIndex >= 0 && gameStatus === "active") {
       console.log("Nowe pytanie - odtwarzanie dźwięku startowego z fade");
-      sounds.playStartSound(questionIndex + 1);
+      playStartSound(questionIndex + 1);
     }
-  }, [
-    currentQuestion,
-    showQuestionAnimation,
-    questionIndex,
-    gameStatus,
-    sounds,
-  ]);
+  }, [currentQuestion, questionIndex, gameStatus, playStartSound]);
 
   // Dźwięk wyboru odpowiedzi
   React.useEffect(() => {
     if (selectedAnswer && !isAnswerRevealed && gameStatus === "active") {
       console.log("Wybrano odpowiedź - odtwarzanie dźwięku z fade");
-      sounds.playAnswerSound();
+      playAnswerSound();
     }
-  }, [selectedAnswer, isAnswerRevealed, gameStatus, sounds]);
+  }, [selectedAnswer, isAnswerRevealed, gameStatus, playAnswerSound]);
 
   // Dźwięki wyników
   React.useEffect(() => {

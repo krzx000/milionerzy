@@ -1,6 +1,6 @@
 export const GAME_CONSTANTS = {
-  AUTO_PROGRESS_TIME: 3, // sekundy
-  ANSWER_CHECK_DELAY: 4000, // milisekundy
+  AUTO_PROGRESS_TIME: 4, // sekundy
+  ANSWER_CHECK_DELAY: 5000, // milisekundy
   VOTING_TIME_LIMIT: 120, // sekundy na głosowanie
   PRIZE_AMOUNTS: [
     "500 zł",

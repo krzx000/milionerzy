@@ -36,13 +36,6 @@ export function useSounds() {
   }, []);
 
   /**
-   * Odtwórz dźwięk ściemniania świateł
-   */
-  const playLightsDown = React.useCallback(() => {
-    SoundAPI.playLightsDown();
-  }, []);
-
-  /**
    * Odtwórz sekwencję dźwięków wyników
    */
   const playResultSequence = React.useCallback(
@@ -73,6 +66,5 @@ export function useSounds() {
     // Pozostałe funkcje (nieużywane, ale dostępne)
     playWinSound,
     playLoseSound,
-    playLightsDown,
   };
 }
