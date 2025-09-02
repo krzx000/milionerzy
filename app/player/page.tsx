@@ -5,7 +5,6 @@ import { IMAGES } from "@/lib/utils/game-assets";
 import { PLAYER_CONSTANTS } from "@/lib/constants/player";
 import { ConnectionBadge } from "@/components/ui/connection-badge";
 import { WaitingScreen } from "@/components/views/WaitingScreen";
-import { WinScreen } from "@/components/views/WinScreen";
 import { LifelinesDisplay } from "@/components/views/LifelinesDisplay";
 import { AudienceVotingDisplay } from "@/components/views/AudienceVotingDisplay";
 import { GamePausedModal } from "@/components/views/GamePausedModal";
@@ -31,7 +30,6 @@ function PlayerView() {
     correctAnswer,
     isAnswerRevealed,
     // Wyniki
-    winnings,
     finalResult,
     // Koła ratunkowe
     lifelinesUsed,
@@ -66,9 +64,7 @@ function PlayerView() {
         return "error";
       }
 
-      if (finalResult === "win" && gameStatus === "ended") {
-        return "win";
-      }
+      // Usunięto logikę WinScreen - po wygranej pokazuje normalny interfejs gry
 
       if (gameStatus === "active" && session && currentQuestion) {
         return "game";
@@ -121,9 +117,6 @@ function PlayerView() {
             </button>
           </div>
         );
-
-      case "win":
-        return <WinScreen isConnected={isConnected} winnings={winnings} />;
 
       case "waiting":
         return <WaitingScreen isConnected={isConnected} />;

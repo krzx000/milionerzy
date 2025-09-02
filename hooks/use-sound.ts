@@ -40,8 +40,8 @@ const answer = "/assets/sounds/answer/answer.wav";
 
 // Stałe czasu trwania dźwięków (w sekundach)
 export const DURATION = {
-  win: [3, 3, 3, 9, 9, 9, 9, 9, 7, 8, 9, 23],
-  start: [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8],
+  win: [3, 3, 3, 7, 7, 7, 7, 7, 7, 8, 7, 23],
+  start: [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7],
   lose: [5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6],
   answer: 5, // czas trwania dźwięku odpowiedzi
 };
@@ -237,13 +237,13 @@ export function useSound(): SoundManager {
             .then(() => {
               audioRefs.current[type] = audio;
 
-              // Scheduj fade out na 95% czasu trwania
-              const fadeStartTime = fadeDuration * 0.05;
-              const fadeDuration95 = fadeDuration * 0.9; // 90% total duration for fade
+              // Scheduj fade out na końcu czasu trwania
+              const fadeOutDuration = 2000; // 2 sekundy fade-out
+              const playDuration = fadeDuration - fadeOutDuration; // Graj pełny czas minus fade
 
               fadeTimeouts.current[type] = setTimeout(() => {
                 const fadeSteps = 50;
-                const fadeInterval = fadeDuration95 / fadeSteps;
+                const fadeInterval = fadeOutDuration / fadeSteps;
                 const volumeStep = audio.volume / fadeSteps;
 
                 fadeIntervals.current[type] = setInterval(() => {
@@ -257,7 +257,7 @@ export function useSound(): SoundManager {
                     resolve();
                   }
                 }, fadeInterval);
-              }, fadeStartTime);
+              }, Math.max(0, playDuration)); // Zacznij fade po playDuration
             })
             .catch((error) => {
               console.error("Błąd odtwarzania:", error);
