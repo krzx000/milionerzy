@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import { useAudioPlayer } from "react-use-audio-player";
+import { SoundAPI, type SoundEventData } from "@/lib/sound/api";
 
 // Importy plików dźwiękowych
 const n1to3win = "/assets/sounds/win/1_to_3 win.mp3";
@@ -112,30 +113,66 @@ export interface SoundManager {
 
   // Kontrola odtwarzania
   stopAll: () => void;
+  stopCurrentAudio: () => void;
   fadeOut: (duration?: number) => void;
+  isPlaying: () => boolean;
+  forcePlay: (soundPath: string, fadeDuration?: number) => void;
 }
-
 export function useSound(): SoundManager {
   const { load, stop } = useAudioPlayer();
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const fadeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const fadeIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isPlayingRef = useRef<boolean>(false);
+
+  // Funkcja do zatrzymania wszystkich aktualnie odtwarzanych dźwięków
+  const stopCurrentAudio = useCallback(() => {
+    // Zatrzymaj react-use-audio-player
+    stop();
+
+    // Zatrzymaj custom audio
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+      currentAudioRef.current = null;
+    }
+
+    // Wyczyść timeouty i intervale
+    if (fadeTimeoutRef.current) {
+      clearTimeout(fadeTimeoutRef.current);
+      fadeTimeoutRef.current = null;
+    }
+
+    if (fadeIntervalRef.current) {
+      clearInterval(fadeIntervalRef.current);
+      fadeIntervalRef.current = null;
+    }
+
+    isPlayingRef.current = false;
+  }, [stop]);
 
   const playSound = useCallback(
     (src: string) => {
       try {
+        stopCurrentAudio(); // Zatrzymaj poprzednie dźwięki
+        isPlayingRef.current = true;
         load(src, { autoplay: true });
       } catch (error) {
         console.error("Błąd odtwarzania dźwięku:", error);
+        isPlayingRef.current = false;
       }
     },
-    [load]
+    [load, stopCurrentAudio]
   );
 
   const createAudioWithFade = useCallback(
     (src: string, fadeDuration: number) => {
       return new Promise<void>((resolve) => {
+        stopCurrentAudio(); // Zatrzymaj poprzednie dźwięki
+
         const audio = new Audio(src);
         audio.volume = 1;
+        isPlayingRef.current = true;
 
         audio.addEventListener("loadeddata", () => {
           audio
@@ -152,12 +189,14 @@ export function useSound(): SoundManager {
                 const fadeInterval = fadeDuration95 / fadeSteps;
                 const volumeStep = audio.volume / fadeSteps;
 
-                const fadeInterval_id = setInterval(() => {
+                fadeIntervalRef.current = setInterval(() => {
                   if (audio.volume > volumeStep) {
                     audio.volume -= volumeStep;
                   } else {
                     audio.volume = 0;
-                    clearInterval(fadeInterval_id);
+                    clearInterval(fadeIntervalRef.current!);
+                    fadeIntervalRef.current = null;
+                    isPlayingRef.current = false;
                     resolve();
                   }
                 }, fadeInterval);
@@ -165,25 +204,37 @@ export function useSound(): SoundManager {
             })
             .catch((error) => {
               console.error("Błąd odtwarzania:", error);
+              isPlayingRef.current = false;
               resolve();
             });
         });
 
         audio.addEventListener("error", (error) => {
           console.error("Błąd ładowania audio:", error);
+          isPlayingRef.current = false;
           resolve();
         });
       });
     },
-    []
+    [stopCurrentAudio]
   );
 
   const playWithFade = useCallback(
     (soundPath: string, fadeDuration: number = 1000) => {
+      // Sprawdź czy już gra jakiś dźwięk
+      if (isPlayingRef.current) {
+        console.log(
+          "Dźwięk już jest odtwarzany, pomijam nowy dźwięk:",
+          soundPath
+        );
+        return;
+      }
+
       try {
         createAudioWithFade(soundPath, fadeDuration);
       } catch (error) {
         console.error("Błąd odtwarzania dźwięku z fade:", error);
+        isPlayingRef.current = false;
       }
     },
     [createAudioWithFade]
@@ -278,29 +329,121 @@ export function useSound(): SoundManager {
       const fadeInterval = duration / fadeSteps;
       const volumeStep = audio.volume / fadeSteps;
 
-      const fadeInterval_id = setInterval(() => {
+      if (fadeIntervalRef.current) {
+        clearInterval(fadeIntervalRef.current);
+      }
+
+      fadeIntervalRef.current = setInterval(() => {
         if (audio.volume > volumeStep) {
           audio.volume -= volumeStep;
         } else {
           audio.volume = 0;
           audio.pause();
-          clearInterval(fadeInterval_id);
+          clearInterval(fadeIntervalRef.current!);
+          fadeIntervalRef.current = null;
+          isPlayingRef.current = false;
         }
       }, fadeInterval);
     }
   }, []);
 
   const stopAll = useCallback(() => {
-    stop();
-    if (currentAudioRef.current) {
-      currentAudioRef.current.pause();
-      currentAudioRef.current = null;
-    }
-    if (fadeTimeoutRef.current) {
-      clearTimeout(fadeTimeoutRef.current);
-      fadeTimeoutRef.current = null;
-    }
-  }, [stop]);
+    stopCurrentAudio();
+  }, [stopCurrentAudio]);
+
+  // Funkcja do sprawdzania czy coś gra
+  const isPlaying = useCallback(() => {
+    return isPlayingRef.current;
+  }, []);
+
+  // Funkcja do wymuszenia odtworzenia nowego dźwięku
+  const forcePlay = useCallback(
+    (soundPath: string, fadeDuration?: number) => {
+      stopCurrentAudio(); // Zawsze zatrzymaj przed nowym
+      if (fadeDuration) {
+        createAudioWithFade(soundPath, fadeDuration);
+      } else {
+        playSound(soundPath);
+      }
+    },
+    [stopCurrentAudio, createAudioWithFade, playSound]
+  );
+
+  // Obsługa eventów dźwiękowych
+  useEffect(() => {
+    const handlePlaySound = (data: SoundEventData) => {
+      console.log("🔊 SOUND EVENT: play-sound", data);
+
+      const { type, questionLevel, fadeDuration } = data;
+
+      switch (type) {
+        case "win":
+          if (questionLevel && fadeDuration) {
+            playWinSoundWithFade(questionLevel);
+          } else if (questionLevel) {
+            playWinSound(questionLevel);
+          }
+          break;
+        case "lose":
+          if (questionLevel && fadeDuration) {
+            playLoseSoundWithFade(questionLevel);
+          } else if (questionLevel) {
+            playLoseSound(questionLevel);
+          }
+          break;
+        case "start":
+          if (questionLevel && fadeDuration) {
+            playStartSoundWithFade(questionLevel);
+          } else if (questionLevel) {
+            playStartSound(questionLevel);
+          }
+          break;
+        case "answer":
+          if (fadeDuration) {
+            playAnswerSoundWithFade();
+          } else {
+            playAnswerSound();
+          }
+          break;
+        case "lightsdown":
+          playLightsDown();
+          break;
+        default:
+          console.warn("Unknown sound type:", type);
+      }
+    };
+
+    const handleStopAllSounds = () => {
+      console.log("🔇 SOUND EVENT: stop-all-sounds");
+      stopCurrentAudio();
+    };
+
+    // Nasłuchuj na eventy
+    const unsubscribePlay = SoundAPI.addEventListener(
+      "play-sound",
+      handlePlaySound
+    );
+    const unsubscribeStopAll = SoundAPI.addEventListener(
+      "stop-all-sounds",
+      handleStopAllSounds
+    );
+
+    return () => {
+      unsubscribePlay();
+      unsubscribeStopAll();
+    };
+  }, [
+    playWinSound,
+    playLoseSound,
+    playStartSound,
+    playAnswerSound,
+    playLightsDown,
+    playWinSoundWithFade,
+    playLoseSoundWithFade,
+    playStartSoundWithFade,
+    playAnswerSoundWithFade,
+    stopCurrentAudio,
+  ]);
 
   return {
     playAnswerSound,
@@ -314,6 +457,9 @@ export function useSound(): SoundManager {
     playStartSoundWithFade,
     playAnswerSoundWithFade,
     stopAll,
+    stopCurrentAudio,
     fadeOut,
+    isPlaying,
+    forcePlay,
   };
 }

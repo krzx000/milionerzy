@@ -3,6 +3,7 @@
 import * as React from "react";
 import { usePlayerState } from "@/hooks/use-player-state";
 import { useSound } from "@/hooks/use-sound";
+import { useSounds } from "@/hooks/use-sounds";
 import { useTransitions } from "@/hooks/use-transitions";
 import { PlayerAPI } from "@/lib/api/player";
 import { PLAYER_CONSTANTS } from "@/lib/constants/player";
@@ -15,6 +16,14 @@ export function usePlayerLogic() {
   const playerState = usePlayerState();
   // Hook do zarządzania transitions
   const transitions = useTransitions();
+
+  // Hook do dźwięków (event-based)
+  const sounds = useSounds();
+  const { playResultSequence, stopAllSounds } = sounds;
+
+  // Hook do dźwięków (legacy - nadal potrzebny dla komponentu)
+  useSound();
+
   const {
     // Stan gry
     session,
@@ -39,17 +48,6 @@ export function usePlayerLogic() {
     // Funkcje pomocnicze
     isConnected,
   } = playerState;
-
-  // Hook do dźwięków
-  const soundControls = useSound();
-  const {
-    playAnswerSoundWithFade,
-    playWinSoundWithFade,
-    playLoseSoundWithFade,
-    playStartSoundWithFade,
-    playLightsDown,
-    stopAll,
-  } = soundControls;
 
   // Stan lokalny dla połączenia
   const [isInitialized, setIsInitialized] = React.useState(false);
@@ -185,60 +183,61 @@ export function usePlayerLogic() {
 
   // Dźwięk startowy przy nowym pytaniu
   React.useEffect(() => {
-    if (currentQuestion && showQuestionAnimation && questionIndex >= 0) {
+    if (
+      currentQuestion &&
+      showQuestionAnimation &&
+      questionIndex >= 0 &&
+      gameStatus === "active"
+    ) {
       console.log("Nowe pytanie - odtwarzanie dźwięku startowego z fade");
-      playStartSoundWithFade(questionIndex + 1);
+      sounds.playStartSound(questionIndex + 1);
     }
   }, [
     currentQuestion,
     showQuestionAnimation,
     questionIndex,
-    playStartSoundWithFade,
+    gameStatus,
+    sounds,
   ]);
 
   // Dźwięk wyboru odpowiedzi
   React.useEffect(() => {
-    if (selectedAnswer && !isAnswerRevealed) {
+    if (selectedAnswer && !isAnswerRevealed && gameStatus === "active") {
       console.log("Wybrano odpowiedź - odtwarzanie dźwięku z fade");
-      playAnswerSoundWithFade();
+      sounds.playAnswerSound();
     }
-  }, [selectedAnswer, isAnswerRevealed, playAnswerSoundWithFade]);
+  }, [selectedAnswer, isAnswerRevealed, gameStatus, sounds]);
 
   // Dźwięki wyników
   React.useEffect(() => {
-    if (isAnswerRevealed && selectedAnswer && correctAnswer) {
+    if (
+      isAnswerRevealed &&
+      selectedAnswer &&
+      correctAnswer &&
+      gameStatus === "active"
+    ) {
       const isCorrect = selectedAnswer === correctAnswer;
       console.log("Ujawniono odpowiedź - odtwarzanie dźwięków");
 
-      playLightsDown();
-
-      setTimeout(() => {
-        if (isCorrect) {
-          console.log("Poprawna odpowiedź - dźwięk wygranej z fade");
-          playWinSoundWithFade(questionIndex + 1);
-        } else {
-          console.log("Niepoprawna odpowiedź - dźwięk przegranej z fade");
-          playLoseSoundWithFade(questionIndex + 1);
-        }
-      }, 1000);
+      // Odtwórz sekwencję dźwięków wyników (zatrzymaj → lights down → win/lose)
+      playResultSequence(isCorrect, questionIndex + 1);
     }
   }, [
     isAnswerRevealed,
     selectedAnswer,
     correctAnswer,
+    gameStatus,
     questionIndex,
-    playWinSoundWithFade,
-    playLoseSoundWithFade,
-    playLightsDown,
+    playResultSequence,
   ]);
 
   // Zatrzymaj dźwięki przy zmianie gry lub błędzie
   React.useEffect(() => {
     if (gameStatus === "ended" || gameStatus === "waiting") {
       console.log("Gra zakończona/oczekująca - zatrzymywanie dźwięków");
-      stopAll();
+      stopAllSounds();
     }
-  }, [gameStatus, stopAll]);
+  }, [gameStatus, stopAllSounds]);
 
   // Zarządzanie wynikami koła ratunkowego 50:50
   React.useEffect(() => {
@@ -425,7 +424,10 @@ export function usePlayerLogic() {
     showGameContent,
     displayQuestionText,
 
-    // Sound controls
-    ...soundControls,
+    // Sound controls (event-based) - tylko trzy kluczowe momenty
+    playStartSound: sounds.playStartSound, // 1. Nowe pytanie
+    playAnswerSound: sounds.playAnswerSound, // 2. Zaznaczenie odpowiedzi
+    playResultSequence: sounds.playResultSequence, // 3. Efekt zaznaczenia (poprawne/niepoprawne)
+    stopAllSounds: sounds.stopAllSounds, // Zatrzymanie (dla cleanup)
   };
 }
