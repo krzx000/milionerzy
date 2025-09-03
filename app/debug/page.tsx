@@ -241,27 +241,6 @@ export default function DebugPage() {
                 <CardTitle>Real-time indicators (Wskaźniki)</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">
-                    Recent events (Ostatnie zdarzenia)
-                  </div>
-                  <div className="space-y-2">
-                    {events.slice(0, 5).map((e, i) => (
-                      <EventItem
-                        key={i}
-                        type={e.type}
-                        data={e.data}
-                        ts={e.ts}
-                      />
-                    ))}
-                    {!events.length && (
-                      <div className="text-xs text-muted-foreground">
-                        Brak zdarzeń
-                      </div>
-                    )}
-                  </div>
-                </div>
-
                 <KeyValueList
                   title="Player state"
                   subtitle="Stan gracza"
