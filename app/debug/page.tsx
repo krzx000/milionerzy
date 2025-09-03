@@ -14,30 +14,147 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 // Force dark theme locally for this page without persisting
 
 type KV = Record<string, unknown>;
+type DebugData =
+  | { last?: { type?: string; data?: KV }; type?: string; data?: KV }
+  | KV
+  | undefined;
 
-function Row({
-  label,
-  pl,
-  value,
-}: {
-  label: string;
-  pl: string;
-  value: unknown;
-}) {
+function hasLast(x: unknown): x is { last: { type?: string; data?: KV } } {
+  if (!x || typeof x !== "object") return false;
+  const rec = x as Record<string, unknown>;
   return (
-    <div className="grid grid-cols-3 gap-2 items-start py-2 border-b last:border-b-0">
-      <div className="col-span-1">
-        <div className="text-sm font-mono text-foreground/90">{label}</div>
-        <div className="text-xs text-muted-foreground">{pl}</div>
+    "last" in rec && typeof rec["last"] === "object" && rec["last"] !== null
+  );
+}
+
+function formatTime(ts?: number) {
+  if (!ts) return "";
+  try {
+    return new Date(ts).toLocaleTimeString("pl-PL", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  } catch {
+    return String(ts);
+  }
+}
+
+type Pair = { label: string; value: string };
+function toPairs(obj?: unknown, max = 8): Pair[] {
+  if (!obj || typeof obj !== "object") return [];
+  const entries = Object.entries(obj as Record<string, unknown>);
+  const pairs: Pair[] = [];
+  for (const [k, v] of entries) {
+    if (v == null) continue;
+    if (
+      typeof v === "string" ||
+      typeof v === "number" ||
+      typeof v === "boolean"
+    ) {
+      pairs.push({ label: k, value: String(v) });
+    } else if (Array.isArray(v)) {
+      const preview = v
+        .slice(0, 4)
+        .map((x) => (typeof x === "object" ? "{…}" : String(x)))
+        .join(", ");
+      const suffix = v.length > 4 ? `, … +${v.length - 4}` : "";
+      pairs.push({ label: k, value: `[${preview}${suffix}]` });
+    } else if (typeof v === "object") {
+      const keys = Object.keys(v as object);
+      const preview = keys.slice(0, 4).join(", ");
+      const suffix = keys.length > 4 ? `, … +${keys.length - 4}` : "";
+      pairs.push({ label: k, value: `{ ${preview}${suffix} }` });
+    }
+    if (pairs.length >= max) break;
+  }
+  return pairs;
+}
+
+function KeyValueList({
+  title,
+  subtitle,
+  data,
+}: {
+  title: string;
+  subtitle?: string;
+  data?: DebugData;
+}) {
+  const container = (data ?? {}) as
+    | { last?: { type?: string; data?: KV }; type?: string; data?: KV }
+    | KV;
+  const last = hasLast(container) ? container.last : container;
+  const type = last?.type as string | undefined;
+  const payload = (last?.data ?? last) as KV | undefined;
+  const pairs = toPairs(payload);
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <div className="text-sm font-medium">{title}</div>
+        {type ? (
+          <Badge variant="secondary" className="text-xs">
+            {type}
+          </Badge>
+        ) : null}
       </div>
-      <div className="col-span-2 text-sm break-words">
-        <pre className="whitespace-pre-wrap text-xs bg-muted/40 p-2 rounded border overflow-auto max-h-40">
-          {JSON.stringify(value, null, 2)}
-        </pre>
+      {subtitle ? (
+        <div className="text-xs text-muted-foreground">{subtitle}</div>
+      ) : null}
+      {pairs.length ? (
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+          {pairs.map((p) => (
+            <React.Fragment key={p.label}>
+              <div className="text-muted-foreground">{p.label}</div>
+              <div className="truncate" title={p.value}>
+                {p.value}
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+      ) : (
+        <div className="text-xs text-muted-foreground">Brak danych</div>
+      )}
+    </div>
+  );
+}
+
+function EventItem({
+  type,
+  data,
+  ts,
+}: {
+  type: GameEventType;
+  data: KV;
+  ts?: number;
+}) {
+  const pairs = toPairs(data);
+  return (
+    <div className="rounded-md border bg-card text-card-foreground p-2">
+      <div className="flex items-center justify-between gap-2">
+        <Badge className="text-xs" variant="outline">
+          {type}
+        </Badge>
+        <div className="text-[10px] text-muted-foreground">
+          {formatTime(ts)}
+        </div>
       </div>
+      {pairs.length ? (
+        <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
+          {pairs.map((p) => (
+            <React.Fragment key={p.label}>
+              <div className="text-muted-foreground">{p.label}</div>
+              <div className="truncate" title={p.value}>
+                {p.value}
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -123,26 +240,42 @@ export default function DebugPage() {
               <CardHeader>
                 <CardTitle>Real-time indicators (Wskaźniki)</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
-                <Row
-                  label="Game events"
-                  pl="Zdarzenia gry"
-                  value={events.slice(0, 10)}
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">
+                    Recent events (Ostatnie zdarzenia)
+                  </div>
+                  <div className="space-y-2">
+                    {events.slice(0, 5).map((e, i) => (
+                      <EventItem
+                        key={i}
+                        type={e.type}
+                        data={e.data}
+                        ts={e.ts}
+                      />
+                    ))}
+                    {!events.length && (
+                      <div className="text-xs text-muted-foreground">
+                        Brak zdarzeń
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <KeyValueList
+                  title="Player state"
+                  subtitle="Stan gracza"
+                  data={playerState}
                 />
-                <Row
-                  label="Player state"
-                  pl="Stan gracza"
-                  value={playerState}
+                <KeyValueList
+                  title="Admin state"
+                  subtitle="Stan administratora"
+                  data={adminState}
                 />
-                <Row
-                  label="Admin state"
-                  pl="Stan administratora"
-                  value={adminState}
-                />
-                <Row
-                  label="Voting state"
-                  pl="Stan głosowania"
-                  value={voteState}
+                <KeyValueList
+                  title="Voting state"
+                  subtitle="Stan głosowania"
+                  data={voteState}
                 />
               </CardContent>
             </Card>
@@ -301,23 +434,23 @@ export default function DebugPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Raw SSE log (Surowy log)</CardTitle>
+                <CardTitle>Event log (Dziennik zdarzeń)</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2 max-h-[70vh] overflow-auto">
+                <div className="space-y-2 max-h-[70vh] overflow-auto pr-1">
                   {events.map((e, i) => (
-                    <div
-                      key={i}
-                      className="text-xs p-2 bg-muted/30 rounded border"
-                    >
-                      <div className="font-mono text-foreground/80">
-                        {e.type}
-                      </div>
-                      <pre className="whitespace-pre-wrap">
-                        {JSON.stringify(e.data, null, 2)}
-                      </pre>
-                    </div>
+                    <EventItem
+                      key={`${e.ts}-${i}`}
+                      type={e.type}
+                      data={e.data}
+                      ts={e.ts}
+                    />
                   ))}
+                  {!events.length && (
+                    <div className="text-xs text-muted-foreground">
+                      Brak zdarzeń
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
