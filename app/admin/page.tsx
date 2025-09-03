@@ -28,7 +28,7 @@ import type { GameEventType } from "@/types/events";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { useAuth } from "@/hooks/use-auth";
 import { LogOut } from "lucide-react";
-import { DURATION } from "@/hooks/use-sound";
+import { SOUND_DURATION_SECONDS as DURATION } from "@/lib/sound/constants";
 
 function LogoutButton() {
   const { logout } = useAuth();

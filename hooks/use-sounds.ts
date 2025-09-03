@@ -1,6 +1,6 @@
 import * as React from "react";
 import { SoundAPI } from "@/lib/sound/api";
-import { DURATION } from "@/hooks/use-sound";
+import { SOUND_DURATION_SECONDS as DURATION } from "@/lib/sound/constants";
 
 export function useSounds() {
   /**

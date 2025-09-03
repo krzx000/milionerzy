@@ -7,6 +7,7 @@ import type { GameEventType } from "@/types/events";
 import type { GameSession } from "@/lib/db/game-session";
 import type { Question } from "@/types/question";
 import { getCurrentPrize, getWinningPrize } from "@/lib/utils/prize";
+import { PLAYER_CONSTANTS } from "@/lib/constants/player";
 
 export interface PlayerGameState {
   // Podstawowe informacje o grze
@@ -274,7 +275,7 @@ export function usePlayerState() {
 
               triggerAnimation("showQuestionAnimation");
               triggerAnimation("showPrizeAnimation");
-              startTimer(30);
+              startTimer(PLAYER_CONSTANTS.DEFAULT_QUESTION_TIME);
             }
           })
           .catch((error) => {
@@ -308,7 +309,7 @@ export function usePlayerState() {
 
         triggerAnimation("showQuestionAnimation");
         triggerAnimation("showPrizeAnimation");
-        startTimer(30);
+        startTimer(PLAYER_CONSTANTS.DEFAULT_QUESTION_TIME);
       }
     },
     [triggerAnimation, startTimer]
@@ -365,7 +366,7 @@ export function usePlayerState() {
           }));
 
           triggerAnimation("showQuestionAnimation");
-          startTimer(30); // 30 sekund na pytanie
+          startTimer(PLAYER_CONSTANTS.DEFAULT_QUESTION_TIME); // 30 sekund na pytanie
           break;
 
         case "question-changed":
@@ -450,7 +451,7 @@ export function usePlayerState() {
                     }));
 
                     triggerAnimation("showQuestionAnimation");
-                    startTimer(30);
+                    startTimer(PLAYER_CONSTANTS.DEFAULT_QUESTION_TIME);
                   }
                 })
                 .catch((error) => {
@@ -787,7 +788,7 @@ export function usePlayerState() {
               }));
 
               triggerAnimation("showQuestionAnimation");
-              startTimer(30);
+              startTimer(PLAYER_CONSTANTS.DEFAULT_QUESTION_TIME);
             } else {
               console.log("Player: Brak aktywnej sesji w fallback");
             }

@@ -33,6 +33,39 @@
 				"/c",
 				"npx -y tsc -p tsconfig.json --noEmit"
 			]
+		},
+		{
+			"label": "Lint and type-check after refactors",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/d",
+				"/s",
+				"/c",
+				"npm run -s lint && npx -y tsc -p tsconfig.json --noEmit"
+			]
+		},
+		{
+			"label": "Lint and type-check after fixes",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/d",
+				"/s",
+				"/c",
+				"npm run -s lint && npx -y tsc -p tsconfig.json --noEmit"
+			]
+		},
+		{
+			"label": "Type-check only",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/d",
+				"/s",
+				"/c",
+				"npx -y tsc -p tsconfig.json --noEmit"
+			]
 		}
 	]
 }
