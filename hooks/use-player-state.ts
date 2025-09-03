@@ -42,6 +42,7 @@ export interface PlayerGameState {
   hiddenAnswers: string[];
   audienceVotingActive: boolean;
   audienceVotingResults: Record<string, number> | null;
+  audienceTotalVotes: number | null;
   showVotingResults: boolean;
 
   // Animacje i efekty
@@ -92,6 +93,7 @@ const initialState: PlayerGameState = {
   hiddenAnswers: [],
   audienceVotingActive: false,
   audienceVotingResults: null,
+  audienceTotalVotes: null,
   showVotingResults: false,
   showQuestionAnimation: false,
   showAnswerAnimation: false,
@@ -567,15 +569,17 @@ export function usePlayerState() {
           const votingResults = votingEndData.results as
             | Record<string, number>
             | undefined;
+          const totalVotes = (votingEndData.totalVotes as number) ?? null;
 
           setState((prev) => ({
             ...prev,
             audienceVotingActive: false,
             audienceVotingResults: votingResults || null,
+            audienceTotalVotes: totalVotes,
             showVotingResults: !!votingResults,
           }));
 
-          // Po 5 sekundach ukryj wyniki głosowania z płynnym przejściem
+          // Po 10 sekundach ukryj wyniki głosowania z płynnym przejściem
           if (votingResults) {
             setTimeout(() => {
               // Najpierw pokaż transition
@@ -584,9 +588,10 @@ export function usePlayerState() {
                   ...prev,
                   showVotingResults: false,
                   audienceVotingResults: null,
+                  audienceTotalVotes: null,
                 }));
               });
-            }, 5000);
+            }, 10000);
           }
           break;
 

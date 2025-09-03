@@ -8,6 +8,7 @@ interface AudienceVotingDisplayProps {
   isActive: boolean;
   showResults: boolean;
   results: Record<string, number> | null;
+  totalVotes?: number | null;
   currentQuestion: Question | null;
   hiddenAnswers: string[];
 }
@@ -90,6 +91,7 @@ export function AudienceVotingDisplay({
   isActive,
   showResults,
   results,
+  totalVotes,
   currentQuestion,
   hiddenAnswers,
 }: AudienceVotingDisplayProps) {
@@ -104,18 +106,8 @@ export function AudienceVotingDisplay({
     D: "bg-red-500",
   };
 
-  // Oblicz procenty dla każdej odpowiedzi
-  const totalVotes = results
-    ? Object.values(results).reduce((sum, count) => sum + count, 0)
-    : 0;
-  const percentages = results
-    ? Object.fromEntries(
-        Object.entries(results).map(([key, count]) => [
-          key,
-          totalVotes > 0 ? (count / totalVotes) * 100 : 0,
-        ])
-      )
-    : {};
+  // Wyniki z SSE przychodzą jako wartości procentowe (0-100)
+  const percentages = results ?? {};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in">
@@ -195,7 +187,7 @@ export function AudienceVotingDisplay({
         </div>
 
         {/* Informacja o łącznej liczbie głosów */}
-        {showResults && totalVotes > 0 && (
+        {showResults && (totalVotes ?? 0) > 0 && (
           <div className="text-center mt-6 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-lg">
             <p className="text-white/90 text-lg">
               Łączna liczba głosów:{" "}

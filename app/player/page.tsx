@@ -36,6 +36,7 @@ function PlayerView() {
     hiddenAnswers,
     audienceVotingActive,
     audienceVotingResults,
+    audienceTotalVotes,
     showVotingResults,
     // Stan połączenia
     isInitialized,
@@ -191,6 +192,7 @@ function PlayerView() {
                 isActive={audienceVotingActive}
                 showResults={showVotingResults}
                 results={audienceVotingResults}
+                totalVotes={audienceTotalVotes}
                 currentQuestion={currentQuestion}
                 hiddenAnswers={hiddenAnswers}
               />
