@@ -75,13 +75,16 @@ export async function POST(request: NextRequest) {
       );
 
       // Wysyłamy również event game-ended z informacją o przegranej
+      // Używamy zaktualizowanego indeksu z finishedSession, aby klient i admin mieli spójne dane
       setTimeout(() => {
         sseManager.broadcast(
           "game-ended",
           {
             reason: "wrong_answer",
             result: "lose",
-            finalQuestionIndex: session.currentQuestionIndex,
+            finalQuestionIndex:
+              finishedSession?.currentQuestionIndex ??
+              session.currentQuestionIndex,
             timestamp: new Date(),
           },
           "all"
@@ -122,13 +125,16 @@ export async function POST(request: NextRequest) {
       );
 
       // Wysyłamy również event game-ended z informacją o wygranej
+      // Używamy zaktualizowanego indeksu z finishedSession (będzie równy totalQuestions przy wygranej)
       setTimeout(() => {
         sseManager.broadcast(
           "game-ended",
           {
             reason: "completed",
             result: "win",
-            finalQuestionIndex: session.currentQuestionIndex,
+            finalQuestionIndex:
+              finishedSession?.currentQuestionIndex ??
+              session.currentQuestionIndex,
             timestamp: new Date(),
           },
           "all"

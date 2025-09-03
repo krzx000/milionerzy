@@ -614,13 +614,10 @@ export function usePlayerState() {
             // Pokaż ekran przejściowy przed zakończeniem gry
             transitions.showTransitionWithCallback(() => {
               setState((prev) => {
-                const isWin = result === "win";
-                const winnings = isWin
-                  ? getWinningPrize(finalQuestionIndex, prev.totalQuestions)
-                  : getWinningPrize(
-                      Math.max(0, finalQuestionIndex - 1),
-                      prev.totalQuestions
-                    );
+                const winnings = getWinningPrize(
+                  finalQuestionIndex,
+                  prev.totalQuestions
+                );
 
                 return {
                   ...prev,
