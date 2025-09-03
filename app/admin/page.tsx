@@ -187,24 +187,45 @@ function AdminPanel() {
           setShowVoteResults(false);
           loadGameSession();
           break;
-        case "game-ended":
-          // Gra się skończyła - wyczyść stan bez ładowania sesji
+        case "game-ended": {
+          // Zdarzenie końca gry – rozróżnij zamknięcie manualne vs. naturalny koniec (wygrana/przegrana)
           setIsVotingActive(false);
           setVoteResults(null);
           setShowVoteResults(false);
-          setGameSession(null);
-          setSelectedAnswer(null);
-          setIsAnswerRevealed(false);
-          setLastAnswerResult(null);
-          setGameEndReason(null);
-          showGameStatusMessage("🛑 Sesja gry została zamknięta!");
+
+          const reason = (data.reason as string) || "";
+
+          if (reason === "manual") {
+            // Sesja została zamknięta przez admina – wyczyść panel
+            setGameSession(null);
+            setSelectedAnswer(null);
+            setIsAnswerRevealed(false);
+            setLastAnswerResult(null);
+            setGameEndReason(null);
+            showGameStatusMessage("🛑 Sesja gry została zamknięta!");
+          } else {
+            // Naturalny koniec – pokaż widok zakończonej gry z wygraną kwotą
+            if (reason === "completed") {
+              setGameEndReason("game_won");
+            } else if (reason === "wrong_answer") {
+              setGameEndReason("wrong_answer");
+            } else {
+              setGameEndReason(null);
+            }
+            // Załaduj zakończoną sesję, aby UI pokazał wynik i przycisk zamknięcia
+            loadGameSession();
+            setSelectedAnswer(null);
+            setIsAnswerRevealed(false);
+            setLastAnswerResult(null);
+            showGameStatusMessage("🏁 Gra zakończona. Możesz zamknąć sesję.");
+          }
           break;
+        }
       }
     },
     [
       showGameStatusMessage,
       loadGameSession,
-      setGameSession,
       setSelectedAnswer,
       setIsAnswerRevealed,
       setLastAnswerResult,

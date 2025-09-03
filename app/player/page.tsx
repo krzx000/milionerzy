@@ -30,7 +30,6 @@ function PlayerView() {
     correctAnswer,
     isAnswerRevealed,
     // Wyniki
-    finalResult,
     // Koła ratunkowe
     lifelinesUsed,
     hiddenAnswers,
@@ -64,9 +63,8 @@ function PlayerView() {
         return "error";
       }
 
-      // Usunięto logikę WinScreen - po wygranej pokazuje normalny interfejs gry
-
-      if (gameStatus === "active" && session && currentQuestion) {
+      // Po zakończeniu gry (ale przed zamknięciem sesji) nadal pokazuj ekran gry z wynikiem
+      if ((gameStatus === "active" || gameStatus === "ended") && session) {
         return "game";
       }
 
@@ -85,15 +83,7 @@ function PlayerView() {
         2400 // 2400ms total transition, callback po 1200ms
       );
     }
-  }, [
-    connectionStatus,
-    gameStatus,
-    finalResult,
-    session,
-    currentQuestion,
-    currentView,
-    transitions,
-  ]);
+  }, [connectionStatus, gameStatus, session, currentView, transitions]);
 
   // Jeśli nie jest jeszcze zainicjalizowane
   if (!isInitialized) {
