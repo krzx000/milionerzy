@@ -157,17 +157,14 @@ export function usePlayerLogic() {
       setHasShownGameStartTransition(true);
       setShowGameContent(false);
 
-  // Rozpocznij transition ze zdefiniowanym czasem (DEFAULT)
-  // Callback wykona się w połowie, transition kończy się po czasie
-      transitions.showTransitionWithCallback(
-        () => {
-          console.log(
-            "Player: Callback w połowie transition - pokazywanie pytania"
-          );
-          setShowGameContent(true);
-        },
-        TRANSITION_CONSTANTS.DURATIONS.DEFAULT
-      );
+      // Rozpocznij transition ze zdefiniowanym czasem (DEFAULT)
+      // Callback wykona się w połowie, transition kończy się po czasie
+      transitions.showTransitionWithCallback(() => {
+        console.log(
+          "Player: Callback w połowie transition - pokazywanie pytania"
+        );
+        setShowGameContent(true);
+      }, TRANSITION_CONSTANTS.DURATIONS.DEFAULT);
     }
   }, [
     gameStatus,

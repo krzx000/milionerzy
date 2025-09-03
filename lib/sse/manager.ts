@@ -34,8 +34,8 @@ class SSEManager {
       connected: new Date(),
     });
 
-  logger.debug(`SSE: Nowy klient połączony: ${id} (type: ${type})`);
-  logger.debug(`SSE: Łącznie klientów: ${this.clients.size}`);
+    logger.debug(`SSE: Nowy klient połączony: ${id} (type: ${type})`);
+    logger.debug(`SSE: Łącznie klientów: ${this.clients.size}`);
 
     // Wyślij potwierdzenie połączenia
     this.sendToClient(id, {
@@ -54,8 +54,8 @@ class SSEManager {
     const client = this.clients.get(id);
     if (client) {
       this.clients.delete(id);
-  logger.debug(`SSE: Klient rozłączony: ${id}`);
-  logger.debug(`SSE: Pozostało klientów: ${this.clients.size}`);
+      logger.debug(`SSE: Klient rozłączony: ${id}`);
+      logger.debug(`SSE: Pozostało klientów: ${this.clients.size}`);
     }
   }
 
@@ -63,7 +63,9 @@ class SSEManager {
   private sendToClient(clientId: string, event: GameEvent): boolean {
     const client = this.clients.get(clientId);
     if (!client) {
-  logger.debug(`SSE: Próba wysłania do nieistniejącego klienta ${clientId}`);
+      logger.debug(
+        `SSE: Próba wysłania do nieistniejącego klienta ${clientId}`
+      );
       return false;
     }
 
@@ -73,7 +75,7 @@ class SSEManager {
         timestamp: event.timestamp,
       })}\n\n`;
 
-  logger.debug(`SSE: Wysyłanie do ${clientId} (${client.type}):`, {
+      logger.debug(`SSE: Wysyłanie do ${clientId} (${client.type}):`, {
         eventType: event.type,
         targetType: event.targetType,
         dataSize: JSON.stringify(event.data).length,
@@ -104,7 +106,7 @@ class SSEManager {
       targetType,
     };
 
-  logger.debug(
+    logger.debug(
       `SSE: Broadcasting ${eventType} to ${targetType} (${this.getClientCount(
         targetType
       )} clients)`
@@ -128,7 +130,7 @@ class SSEManager {
       }
     });
 
-  logger.debug(
+    logger.debug(
       `SSE: Broadcast ${eventType} - sukcess: ${successCount}, failures: ${failureCount}`
     );
   }
@@ -173,7 +175,9 @@ class SSEManager {
       `SSE: Lista połączonych klientów (${this.clients.size} total):`
     );
     this.clients.forEach((client, id) => {
-      logger.debug(`  - ${id} (${client.type}) - connected ${client.connected}`);
+      logger.debug(
+        `  - ${id} (${client.type}) - connected ${client.connected}`
+      );
     });
   }
 

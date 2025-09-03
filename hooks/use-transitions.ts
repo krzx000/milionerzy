@@ -215,7 +215,10 @@ export function useTransitions() {
    * Pokaż transition i wykonaj callback w środku
    */
   const showTransitionWithCallback = React.useCallback(
-    (callback: () => void | Promise<void>, showDuration: number = TRANSITION_CONSTANTS.DURATIONS.SHORT) => {
+    (
+      callback: () => void | Promise<void>,
+      showDuration: number = TRANSITION_CONSTANTS.DURATIONS.SHORT
+    ) => {
       TransitionAPI.showWithCallback(callback, showDuration, {
         type: "callback",
       });

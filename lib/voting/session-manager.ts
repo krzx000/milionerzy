@@ -108,7 +108,7 @@ export async function startVotingSession(sessionId: string): Promise<{
         currentVoteSession.isActive = false;
         currentVoteSession.endTime = new Date();
 
-  logger.debug(
+        logger.debug(
           `Automatycznie zakończono głosowanie: ${currentVoteSession.id}`
         );
 
@@ -149,7 +149,7 @@ export async function startVotingSession(sessionId: string): Promise<{
       }
     }, GAME_CONSTANTS.VOTING_TIME_LIMIT * 1000);
 
-  logger.debug(`Rozpoczęto głosowanie: ${currentVoteSession.id}`);
+    logger.debug(`Rozpoczęto głosowanie: ${currentVoteSession.id}`);
 
     // SSE: Powiadom o rozpoczęciu głosowania
     sendToVoters("voting-started", {

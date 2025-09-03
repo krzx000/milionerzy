@@ -44,23 +44,114 @@ const sampleQuestions = [
     answerD: "1907",
     correctAnswer: "B",
   },
+  // Kilka dodatkowych pytań bazowych, by łatwiej dobić do 12 bez duplikatów
+  {
+    content: "Który pierwiastek ma symbol O?",
+    answerA: "Złoto",
+    answerB: "Srebro",
+    answerC: "Tlen",
+    answerD: "Żelazo",
+    correctAnswer: "C",
+  },
+  {
+    content: "Ile jest kontynentów na Ziemi?",
+    answerA: "5",
+    answerB: "6",
+    answerC: "7",
+    answerD: "8",
+    correctAnswer: "C",
+  },
+  {
+    content: "Jak nazywa się największy ocean na Ziemi?",
+    answerA: "Ocean Atlantycki",
+    answerB: "Ocean Spokojny",
+    answerC: "Ocean Indyjski",
+    answerD: "Ocean Arktyczny",
+    correctAnswer: "B",
+  },
+  {
+    content: "Który instrument ma klawisze i struny?",
+    answerA: "Gitara",
+    answerB: "Fortepian",
+    answerC: "Skrzypce",
+    answerD: "Flet",
+    correctAnswer: "B",
+  },
+  {
+    content: "Jak nazywa się stolica Francji?",
+    answerA: "Paryż",
+    answerB: "Rzym",
+    answerC: "Madryt",
+    answerD: "Berlin",
+    correctAnswer: "A",
+  },
+  {
+    content: "Który miesiąc ma 28 dni w roku nieprzestępnym?",
+    answerA: "Luty",
+    answerB: "Styczeń",
+    answerC: "Marzec",
+    answerD: "Listopad",
+    correctAnswer: "A",
+  },
+  {
+    content: "Ile wynosi 5! (silnia)?",
+    answerA: "60",
+    answerB: "120",
+    answerC: "24",
+    answerD: "720",
+    correctAnswer: "B",
+  },
 ];
 
 async function main() {
   console.log("Start seedowania bazy danych...");
+  // Nie usuwaj pytań – tylko uzupełnij do 12 sztuk
+  const TARGET_COUNT = 12;
 
-  // Usuń wszystkie istniejące pytania
-  await prisma.question.deleteMany();
-  console.log("Usunięto wszystkie istniejące pytania");
+  const existingQuestions = await prisma.question.findMany({
+    select: { content: true },
+  });
+  const existingContents = new Set(existingQuestions.map((q) => q.content));
 
-  // Dodaj przykładowe pytania
-  for (const question of sampleQuestions) {
-    await prisma.question.create({
-      data: question,
-    });
+  const currentCount = existingQuestions.length;
+  if (currentCount >= TARGET_COUNT) {
+    console.log(`W bazie jest już ${currentCount} pytań – nie dodaję nowych.`);
+    console.log("Seedowanie zakończone!");
+    return;
   }
 
-  console.log(`Dodano ${sampleQuestions.length} przykładowych pytań`);
+  const needed = TARGET_COUNT - currentCount;
+  const toInsert: typeof sampleQuestions = [];
+
+  // 1) Spróbuj wstawić brakujące z przygotowanych próbek bez dublowania contentu
+  for (const q of sampleQuestions) {
+    if (toInsert.length >= needed) break;
+    if (!existingContents.has(q.content)) {
+      toInsert.push(q);
+      existingContents.add(q.content);
+    }
+  }
+
+  // 2) Jeśli nadal brakuje, generuj warianty z unikalnym contentem
+  let idx = 1;
+  while (toInsert.length < needed) {
+    const base =
+      sampleQuestions[(toInsert.length + idx) % sampleQuestions.length];
+    const variantContent = `${base.content} (wariant ${idx})`;
+    if (!existingContents.has(variantContent)) {
+      toInsert.push({ ...base, content: variantContent });
+      existingContents.add(variantContent);
+    }
+    idx++;
+  }
+
+  // Wstaw partią
+  const result = await prisma.question.createMany({ data: toInsert });
+  console.log(
+    `Dodano ${result.count} pytań. Razem w bazie będzie ${
+      currentCount + result.count
+    }.`
+  );
   console.log("Seedowanie zakończone!");
 }
 

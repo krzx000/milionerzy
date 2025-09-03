@@ -97,9 +97,9 @@ function PlayerView() {
 
     if (newView !== currentView) {
       // Pokaż transition przed zmianą widoku - używamy dłuższego czasu dla płynniejszego przejścia
-        transitions.showTransitionWithCallback(() => {
-          setCurrentView(newView);
-        }, 2400);
+      transitions.showTransitionWithCallback(() => {
+        setCurrentView(newView);
+      }, 2400);
     }
   }, [connectionStatus, gameStatus, session, currentView, transitions]);
 
