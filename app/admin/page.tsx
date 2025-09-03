@@ -28,6 +28,7 @@ import type { GameEventType } from "@/types/events";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { useAuth } from "@/hooks/use-auth";
 import { LogOut } from "lucide-react";
+import { DURATION } from "@/hooks/use-sound";
 
 function LogoutButton() {
   const { logout } = useAuth();
@@ -466,11 +467,13 @@ function AdminPanel() {
       return;
     }
 
-    // Opóźnienie przed ujawnieniem poprawnej odpowiedzi
-    showGameStatusMessage("🎵 Sprawdzanie odpowiedzi...");
+    // Odczekaj czas trwania dźwięku zaznaczenia (75% czasu) - dźwięk odtworzy gracz
+    showGameStatusMessage("🎵 Oczekiwanie na dźwięk zaznaczenia...");
+    const answerSoundDelay = DURATION.answer * 1000 * 0.75;
 
     setTimeout(async () => {
       // Krok 2: Sprawdź odpowiedź (pokaż wynik)
+      showGameStatusMessage("🎵 Sprawdzanie odpowiedzi...");
       const response = await GameAPI.submitAnswer(selectedAnswer);
 
       if (response.success && response.data) {
@@ -495,29 +498,60 @@ function AdminPanel() {
           setGameEndReason("wrong_answer");
         }
 
-        setGameLoading(false);
+        // Odczekaj na odtworzenie odpowiedniego dźwięku (gracz odtworzy automatycznie)
+        const questionLevel = currentQuestionIndex;
+        let resultSoundDelay = 0;
 
         if (correct) {
           if (gameWon) {
             showSuccessMessage("Gratulacje! Gracz wygrał wszystkie pytania!");
-
-            setTimeout(() => {
-              setSelectedAnswer(null);
-              setIsAnswerRevealed(false);
-            }, 3000);
+            showGameStatusMessage("🎵 Oczekiwanie na dźwięk wygranej...");
+            resultSoundDelay = DURATION.win[questionLevel] * 1000 * 0.75;
           } else {
             showSuccessMessage("Poprawna odpowiedź!");
+            showGameStatusMessage("🎵 Oczekiwanie na dźwięk wygranej...");
+            resultSoundDelay = DURATION.win[questionLevel] * 1000 * 0.75;
           }
         } else {
           showErrorMessage(
             `Niepoprawna odpowiedź! Poprawna odpowiedź to: ${correctAnswer}.`
           );
+          showGameStatusMessage("🎵 Oczekiwanie na dźwięk przegranej...");
+          resultSoundDelay = DURATION.lose[questionLevel] * 1000 * 0.75;
         }
+
+        setGameLoading(false);
+
+        // Odczekaj czas trwania dźwięku wynik (75% czasu)
+        setTimeout(async () => {
+          if (correct && !gameWon) {
+            // Automatyczne przejście do następnego pytania
+            showGameStatusMessage("▶️ Przechodzenie do następnego pytania...");
+            try {
+              const nextResponse = await GameAPI.nextQuestion();
+              if (nextResponse.success && nextResponse.data) {
+                // Odśwież sesję, aby pobrać aktualne dane z pytaniami
+                await loadGameSession();
+              }
+              setSelectedAnswer(null);
+              setIsAnswerRevealed(false);
+              setLastAnswerResult(null);
+            } catch (error) {
+              console.error("Error in nextQuestion:", error);
+              showErrorMessage("Błąd przejścia do następnego pytania");
+            }
+          } else if (gameWon || !correct) {
+            // Gra zakończona - wyczyść stan
+            showGameStatusMessage("🏁 Gra zakończona");
+            setSelectedAnswer(null);
+            setIsAnswerRevealed(false);
+          }
+        }, resultSoundDelay);
       } else {
         showErrorMessage(response.error || "Błąd wysyłania odpowiedzi");
         setGameLoading(false);
       }
-    }, GAME_CONSTANTS.ANSWER_CHECK_DELAY);
+    }, answerSoundDelay);
   }, [
     selectedAnswer,
     gameLoading,
@@ -529,6 +563,7 @@ function AdminPanel() {
     showSuccessMessage,
     showErrorMessage,
     setGameEndReason,
+    currentQuestionIndex,
   ]);
 
   const handleCancelAnswer = React.useCallback(() => {
@@ -578,42 +613,6 @@ function AdminPanel() {
       showErrorMessage("Błąd kończenia głosowania");
     }
   }, [showGameStatusMessage, showErrorMessage]);
-
-  // Effect do automatycznego przejścia do kolejnego pytania
-  React.useEffect(() => {
-    if (
-      isAnswerRevealed &&
-      lastAnswerResult?.correct &&
-      !lastAnswerResult?.gameWon &&
-      isGameActive &&
-      !gameLoading
-    ) {
-      const timeoutId = setTimeout(async () => {
-        try {
-          const nextResponse = await GameAPI.nextQuestion();
-          if (nextResponse.success && nextResponse.data) {
-            // Odśwież sesję, aby pobrać aktualne dane z pytaniami
-            await loadGameSession();
-          }
-          setSelectedAnswer(null);
-          setIsAnswerRevealed(false);
-          setLastAnswerResult(null);
-        } catch (error) {
-          console.error("Error in auto-progress nextQuestion:", error);
-        }
-      }, GAME_CONSTANTS.AUTO_PROGRESS_TIME * 1000);
-
-      return () => {
-        clearTimeout(timeoutId);
-      };
-    }
-  }, [
-    isAnswerRevealed,
-    lastAnswerResult,
-    isGameActive,
-    gameLoading,
-    loadGameSession,
-  ]);
 
   // Ładowanie danych przy inicjalizacji
   React.useEffect(() => {

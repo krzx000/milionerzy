@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Image from "next/image";
 import { Inter, Coiny } from "next/font/google";
 import { Textfit } from "react-textfit";
@@ -51,7 +52,6 @@ export function AnswersDisplay({
     if (selectedAnswer === key) return "selected";
     return "default";
   };
-
   return (
     <div
       className={`-space-y-8 relative transition-all duration-500 ${

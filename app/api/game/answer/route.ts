@@ -56,23 +56,38 @@ export async function POST(request: NextRequest) {
 
     const isCorrect = answer === currentQuestion.correctAnswer;
 
-    // Broadcast SSE event o ujawnieniu odpowiedzi
-    sseManager.broadcast(
-      "answer-revealed",
-      {
-        selectedAnswer: answer,
-        correctAnswer: currentQuestion.correctAnswer,
-        isCorrect,
-        questionIndex: session.currentQuestionIndex,
-        questionId: currentQuestion.id,
-        gameWon: false, // Będzie zaktualizowane niżej jeśli prawda
-      },
-      "all"
-    );
-
     if (!isCorrect) {
       // Niepoprawna odpowiedź - zakończ grę
       const finishedSession = await gameSessionDb.finishGame(false);
+
+      // Broadcast SSE event o ujawnieniu niepoprawnej odpowiedzi
+      sseManager.broadcast(
+        "answer-revealed",
+        {
+          selectedAnswer: answer,
+          correctAnswer: currentQuestion.correctAnswer,
+          isCorrect: false,
+          questionIndex: session.currentQuestionIndex,
+          questionId: currentQuestion.id,
+          gameWon: false,
+        },
+        "all"
+      );
+
+      // Wysyłamy również event game-ended z informacją o przegranej
+      setTimeout(() => {
+        sseManager.broadcast(
+          "game-ended",
+          {
+            reason: "wrong_answer",
+            result: "lose",
+            finalQuestionIndex: session.currentQuestionIndex,
+            timestamp: new Date(),
+          },
+          "all"
+        );
+      }, 3000); // 3 sekundy opóźnienia, żeby użytkownik zobaczył poprawną odpowiedź
+
       return NextResponse.json({
         success: true,
         data: {
@@ -137,6 +152,21 @@ export async function POST(request: NextRequest) {
     } else {
       // Poprawna odpowiedź - NIE przechodź automatycznie do następnego pytania
       // UI będzie wywołać osobny endpoint do przejścia dalej po opóźnieniu
+
+      // Broadcast SSE event o ujawnieniu poprawnej odpowiedzi
+      sseManager.broadcast(
+        "answer-revealed",
+        {
+          selectedAnswer: answer,
+          correctAnswer: currentQuestion.correctAnswer,
+          isCorrect: true,
+          questionIndex: session.currentQuestionIndex,
+          questionId: currentQuestion.id,
+          gameWon: false,
+        },
+        "all"
+      );
+
       return NextResponse.json({
         success: true,
         data: {

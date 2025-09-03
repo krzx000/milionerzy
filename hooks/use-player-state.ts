@@ -407,6 +407,7 @@ export function usePlayerState() {
           setState((prev) => ({
             ...prev,
             selectedAnswer,
+            gameStatus: "active", // Upewnij się że gra jest aktywna przy zaznaczeniu odpowiedzi
           }));
           triggerAnimation("showAnswerAnimation");
 
@@ -471,6 +472,12 @@ export function usePlayerState() {
 
         case "answer-revealed":
           const correctAnswer = data.correctAnswer as string;
+          console.log("Player received answer-revealed event:", {
+            correctAnswer,
+            selectedAnswer: data.selectedAnswer,
+            isCorrect: data.isCorrect,
+            gameWon: data.gameWon,
+          });
 
           setState((prev) => {
             const timeUsed = prev.questionStartTime

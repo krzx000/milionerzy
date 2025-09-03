@@ -196,16 +196,16 @@ export function usePlayerLogic() {
     }
   }, [selectedAnswer, isAnswerRevealed, gameStatus, playAnswerSound]);
 
-  // Dźwięki wyników
+  // Dźwięki wyników - odtwarzaj gdy odpowiedź zostanie ujawniona
   React.useEffect(() => {
-    if (
-      isAnswerRevealed &&
-      selectedAnswer &&
-      correctAnswer &&
-      gameStatus === "active"
-    ) {
+    if (isAnswerRevealed && selectedAnswer && correctAnswer) {
       const isCorrect = selectedAnswer === correctAnswer;
-      console.log("Ujawniono odpowiedź - odtwarzanie dźwięków");
+      console.log("Ujawniono odpowiedź - odtwarzanie dźwięków", {
+        selectedAnswer,
+        correctAnswer,
+        isCorrect,
+        questionIndex: questionIndex + 1,
+      });
 
       // Odtwórz sekwencję dźwięków wyników (zatrzymaj → lights down → win/lose)
       playResultSequence(isCorrect, questionIndex + 1);
@@ -214,7 +214,6 @@ export function usePlayerLogic() {
     isAnswerRevealed,
     selectedAnswer,
     correctAnswer,
-    gameStatus,
     questionIndex,
     playResultSequence,
   ]);

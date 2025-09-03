@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Question as QuestionType } from "@/types/question";
 import { GameSessionWithQuestions } from "@/lib/db/game-session";
 import { getCurrentPrize } from "@/lib/utils/prize";
-import { GAME_CONSTANTS } from "@/lib/constants/game";
 
 interface CurrentQuestionDisplayProps {
   gameSession: GameSessionWithQuestions | null;
@@ -209,8 +208,7 @@ export function CurrentQuestionDisplay({
                     </span>
                   ) : (
                     <span className="text-green-600">
-                      Poprawnie! Przejście do następnego pytania za{" "}
-                      {GAME_CONSTANTS.AUTO_PROGRESS_TIME}s...
+                      Poprawnie! Przejście do następnego pytania...
                     </span>
                   )
                 ) : (
