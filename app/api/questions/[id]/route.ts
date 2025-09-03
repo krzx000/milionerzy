@@ -3,7 +3,7 @@ import { questionsDb } from "@/lib/db/questions";
 
 // GET /api/questions/[id] - pobierz pojedyncze pytanie
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -31,12 +31,12 @@ export async function GET(
 
 // PUT /api/questions/[id] - zaktualizuj pytanie
 export async function PUT(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
+    const body = await _request.json();
 
     // Walidacja danych
     if (!body.content || !body.answers || !body.correctAnswer) {
@@ -96,7 +96,7 @@ export async function PUT(
 
 // DELETE /api/questions/[id] - usuń pytanie
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

@@ -13,11 +13,13 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [
+  "plugins": [
       {
         "name": "next"
       }
     ],
+  "noUnusedLocals": true,
+  "noUnusedParameters": true,
     "paths": {
       "@/*": ["./*"]
     }

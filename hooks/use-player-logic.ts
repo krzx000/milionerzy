@@ -7,7 +7,7 @@ import { useSounds } from "@/hooks/use-sounds";
 import { useTransitions } from "@/hooks/use-transitions";
 import { PlayerAPI } from "@/lib/api/player";
 import { PLAYER_CONSTANTS } from "@/lib/constants/player";
-import { formatLogData } from "@/lib/utils/player";
+import { formatLogData } from "@/lib/utils/utils";
 import { type AnswerKey } from "@/lib/utils/game-assets";
 import type { ConnectionState } from "@/lib/constants/player";
 

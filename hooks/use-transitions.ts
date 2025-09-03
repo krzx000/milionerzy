@@ -195,7 +195,7 @@ export function useTransitions() {
    * Pokaż transition z custom tekstem
    */
   const showCustomTransition = React.useCallback(
-    (text: string, duration: number = 3200) => {
+    (_text: string, duration: number = 3200) => {
       TransitionAPI.showTimed(duration, {
         type: "custom",
       });
@@ -209,7 +209,7 @@ export function useTransitions() {
   const showTransitionWithCallback = React.useCallback(
     (
       callback: () => void | Promise<void>,
-      text?: string,
+      _text?: string,
       showDuration: number = 1600
     ) => {
       TransitionAPI.showWithCallback(callback, showDuration, {

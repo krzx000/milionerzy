@@ -1,0 +1,38 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run strict type check and lint to list unused",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/d",
+				"/s",
+				"/c",
+				"npm run -s lint && npx -y tsc -p tsconfig.json --noEmit"
+			]
+		},
+		{
+			"label": "Re-run strict type check and lint",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/d",
+				"/s",
+				"/c",
+				"npm run -s lint && npx -y tsc -p tsconfig.json --noEmit"
+			]
+		},
+		{
+			"label": "TypeScript noEmit check",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/d",
+				"/s",
+				"/c",
+				"npx -y tsc -p tsconfig.json --noEmit"
+			]
+		}
+	]
+}
