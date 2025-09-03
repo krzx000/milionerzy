@@ -30,6 +30,7 @@ export function usePlayerLogic() {
     session,
     currentQuestion,
     questionIndex,
+    totalQuestions,
     currentPrize,
     gameStatus,
     // Stan odpowiedzi
@@ -219,12 +220,22 @@ export function usePlayerLogic() {
   ]);
 
   // Zatrzymaj dźwięki przy zmianie gry lub błędzie
+  // Wyjątek: na ostatnim pytaniu nie przerywaj dźwięku – pozwól mu wybrzmieć do końca
   React.useEffect(() => {
+    const total = typeof totalQuestions === "number" ? totalQuestions : 12; // domyślnie 12 pytań
+    const isLastQuestion = questionIndex + 1 >= total;
+
     if (gameStatus === "ended" || gameStatus === "waiting") {
+      if (isLastQuestion) {
+        console.log(
+          "Skip stopAllSounds on last question – let the final sound finish"
+        );
+        return;
+      }
       console.log("Gra zakończona/oczekująca - zatrzymywanie dźwięków");
       stopAllSounds();
     }
-  }, [gameStatus, stopAllSounds]);
+  }, [gameStatus, questionIndex, totalQuestions, stopAllSounds]);
 
   // Zarządzanie wynikami koła ratunkowego 50:50
   React.useEffect(() => {
