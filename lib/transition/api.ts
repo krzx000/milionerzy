@@ -12,6 +12,8 @@ export interface TransitionEventData {
   duration?: number; // czas trwania (opcjonalne)
 }
 
+import { TRANSITION_CONSTANTS } from "@/lib/constants/transitions";
+
 class TransitionAPI {
   private static readonly EVENT_PREFIX = "transition:";
 
@@ -69,7 +71,10 @@ class TransitionAPI {
   /**
    * Pokaż transition z automatycznym ukryciem po określonym czasie
    */
-  static showTimed(duration: number = 3200, data?: TransitionEventData): void {
+  static showTimed(
+    duration: number = TRANSITION_CONSTANTS.DURATIONS.DEFAULT,
+    data?: TransitionEventData
+  ): void {
     this.show(data);
 
     setTimeout(() => {
@@ -82,7 +87,7 @@ class TransitionAPI {
    */
   static showWithCallback(
     callback: () => void | Promise<void>,
-    showDuration: number = 1600,
+    showDuration: number = TRANSITION_CONSTANTS.DURATIONS.SHORT,
     data?: TransitionEventData
   ): void {
     this.show(data);

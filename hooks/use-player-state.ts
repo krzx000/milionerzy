@@ -392,7 +392,7 @@ export function usePlayerState() {
                 newTotalQuestions,
                 newHiddenAnswers
               );
-            }, "Przygotuj się na następne pytanie...");
+            });
           } else {
             // Pierwsze pytanie - pokaż od razu
             handleNewQuestion(
@@ -633,7 +633,7 @@ export function usePlayerState() {
                 };
               });
               stopTimer();
-            }, "Gra zakończona");
+            });
           }
           break;
 

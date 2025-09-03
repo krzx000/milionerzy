@@ -6,6 +6,7 @@ import {
   GameEventType,
   ClientType,
 } from "@/types/events";
+import { logger } from "@/lib/utils/logger";
 
 class SSEManager {
   private clients = new Map<string, SSEClient>();
@@ -33,8 +34,8 @@ class SSEManager {
       connected: new Date(),
     });
 
-    console.log(`SSE: Nowy klient połączony: ${id} (type: ${type})`);
-    console.log(`SSE: Łącznie klientów: ${this.clients.size}`);
+  logger.debug(`SSE: Nowy klient połączony: ${id} (type: ${type})`);
+  logger.debug(`SSE: Łącznie klientów: ${this.clients.size}`);
 
     // Wyślij potwierdzenie połączenia
     this.sendToClient(id, {
@@ -53,8 +54,8 @@ class SSEManager {
     const client = this.clients.get(id);
     if (client) {
       this.clients.delete(id);
-      console.log(`SSE: Klient rozłączony: ${id}`);
-      console.log(`SSE: Pozostało klientów: ${this.clients.size}`);
+  logger.debug(`SSE: Klient rozłączony: ${id}`);
+  logger.debug(`SSE: Pozostało klientów: ${this.clients.size}`);
     }
   }
 
@@ -62,7 +63,7 @@ class SSEManager {
   private sendToClient(clientId: string, event: GameEvent): boolean {
     const client = this.clients.get(clientId);
     if (!client) {
-      console.log(`SSE: Próba wysłania do nieistniejącego klienta ${clientId}`);
+  logger.debug(`SSE: Próba wysłania do nieistniejącego klienta ${clientId}`);
       return false;
     }
 
@@ -72,7 +73,7 @@ class SSEManager {
         timestamp: event.timestamp,
       })}\n\n`;
 
-      console.log(`SSE: Wysyłanie do ${clientId} (${client.type}):`, {
+  logger.debug(`SSE: Wysyłanie do ${clientId} (${client.type}):`, {
         eventType: event.type,
         targetType: event.targetType,
         dataSize: JSON.stringify(event.data).length,
@@ -103,7 +104,7 @@ class SSEManager {
       targetType,
     };
 
-    console.log(
+  logger.debug(
       `SSE: Broadcasting ${eventType} to ${targetType} (${this.getClientCount(
         targetType
       )} clients)`
@@ -127,7 +128,7 @@ class SSEManager {
       }
     });
 
-    console.log(
+  logger.debug(
       `SSE: Broadcast ${eventType} - sukcess: ${successCount}, failures: ${failureCount}`
     );
   }
@@ -168,11 +169,11 @@ class SSEManager {
 
   // Funkcja diagnostyczna - wyświetl listę połączonych klientów
   listClients(): void {
-    console.log(
+    logger.debug(
       `SSE: Lista połączonych klientów (${this.clients.size} total):`
     );
     this.clients.forEach((client, id) => {
-      console.log(`  - ${id} (${client.type}) - connected ${client.connected}`);
+      logger.debug(`  - ${id} (${client.type}) - connected ${client.connected}`);
     });
   }
 

@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { logger } from "@/lib/utils/logger";
 import type { GameSession as PrismaGameSession } from "@prisma/client";
 import { Question } from "@/types/question";
 
@@ -85,7 +86,7 @@ export const gameSessionDb = {
   // Pobierz aktualną sesję (tylko aktywną)
   getCurrent: async (): Promise<GameSession | null> => {
     try {
-      console.log("Getting current game session...");
+  logger.debug("Getting current game session...");
 
       // Szukamy tylko aktywnej sesji
       const session = await prisma.gameSession.findFirst({
@@ -94,11 +95,11 @@ export const gameSessionDb = {
       });
 
       if (session) {
-        console.log(`Found active session: ${session.id}`);
+  logger.debug(`Found active session: ${session.id}`);
         return mapPrismaToGameSession(session);
       }
 
-      console.log("No active session found");
+  logger.debug("No active session found");
       return null;
     } catch (error) {
       console.error("Error getting current game session:", error);
@@ -109,7 +110,7 @@ export const gameSessionDb = {
   // Pobierz ostatnią zakończoną sesję (do wyświetlenia po zakończeniu gry)
   getLastFinished: async (): Promise<GameSession | null> => {
     try {
-      console.log("Getting last finished game session...");
+  logger.debug("Getting last finished game session...");
 
       // Szukamy tylko sesji zakończonych, ale nie zamkniętych przez admina
       const session = await prisma.gameSession.findFirst({
@@ -121,11 +122,11 @@ export const gameSessionDb = {
       });
 
       if (session) {
-        console.log(`Found finished session: ${session.id}`);
+  logger.debug(`Found finished session: ${session.id}`);
         return mapPrismaToGameSession(session);
       }
 
-      console.log("No finished session found");
+  logger.debug("No finished session found");
       return null;
     } catch (error) {
       console.error("Error getting last finished game session:", error);

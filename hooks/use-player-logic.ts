@@ -7,6 +7,7 @@ import { useSounds } from "@/hooks/use-sounds";
 import { useTransitions } from "@/hooks/use-transitions";
 import { PlayerAPI } from "@/lib/api/player";
 import { PLAYER_CONSTANTS } from "@/lib/constants/player";
+import { TRANSITION_CONSTANTS } from "@/lib/constants/transitions";
 import { formatLogData } from "@/lib/utils/utils";
 import { type AnswerKey } from "@/lib/utils/game-assets";
 import type { ConnectionState } from "@/lib/constants/player";
@@ -156,8 +157,8 @@ export function usePlayerLogic() {
       setHasShownGameStartTransition(true);
       setShowGameContent(false);
 
-      // Rozpocznij transition z czasem 3200ms
-      // Callback wykona się po 1600ms (w połowie), transition kończy się po 3200ms
+  // Rozpocznij transition ze zdefiniowanym czasem (DEFAULT)
+  // Callback wykona się w połowie, transition kończy się po czasie
       transitions.showTransitionWithCallback(
         () => {
           console.log(
@@ -165,8 +166,7 @@ export function usePlayerLogic() {
           );
           setShowGameContent(true);
         },
-        "Gra się rozpoczyna!",
-        3200
+        TRANSITION_CONSTANTS.DURATIONS.DEFAULT
       );
     }
   }, [

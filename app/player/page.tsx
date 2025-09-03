@@ -97,13 +97,9 @@ function PlayerView() {
 
     if (newView !== currentView) {
       // Pokaż transition przed zmianą widoku - używamy dłuższego czasu dla płynniejszego przejścia
-      transitions.showTransitionWithCallback(
-        () => {
+        transitions.showTransitionWithCallback(() => {
           setCurrentView(newView);
-        },
-        undefined, // brak custom tekstu
-        2400 // 2400ms total transition, callback po 1200ms
-      );
+        }, 2400);
     }
   }, [connectionStatus, gameStatus, session, currentView, transitions]);
 

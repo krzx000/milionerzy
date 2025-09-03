@@ -164,11 +164,15 @@ export function useTransitions() {
   const showVotingResultsTransition = React.useCallback(
     (callback?: () => void) => {
       if (callback) {
-        TransitionAPI.showWithCallback(callback, 1500, {
-          type: "voting-results",
-        });
+        TransitionAPI.showWithCallback(
+          callback,
+          TRANSITION_CONSTANTS.DURATIONS.SHORT,
+          {
+            type: "voting-results",
+          }
+        );
       } else {
-        TransitionAPI.showTimed(1500, {
+        TransitionAPI.showTimed(TRANSITION_CONSTANTS.DURATIONS.SHORT, {
           type: "voting-results",
         });
       }
@@ -181,11 +185,15 @@ export function useTransitions() {
    */
   const showGameResetTransition = React.useCallback((callback?: () => void) => {
     if (callback) {
-      TransitionAPI.showWithCallback(callback, 3200, {
-        type: "game-reset",
-      });
+      TransitionAPI.showWithCallback(
+        callback,
+        TRANSITION_CONSTANTS.DURATIONS.DEFAULT,
+        {
+          type: "game-reset",
+        }
+      );
     } else {
-      TransitionAPI.showTimed(3200, {
+      TransitionAPI.showTimed(TRANSITION_CONSTANTS.DURATIONS.DEFAULT, {
         type: "game-reset",
       });
     }
@@ -195,7 +203,7 @@ export function useTransitions() {
    * Pokaż transition z custom tekstem
    */
   const showCustomTransition = React.useCallback(
-    (_text: string, duration: number = 3200) => {
+    (duration: number = TRANSITION_CONSTANTS.DURATIONS.DEFAULT) => {
       TransitionAPI.showTimed(duration, {
         type: "custom",
       });
@@ -207,11 +215,7 @@ export function useTransitions() {
    * Pokaż transition i wykonaj callback w środku
    */
   const showTransitionWithCallback = React.useCallback(
-    (
-      callback: () => void | Promise<void>,
-      _text?: string,
-      showDuration: number = 1600
-    ) => {
+    (callback: () => void | Promise<void>, showDuration: number = TRANSITION_CONSTANTS.DURATIONS.SHORT) => {
       TransitionAPI.showWithCallback(callback, showDuration, {
         type: "callback",
       });

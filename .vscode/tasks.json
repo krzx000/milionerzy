@@ -66,6 +66,50 @@
 				"/c",
 				"npx -y tsc -p tsconfig.json --noEmit"
 			]
+		},
+		{
+			"label": "Lint and type-check after transitions+logger",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/d",
+				"/s",
+				"/c",
+				"npm run -s lint && npx -y tsc -p tsconfig.json --noEmit"
+			]
+		},
+		{
+			"label": "Lint + TS after removing text args",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/d",
+				"/s",
+				"/c",
+				"npm run -s lint && npx -y tsc -p tsconfig.json --noEmit"
+			]
+		},
+		{
+			"label": "Final lint+ts check for transitions API change",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/d",
+				"/s",
+				"/c",
+				"npm run -s lint && npx -y tsc -p tsconfig.json --noEmit"
+			]
+		},
+		{
+			"label": "Re-run TS check to verify fix",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/d",
+				"/s",
+				"/c",
+				"npx -y tsc -p tsconfig.json --noEmit"
+			]
 		}
 	]
 }

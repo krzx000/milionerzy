@@ -3,6 +3,7 @@ import { gameSessionDb } from "@/lib/db/game-session";
 import { prisma } from "@/lib/db/prisma";
 import { GAME_CONSTANTS } from "@/lib/constants/game";
 import { broadcastEvent, sendToAdmin, sendToVoters } from "@/lib/sse/manager";
+import { logger } from "@/lib/utils/logger";
 
 // Tymczasowy store w pamięci - w produkcji użyć bazy danych
 export let currentVoteSession: VoteSession | null = null;
@@ -12,7 +13,7 @@ export let votes: Record<string, { option: string; timestamp: Date }> = {};
 export function clearVotingSession() {
   currentVoteSession = null;
   votes = {};
-  console.log("Wyczyszczono sesję głosowania");
+  logger.debug("Wyczyszczono sesję głosowania");
 }
 
 // Funkcja pomocnicza do uruchamiania głosowania (można wywołać z innych endpointów)
@@ -107,7 +108,7 @@ export async function startVotingSession(sessionId: string): Promise<{
         currentVoteSession.isActive = false;
         currentVoteSession.endTime = new Date();
 
-        console.log(
+  logger.debug(
           `Automatycznie zakończono głosowanie: ${currentVoteSession.id}`
         );
 
@@ -148,7 +149,7 @@ export async function startVotingSession(sessionId: string): Promise<{
       }
     }, GAME_CONSTANTS.VOTING_TIME_LIMIT * 1000);
 
-    console.log(`Rozpoczęto głosowanie: ${currentVoteSession.id}`);
+  logger.debug(`Rozpoczęto głosowanie: ${currentVoteSession.id}`);
 
     // SSE: Powiadom o rozpoczęciu głosowania
     sendToVoters("voting-started", {
