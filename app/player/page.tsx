@@ -16,6 +16,7 @@ import { ImagePreloader } from "@/components/ui/image-preloader";
 import { usePlayerLogic } from "@/hooks/use-player-logic";
 import { useTransitions } from "@/hooks/use-transitions";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { WinConfettiOverlay } from "@/components/ui/win-confetti";
 
 function PlayerView() {
   const {
@@ -46,6 +47,7 @@ function PlayerView() {
     isTransitioning,
     showGameContent,
     displayQuestionText,
+    isFullWin,
   } = usePlayerLogic();
 
   // Hook do zarządzania transition
@@ -55,6 +57,25 @@ function PlayerView() {
   const [currentView, setCurrentView] = React.useState<
     "waiting" | "game" | "win" | "error"
   >("waiting");
+
+  // Konfetti: pokaż tylko raz przy pełnej wygranej i automatycznie schowaj po kilku sekundach
+  const [confettiActive, setConfettiActive] = React.useState(false);
+  const [confettiShown, setConfettiShown] = React.useState(false);
+  React.useEffect(() => {
+    if (showWinScreen && isFullWin && !confettiShown) {
+      setConfettiShown(true);
+      setConfettiActive(true);
+      const t = setTimeout(() => setConfettiActive(false), 7000);
+      return () => clearTimeout(t);
+    }
+  }, [showWinScreen, isFullWin, confettiShown]);
+  // Reset po rozpoczęciu nowej gry/sesji
+  React.useEffect(() => {
+    if (gameStatus === "active") {
+      setConfettiActive(false);
+      setConfettiShown(false);
+    }
+  }, [gameStatus]);
 
   // Efekt do zarządzania przejściami między widokami
   React.useEffect(() => {
@@ -193,6 +214,12 @@ function PlayerView() {
       {renderCurrentView()}
       {/* TRANSITION OVERLAY */}
       <TransitionOverlay />
+      {/* CONFETTI – tylko przy pełnej wygranej, po pokazaniu ekranu wygranej */}
+      {confettiActive ? (
+        <div className="pointer-events-none fixed inset-0 z-[60]">
+          <WinConfettiOverlay run={true} pieces={600} />
+        </div>
+      ) : null}
     </>
   );
 }

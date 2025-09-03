@@ -71,6 +71,24 @@ export function usePlayerLogic() {
   // Ref do śledzenia czy animacja wygranej już została uruchomiona
   const winAnimationTriggered = React.useRef(false);
 
+  // Obliczenia pomocnicze
+  const total = React.useMemo(
+    () => (typeof totalQuestions === "number" ? totalQuestions : 12),
+    [totalQuestions]
+  );
+  const isLastQuestion = React.useMemo(
+    () => questionIndex + 1 >= total,
+    [questionIndex, total]
+  );
+  const isFullWin =
+    gameStatus === "ended" &&
+    isAnswerRevealed &&
+    showFinalAnswer &&
+    !!selectedAnswer &&
+    !!correctAnswer &&
+    selectedAnswer === correctAnswer &&
+    isLastQuestion;
+
   // Flags for tracking shown transitions
   const [hasShownGameStartTransition, setHasShownGameStartTransition] =
     React.useState(false);
@@ -222,9 +240,6 @@ export function usePlayerLogic() {
   // Zatrzymaj dźwięki przy zmianie gry lub błędzie
   // Wyjątek: na ostatnim pytaniu nie przerywaj dźwięku – pozwól mu wybrzmieć do końca
   React.useEffect(() => {
-    const total = typeof totalQuestions === "number" ? totalQuestions : 12; // domyślnie 12 pytań
-    const isLastQuestion = questionIndex + 1 >= total;
-
     if (gameStatus === "ended" || gameStatus === "waiting") {
       if (isLastQuestion) {
         console.log(
@@ -235,7 +250,7 @@ export function usePlayerLogic() {
       console.log("Gra zakończona/oczekująca - zatrzymywanie dźwięków");
       stopAllSounds();
     }
-  }, [gameStatus, questionIndex, totalQuestions, stopAllSounds]);
+  }, [gameStatus, isLastQuestion, stopAllSounds]);
 
   // Zarządzanie wynikami koła ratunkowego 50:50
   React.useEffect(() => {
@@ -421,6 +436,7 @@ export function usePlayerLogic() {
     isTransitioning,
     showGameContent,
     displayQuestionText,
+    isFullWin,
 
     // Sound controls (event-based) - tylko trzy kluczowe momenty
     playStartSound: sounds.playStartSound, // 1. Nowe pytanie
