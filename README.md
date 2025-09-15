@@ -4,6 +4,8 @@
 
 Nowoczesna aplikacja quizowa wzorowana na kultowym teleturnieju „Milionerzy", stworzona specjalnie z myślą o przeprowadzaniu konkursów wiedzy na auli szkolnej. System składa się z trzech modułów komunikujących się w czasie rzeczywistym, zapewniając profesjonalne i atrakcyjne przeprowadzenie teleturnieju w warunkach szkolnych.
 
+[![PLIK PDF](https://img.shields.io/badge/Zobacz_Plik_PDF-000?style=for-the-badge)](https://krzx.top/milionerzy)
+
 ## 📷 Zrzuty ekranu
 
 ![Zrzut 1](./screenshots/screenshot-1.png)
