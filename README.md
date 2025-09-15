@@ -1,6 +1,16 @@
+- ![Logo](./screenshots/logo.png)
+
 # 🎓 Milionerzy – Aplikacja Webowa do Przeprowadzania Teleturniejów Szkolnych
 
 Nowoczesna aplikacja quizowa wzorowana na kultowym teleturnieju „Milionerzy", stworzona specjalnie z myślą o przeprowadzaniu konkursów wiedzy na auli szkolnej. System składa się z trzech modułów komunikujących się w czasie rzeczywistym, zapewniając profesjonalne i atrakcyjne przeprowadzenie teleturnieju w warunkach szkolnych.
+
+## 📷 Zrzuty ekranu
+
+- ![Zrzut 1](./screenshots/screenshot-1.png)
+- ![Zrzut 2](./screenshots/screenshot-2.png)
+- ![Zrzut 3](./screenshots/screenshot-3.png)
+- ![Zrzut 4](./screenshots/screenshot-4.png)
+- ![Zrzut 5](./screenshots/screenshot-5.png)
 
 ## ✨ Kluczowe zalety
 
