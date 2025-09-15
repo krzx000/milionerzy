@@ -1,4 +1,4 @@
-- ![Logo](./screenshots/logo.png)
+![Logo](./screenshots/logo.png)
 
 # 🎓 Milionerzy – Aplikacja Webowa do Przeprowadzania Teleturniejów Szkolnych
 
@@ -6,11 +6,11 @@ Nowoczesna aplikacja quizowa wzorowana na kultowym teleturnieju „Milionerzy", 
 
 ## 📷 Zrzuty ekranu
 
-- ![Zrzut 1](./screenshots/screenshot-1.png)
-- ![Zrzut 2](./screenshots/screenshot-2.png)
-- ![Zrzut 3](./screenshots/screenshot-3.png)
-- ![Zrzut 4](./screenshots/screenshot-4.png)
-- ![Zrzut 5](./screenshots/screenshot-5.png)
+![Zrzut 1](./screenshots/screenshot-1.png)
+![Zrzut 2](./screenshots/screenshot-2.png)
+![Zrzut 3](./screenshots/screenshot-3.png)
+![Zrzut 4](./screenshots/screenshot-4.png)
+![Zrzut 5](./screenshots/screenshot-5.png)
 
 ## ✨ Kluczowe zalety
 
