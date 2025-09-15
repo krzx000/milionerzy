@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { sseManager } from "@/lib/sse/manager";
 
+export const dynamic = "force-static";
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const clientType = searchParams.get("type") as
