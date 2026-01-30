@@ -1,6 +1,6 @@
 import { prisma } from "./prisma";
 import { logger } from "@/lib/utils/logger";
-import type { GameSession as PrismaGameSession } from "@prisma/client";
+import type { GameSession as PrismaGameSession } from "../../prisma/generated/prisma";
 import { Question } from "@/types/question";
 
 export type GameStatus = "inactive" | "active" | "finished";
