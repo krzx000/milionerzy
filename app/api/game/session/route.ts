@@ -27,7 +27,31 @@ export async function GET() {
       orderBy: { order: "asc" },
       include: { question: true },
     });
-    const questions = sessionQuestions.map((q) => ({
+    interface Question {
+      id: number;
+      content: string;
+      answers: {
+      A: string;
+      B: string;
+      C: string;
+      D: string;
+      };
+      correctAnswer: "A" | "B" | "C" | "D";
+    }
+
+    interface GameSessionQuestion {
+      question: {
+        id: number;
+        content: string;
+        answerA: string;
+        answerB: string;
+        answerC: string;
+        answerD: string;
+        correctAnswer: "A" | "B" | "C" | "D";
+      };
+    }
+
+    const questions: Question[] = sessionQuestions.map((q: GameSessionQuestion): Question => ({
       id: q.question.id,
       content: q.question.content,
       answers: {

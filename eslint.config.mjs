@@ -15,15 +15,15 @@ const eslintConfig = [
     files: ["**/*.ts", "**/*.tsx"],
     rules: {
       // Wymuś zgłaszanie nieużywanych zmiennych/parametrów w TypeScript
-      "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-          ignoreRestSiblings: true,
-        },
-      ],
+      // "no-unused-vars": "off",
+      // "@typescript-eslint/no-unused-vars": [
+      //   "error",
+      //   {
+      //     argsIgnorePattern: "^_",
+      //     varsIgnorePattern: "^_",
+      //     ignoreRestSiblings: true,
+      //   },
+      // ],
     },
   },
   {

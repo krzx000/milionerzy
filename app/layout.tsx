@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/sonner";
-import { AudioProvider } from "@/components/providers/audio-provider";
+import { LayoutClient } from "./layout-client";
 
 const interSans = Inter({
   subsets: ["latin"],
@@ -44,14 +43,5 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <html lang="pl">
-      <body className={`${interSans.variable} antialiased`}>
-        <AudioProvider>
-          {children}
-          <Toaster />
-        </AudioProvider>
-      </body>
-    </html>
-  );
+  return <LayoutClient fontClass={interSans.variable}>{children}</LayoutClient>;
 }

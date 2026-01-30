@@ -1,9 +1,57 @@
 "use client";
 
-import * as React from "react";
 import Image from "next/image";
 import { Inter, Coiny } from "next/font/google";
-import { Textfit } from "react-textfit";
+import { useRef, useLayoutEffect, useState, CSSProperties, ReactNode } from "react";
+// Prosty zamiennik Textfit do jednowierszowego tekstu
+interface AutoFontSizeProps {
+  min?: number;
+  max?: number;
+  children: ReactNode;
+  style?: CSSProperties;
+  className?: string;
+  fontFamily?: string;
+}
+
+function AutoFontSize({
+  min = 10,
+  max = 30,
+  children,
+  style,
+  className = "",
+  fontFamily,
+}: AutoFontSizeProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [fontSize, setFontSize] = useState(max);
+
+  useLayoutEffect(() => {
+    if (!containerRef.current || !textRef.current) return;
+    const container = containerRef.current;
+    const text = textRef.current;
+    let current = max;
+    text.style.fontSize = `${current}px`;
+    const fits = () => text.scrollWidth <= container.offsetWidth && text.offsetHeight <= container.offsetHeight;
+    while (current > min && !fits()) {
+      current -= 1;
+      text.style.fontSize = `${current}px`;
+    }
+    setFontSize(current);
+  }, [children, min, max, style]);
+
+  return (
+    <div
+      ref={containerRef}
+      style={{ width: "100%", height: "100%", ...style, display: "flex", alignItems: "center", justifyContent: "flex-start", textAlign: "left", fontFamily }}
+      className={className}
+    >
+      <span ref={textRef} style={{ fontSize, width: "100%", whiteSpace: "nowrap",  textOverflow: "ellipsis" }}>
+        {children}
+      </span>
+    </div>
+  );
+}
+// import { Textfit } from "react-textfit";
 import {
   IMAGES,
   getAnswerRowBackground,
@@ -83,15 +131,13 @@ export function AnswersDisplay({
         {/* Odpowiedź A */}
         {isAnswerVisible("A") && (
           <div className="absolute left-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center">
-            <div className="text-shadow-bold flex justify-start items-center w-full">
-              <Textfit
-                mode="single"
-                min={30}
+            <div className="flex justify-start items-center w-full">
+              <AutoFontSize
+                min={18}
                 max={30}
-                style={{
-                  ...INTER.style,
-                }}
+                style={INTER.style}
                 className="text-white font-bold"
+                fontFamily={INTER.style.fontFamily as string}
               >
                 <div className="flex gap-4">
                   <span style={INTER.style} className="font-extrabold">
@@ -99,7 +145,7 @@ export function AnswersDisplay({
                   </span>
                   <span>{currentQuestion.answers.A}</span>
                 </div>
-              </Textfit>
+              </AutoFontSize>
             </div>
           </div>
         )}
@@ -107,15 +153,13 @@ export function AnswersDisplay({
         {/* Odpowiedź B */}
         {isAnswerVisible("B") && (
           <div className="absolute right-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center">
-            <div className="text-shadow-bold flex justify-start items-center w-full">
-              <Textfit
-                mode="single"
-                min={30}
+            <div className="flex justify-start items-center w-full">
+              <AutoFontSize
+                min={18}
                 max={30}
-                style={{
-                  ...INTER.style,
-                }}
+                style={INTER.style}
                 className="text-white font-bold"
+                fontFamily={INTER.style.fontFamily as string}
               >
                 <div className="flex gap-4">
                   <span style={INTER.style} className="font-extrabold">
@@ -123,7 +167,7 @@ export function AnswersDisplay({
                   </span>
                   <span>{currentQuestion.answers.B}</span>
                 </div>
-              </Textfit>
+              </AutoFontSize>
             </div>
           </div>
         )}
@@ -169,15 +213,13 @@ export function AnswersDisplay({
         {/* Odpowiedź C */}
         {isAnswerVisible("C") && (
           <div className="absolute left-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center">
-            <div className="text-shadow-bold flex justify-start items-center w-full">
-              <Textfit
-                mode="single"
-                min={30}
+            <div className="flex justify-start items-center w-full">
+              <AutoFontSize
+                min={18}
                 max={30}
-                style={{
-                  ...INTER.style,
-                }}
+                style={INTER.style}
                 className="text-white font-bold"
+                fontFamily={INTER.style.fontFamily as string}
               >
                 <div className="flex gap-4">
                   <span style={INTER.style} className="font-extrabold">
@@ -185,7 +227,7 @@ export function AnswersDisplay({
                   </span>
                   <span>{currentQuestion.answers.C}</span>
                 </div>
-              </Textfit>
+              </AutoFontSize>
             </div>
           </div>
         )}
@@ -193,15 +235,13 @@ export function AnswersDisplay({
         {/* Odpowiedź D */}
         {isAnswerVisible("D") && (
           <div className="absolute right-[14.5%] top-1/2 -translate-y-1/2 w-[29%] h-[50%] flex items-center">
-            <div className="text-shadow-bold flex justify-start items-center w-full">
-              <Textfit
-                mode="single"
-                min={30}
+            <div className="flex justify-start items-center w-full">
+              <AutoFontSize
+                min={18}
                 max={30}
-                style={{
-                  ...INTER.style,
-                }}
+                style={INTER.style}
                 className="text-white font-bold"
+                fontFamily={INTER.style.fontFamily as string}
               >
                 <div className="flex gap-4">
                   <span style={INTER.style} className="font-extrabold">
@@ -209,7 +249,7 @@ export function AnswersDisplay({
                   </span>
                   <span>{currentQuestion.answers.D}</span>
                 </div>
-              </Textfit>
+              </AutoFontSize>
             </div>
           </div>
         )}

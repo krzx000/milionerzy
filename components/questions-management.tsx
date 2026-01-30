@@ -133,10 +133,16 @@ export function QuestionsManagement({
     }
   };
 
-  const handleQuestionSaved = () => {
-    setIsQuestionDialogOpen(false);
-    setEditingQuestion(undefined);
-    loadQuestions();
+  const handleQuestionSaved = async (question) => {
+    try {
+      await QuestionsAPI.create(question);
+      toast.success("Pytanie zostało dodane");
+      setIsQuestionDialogOpen(false);
+      setEditingQuestion(undefined);
+      loadQuestions();
+    } catch (error) {
+      toast.error("Błąd podczas dodawania pytania");
+    }
   };
 
   const columns = React.useMemo(

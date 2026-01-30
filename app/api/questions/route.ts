@@ -59,6 +59,8 @@ export async function POST(request: NextRequest) {
       correctAnswer: body.correctAnswer,
     });
 
+    console.log("Nowe pytanie dodane:", newQuestion);
+
     return NextResponse.json(
       {
         success: true,

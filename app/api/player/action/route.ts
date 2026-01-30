@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
               include: { question: true },
             });
 
-            const questions = sessionQuestions.map((q) => ({
+            const questions = sessionQuestions.map((q: typeof sessionQuestions[number]) => ({
               id: q.question.id,
               content: q.question.content,
               answers: {

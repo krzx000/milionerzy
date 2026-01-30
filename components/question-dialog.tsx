@@ -82,8 +82,8 @@ export function QuestionDialog({
     }
   }, [question, form]);
 
-  const onSubmit = (data: QuestionFormData) => {
-    onSave({
+  const onSubmit = async (data: QuestionFormData) => {
+    await onSave({
       id: question?.id,
       content: data.content,
       answers: data.answers,
