@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
   Card,
   CardContent,
@@ -88,7 +87,7 @@ export function CurrentQuestionDisplay({
               <h3 className="text-lg font-semibold dark:text-blue-200 text-blue-700 mb-2">
                 Pytanie za {getCurrentPrize(currentQuestionIndex)}
               </h3>
-              <p className="dark:text-blue-400 text-blue-600 leading-relaxed break-words">
+              <p className="dark:text-blue-400 text-blue-600 leading-relaxed wrap-break-word">
                 {currentQuestion.content}
               </p>
             </div>
@@ -118,7 +117,7 @@ export function CurrentQuestionDisplay({
                   | "destructive"
                   | "outline" = "outline";
                 let className =
-                  "justify-start text-left h-auto py-3 px-4 whitespace-normal break-words min-h-[3rem]";
+                  "justify-start text-left h-auto py-3 px-4 whitespace-normal wrap-break-word min-h-12";
 
                 if (isHidden) {
                   // Odpowiedź ukryta przez 50:50
@@ -152,13 +151,13 @@ export function CurrentQuestionDisplay({
                     }
                     onClick={() => !isHidden && onSelectAnswer(key)}
                   >
-                    <span className="font-bold mr-3 flex-shrink-0">{key}:</span>
-                    <span className="flex-1 break-words leading-relaxed">
+                    <span className="font-bold mr-3 shrink-0">{key}:</span>
+                    <span className="flex-1 wrap-break-word leading-relaxed">
                       {isHidden ? "••••••••" : value}
                     </span>
-                    {isCorrect && <span className="ml-2 flex-shrink-0">✓</span>}
-                    {isWrong && <span className="ml-2 flex-shrink-0">✗</span>}
-                    {isHidden && <span className="ml-2 flex-shrink-0">⚖️</span>}
+                    {isCorrect && <span className="ml-2 shrink-0">✓</span>}
+                    {isWrong && <span className="ml-2 shrink-0">✗</span>}
+                    {isHidden && <span className="ml-2 shrink-0">⚖️</span>}
                   </Button>
                 );
               })}
@@ -174,7 +173,7 @@ export function CurrentQuestionDisplay({
                   <div className="flex flex-col xl:flex-row gap-2 w-full">
                     <Button
                       onClick={onConfirmAnswer}
-                      className="!bg-green-600 !hover:bg-green-700 text-white flex-1 px-4 py-3 text-lg font-semibold"
+                      className="bg-green-600! !hover:bg-green-700 text-white flex-1 px-4 py-3 text-lg font-semibold"
                       size="lg"
                     >
                       ✅ Potwierdź odpowiedź
@@ -200,7 +199,7 @@ export function CurrentQuestionDisplay({
             )}
 
             {isAnswerRevealed && !gameLoading && lastAnswerResult && (
-              <div className="text-center text-sm text-gray-600 break-words">
+              <div className="text-center text-sm text-gray-600 wrap-break-word">
                 {lastAnswerResult.correct ? (
                   lastAnswerResult.gameWon ? (
                     <span className="text-green-600 font-semibold">

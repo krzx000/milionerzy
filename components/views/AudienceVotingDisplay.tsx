@@ -1,9 +1,9 @@
 "use client";
 
-import * as React from "react";
+
 import { IMAGES } from "@/lib/utils/game-assets";
 import type { Question } from "@/types/question";
-
+import * as React from "react";
 interface AudienceVotingDisplayProps {
   isActive: boolean;
   showResults: boolean;
@@ -121,11 +121,11 @@ export function AudienceVotingDisplay({
       {/* Główny panel głosowania */}
       <div className="relative w-full max-w-4xl mx-8 bg-white/20 backdrop-blur-lg border border-white/30 rounded-3xl p-8 shadow-2xl hover:shadow-2xl transition-all duration-500 hover:bg-white/25">
         {/* Gradient overlay dla dodatkowego efektu */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent rounded-3xl pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-b from-white/5 to-transparent rounded-3xl pointer-events-none" />
         {/* Nagłówek */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-yellow-400/80 to-orange-500/80 backdrop-blur-sm rounded-full flex items-center justify-center mr-4 shadow-lg border border-white/20">
+            <div className="w-16 h-16 bg-linear-to-br from-yellow-400/80 to-orange-500/80 backdrop-blur-sm rounded-full flex items-center justify-center mr-4 shadow-lg border border-white/20">
               <span className="text-2xl">👥</span>
             </div>
             <h2 className="text-3xl font-bold text-white drop-shadow-lg">
@@ -202,7 +202,7 @@ export function AudienceVotingDisplay({
         {isActive && !showResults && (
           <div className="mt-8 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-lg">
             <div className="w-full h-3 bg-black/40 backdrop-blur-sm rounded-full overflow-hidden border border-white/20">
-              <div className="h-full bg-gradient-to-r from-blue-500 to-red-500 rounded-full animate-pulse shadow-lg" />
+              <div className="h-full bg-linear-to-r from-blue-500 to-red-500 rounded-full animate-pulse shadow-lg" />
             </div>
             <p className="text-center text-white/90 mt-3 text-sm font-medium drop-shadow-md">
               Zbieranie głosów...

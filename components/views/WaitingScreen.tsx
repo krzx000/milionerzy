@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+
 import Image from "next/image";
 import { ConnectionBadge } from "@/components/ui/connection-badge";
 import { IMAGES } from "@/lib/utils/game-assets";

@@ -1,6 +1,6 @@
 "use client";
-
 import * as React from "react";
+
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -193,7 +193,7 @@ export function DataTable<TData>({
             placeholder="Szukaj..."
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
-            className="h-8 w-[120px] lg:w-[200px] xl:w-[250px] max-w-full"
+            className="h-8 w-30 lg:w-50 xl:w-62.5 max-w-full"
           />
         </div>
         <DropdownMenu>
@@ -201,13 +201,13 @@ export function DataTable<TData>({
             <Button
               variant="outline"
               size="sm"
-              className="ml-auto hidden h-8 lg:flex flex-shrink-0"
+              className="ml-auto hidden h-8 lg:flex shrink-0"
             >
               <SettingsIcon className="mr-2 h-4 w-4" />
               Kolumny
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[150px]">
+          <DropdownMenuContent align="end" className="w-37.5">
             {columns
               .filter((column: Column<TData>) => column.enableHiding !== false)
               .map((column: Column<TData>) => {
@@ -239,7 +239,7 @@ export function DataTable<TData>({
           <TableHeader>
             <TableRow>
               {enableRowSelection && (
-                <TableHead className="w-[50px] text-center">
+                <TableHead className="w-12.5 text-center">
                   <div className="flex items-center justify-center">
                     <Checkbox
                       checked={
@@ -334,10 +334,10 @@ export function DataTable<TData>({
       </div>
       <div className="flex flex-col">
         {/* <div className="flex flex-col space-y-4 px-2 xl:flex-row sm:items-center sm:justify-between sm:space-y-0 overflow-hidden"> */}
-        <div className="flex w-full py-1 items-center justify-center text-xs font-medium sm:w-auto xl:text-sm min-w-0 flex-shrink-0">
+        <div className="flex w-full py-1 items-center justify-center text-xs font-medium sm:w-auto xl:text-sm min-w-0 shrink-0">
           Strona {state.pagination.pageIndex + 1} z {pageCount}
         </div>
-        <div className="flex items-center justify-center space-x-1 sm:space-x-1 xl:space-x-2 flex-shrink-0">
+        <div className="flex items-center justify-center space-x-1 sm:space-x-1 xl:space-x-2 shrink-0">
           <Button
             variant="outline"
             className="h-7 w-7 p-0 xl:h-8 xl:w-8"
@@ -390,7 +390,7 @@ export function DataTable<TData>({
             <>Razem {sortedData.length} wierszy.</>
           )}
         </div>
-        <div className="flex gap-2 justify-center items-center min-w-0 flex-shrink-0">
+        <div className="flex gap-2 justify-center items-center min-w-0 shrink-0">
           <p className="text-sm font-medium whitespace-nowrap">
             Wierszy na stronie
           </p>
@@ -406,7 +406,7 @@ export function DataTable<TData>({
                 },
               }))
             }
-            className="h-8 w-[60px] rounded-md border border-input bg-background px-2 py-1 text-xs xl:w-[70px] xl:text-sm flex-shrink-0"
+            className="h-8 w-15 rounded-md border border-input bg-background px-2 py-1 text-xs xl:w-17.5 xl:text-sm shrink-0"
           >
             {[10, 20, 30, 40, 50].map((pageSize) => (
               <option key={pageSize} value={pageSize}>

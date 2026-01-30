@@ -214,7 +214,7 @@ function PlayerView() {
       <TransitionOverlay />
       {/* CONFETTI – tylko przy pełnej wygranej, po pokazaniu ekranu wygranej */}
       {confettiActive ? (
-        <div className="pointer-events-none fixed inset-0 z-[60]">
+        <div className="pointer-events-none fixed inset-0 z-60">
           <WinConfettiOverlay run={true} pieces={600} />
         </div>
       ) : null}

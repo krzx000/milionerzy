@@ -54,7 +54,7 @@ export function TransitionOverlay() {
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] bg-black/20 transition-all duration-1000 ease-in-out ${
+      className={`fixed inset-0 z-9999 bg-black/20 transition-all duration-1000 ease-in-out ${
         isAnimating
           ? "opacity-100 backdrop-blur-3xl"
           : "opacity-0 backdrop-blur-none"

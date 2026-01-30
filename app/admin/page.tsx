@@ -712,7 +712,7 @@ function AdminPanel() {
           {voteResults && (
             <div className="space-y-6">
               {/* Łączna liczba głosów */}
-              <div className="text-center bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 p-4 rounded-lg">
+              <div className="text-center bg-linear-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 p-4 rounded-lg">
                 <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                   {voteResults.totalVotes}
                 </p>

@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+
 import {
   Card,
   CardContent,
@@ -125,7 +125,7 @@ export function GameManagement({
                       size="sm"
                       disabled={isUsed || gameLoading}
                       onClick={() => onUseLifeline(lifelineKey)}
-                      className="text-xs whitespace-normal break-words h-auto py-2"
+                      className="text-xs whitespace-normal wrap-break-word h-auto py-2"
                     >
                       {isUsed ? (
                         <span className="line-through">

@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
   Card,
   CardContent,
@@ -38,7 +37,7 @@ export function GameHistory({
               Poprzednie sesje gry z wynikami i statystykami
             </CardDescription>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 lg:flex-shrink-0">
+          <div className="flex flex-col sm:flex-row gap-2 lg:shrink-0">
             {onClearAllSessions && gameHistory.length > 0 && (
               <Button
                 variant="destructive"
@@ -89,7 +88,7 @@ export function GameHistory({
             </div>
           ) : (
             <div className="overflow-x-auto -mx-6 px-6">
-              <div className="space-y-0 min-w-[800px]">
+              <div className="space-y-0 min-w-200">
                 {/* Nagłówek tabeli */}
                 <div className="grid grid-cols-7 gap-0 border-b border-gray-200 dark:border-gray-700 pb-2 mb-3">
                   <div className="text-left p-3 whitespace-nowrap font-medium text-sm">

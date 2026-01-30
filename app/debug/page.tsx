@@ -1,5 +1,4 @@
 "use client";
-
 import * as React from "react";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { useServerSentEvents } from "@/hooks/use-sse";
@@ -388,7 +387,7 @@ export default function DebugPage() {
                   </div>
                   <div className="flex gap-2 items-center">
                     <Select value={effect} onValueChange={setEffect}>
-                      <SelectTrigger className="w-[200px]">
+                      <SelectTrigger className="w-50">
                         <SelectValue placeholder="Effect" />
                       </SelectTrigger>
                       <SelectContent>

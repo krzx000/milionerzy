@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useCallback, useState } from "react";
 import { GameEventType, ClientType } from "@/types/events";
-
 interface UseSSEOptions {
   clientType: ClientType;
   onEvent?: (eventType: GameEventType, data: Record<string, unknown>) => void;

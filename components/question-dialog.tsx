@@ -29,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Question, AnswerOption } from "@/types/question";
+import {  AnswerOption } from "@/types/question";
 
 const questionSchema = z.object({
   content: z.string().min(5, "Pytanie musi mieć przynajmniej 5 znaków"),
@@ -44,11 +44,13 @@ const questionSchema = z.object({
 
 type QuestionFormData = z.infer<typeof questionSchema>;
 
+import { Question as QuestionType } from "@/types/question";
+
 interface QuestionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  question?: Question;
-  onSave: (question: Omit<Question, "id"> & { id?: string }) => void;
+  question?: QuestionType;
+  onSave: (question: QuestionType) => void | Promise<void>;
 }
 
 export function QuestionDialog({
@@ -84,7 +86,7 @@ export function QuestionDialog({
 
   const onSubmit = async (data: QuestionFormData) => {
     await onSave({
-      id: question?.id,
+      id: question?.id ?? "",
       content: data.content,
       answers: data.answers,
       correctAnswer: data.correctAnswer,

@@ -133,14 +133,14 @@ export function QuestionsManagement({
     }
   };
 
-  const handleQuestionSaved = async (question) => {
+  const handleQuestionSaved = async (question: QuestionType) => {
     try {
       await QuestionsAPI.create(question);
       toast.success("Pytanie zostało dodane");
       setIsQuestionDialogOpen(false);
       setEditingQuestion(undefined);
       loadQuestions();
-    } catch (error) {
+    } catch {
       toast.error("Błąd podczas dodawania pytania");
     }
   };
@@ -165,7 +165,7 @@ export function QuestionsManagement({
           return (
             <Badge
               variant="outline"
-              className={`truncate max-w-[200px] ${
+              className={`truncate max-w-50 ${
                 shouldBlur
                   ? "pixelated-text select-none pointer-events-none"
                   : ""

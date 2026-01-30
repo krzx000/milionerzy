@@ -7,7 +7,6 @@ import {
   SOUND_PATHS as SOUND,
   SOUND_DURATION_SECONDS as DURATION,
 } from "@/lib/sound/constants";
-
 export type SoundType = "start" | "answer" | "win" | "lose";
 
 export interface SoundManager {

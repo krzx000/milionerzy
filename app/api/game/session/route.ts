@@ -27,41 +27,35 @@ export async function GET() {
       orderBy: { order: "asc" },
       include: { question: true },
     });
-    interface Question {
+    type Question = {
       id: number;
       content: string;
       answers: {
-      A: string;
-      B: string;
-      C: string;
-      D: string;
+        A: string;
+        B: string;
+        C: string;
+        D: string;
       };
       correctAnswer: "A" | "B" | "C" | "D";
-    }
+    };
 
-    interface GameSessionQuestion {
-      question: {
-        id: number;
-        content: string;
-        answerA: string;
-        answerB: string;
-        answerC: string;
-        answerD: string;
-        correctAnswer: "A" | "B" | "C" | "D";
+    const questions: Question[] = sessionQuestions.map((q): Question => {
+      const question = q.question;
+      return {
+        id: Number(question.id),
+        content: question.content,
+        answers: {
+          A: question.answerA,
+          B: question.answerB,
+          C: question.answerC,
+          D: question.answerD,
+        },
+        correctAnswer:
+          typeof question.correctAnswer === "string" && ["A", "B", "C", "D"].includes(question.correctAnswer)
+        ? (question.correctAnswer as "A" | "B" | "C" | "D")
+        : "A",
       };
-    }
-
-    const questions: Question[] = sessionQuestions.map((q: GameSessionQuestion): Question => ({
-      id: q.question.id,
-      content: q.question.content,
-      answers: {
-        A: q.question.answerA,
-        B: q.question.answerB,
-        C: q.question.answerC,
-        D: q.question.answerD,
-      },
-      correctAnswer: q.question.correctAnswer as "A" | "B" | "C" | "D",
-    }));
+    });
     const currentQuestion = questions[session.currentQuestionIndex] || null;
 
     const prizes = [

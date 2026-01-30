@@ -1,12 +1,13 @@
 "use client";
 
-import * as React from "react";
+
 import type { VoteSession, VoteStats, VoteOption } from "@/types/voting";
 import type { Question } from "@/types/question";
 import { VotingAPI, type GameViewerState } from "@/lib/api/voting";
 import { getWinningPrize } from "@/lib/utils/prize";
 import { useServerSentEvents } from "@/hooks/use-sse";
 import type { GameEventType } from "@/types/events";
+import * as React from "react";
 
 export interface ViewerState {
   gameState: GameViewerState | null;

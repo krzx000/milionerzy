@@ -1,6 +1,6 @@
 "use client";
 
-// import * as React from "react";
+// 
 import Image from "next/image";
 // import { Textfit } from "react-textfit";
 import { useRef, useLayoutEffect, useState, CSSProperties, ReactNode } from "react";
