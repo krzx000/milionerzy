@@ -1,6 +1,6 @@
 import { Question } from "@/types/question";
 import { prisma } from "./prisma";
-import { Question as PrismaQuestion } from "@prisma/client";
+import { Question as PrismaQuestion } from "../../prisma/generated/prisma";
 
 // Funkcje mapowania między bazą danych a typami aplikacji
 const mapPrismaToQuestion = (prismaQuestion: PrismaQuestion): Question => ({
