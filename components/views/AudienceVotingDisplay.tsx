@@ -130,7 +130,10 @@ export function AudienceVotingDisplay({
             </div>
             <h2 className="text-3xl font-bold text-white drop-shadow-lg">
               {isActive && !showResults
-                ? "Trwa głosowanie publiczności..."
+                ? <div>
+                    <span>Trwa głosowanie publiczności...</span>
+                    <p className="font-normal">Wejdź na stronę <b>zst.krzx.top</b> i oddaj swój głos!</p>
+                </div>
                 : "Wyniki głosowania publiczności"}
             </h2>
           </div>

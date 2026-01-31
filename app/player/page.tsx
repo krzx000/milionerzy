@@ -137,7 +137,7 @@ function PlayerView() {
           >
             {/* Status połączenia w prawym górnym rogu */}
             <div className="fixed top-6 right-6 z-50">
-              <ConnectionBadge isConnected={isConnected} />
+              <ConnectionBadge version="small" isConnected={isConnected} />
             </div>
 
             {/* GŁÓWNA ZAWARTOŚĆ GRY */}

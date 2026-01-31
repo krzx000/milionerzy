@@ -10,7 +10,7 @@ export function VoteHeader() {
             <div className="w-6 h-6 bg-blue-100/30 backdrop-blur-sm rounded-lg flex items-center justify-center">
               <Trophy className="w-4 h-4 text-blue-200" />
             </div>
-            Milionerzy
+            Zstlionerzy
           </CardTitle>
         </CardHeader>
         <CardContent>

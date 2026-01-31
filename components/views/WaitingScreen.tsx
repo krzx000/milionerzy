@@ -23,7 +23,7 @@ export function WaitingScreen({ isConnected }: WaitingScreenProps) {
     >
       {/* Status połączenia w prawym górnym rogu */}
       <div className="fixed top-6 right-6 z-50">
-        <ConnectionBadge isConnected={isConnected} />
+        <ConnectionBadge isConnected={isConnected} version="small" />
       </div>
 
       <div className="flex flex-col items-center justify-center space-y-8 text-center transition-all duration-700 ease-in-out opacity-100">
@@ -31,7 +31,7 @@ export function WaitingScreen({ isConnected }: WaitingScreenProps) {
         <div className="mb-8 transition-all duration-700 ease-in-out">
           <Image
             src={IMAGES.LOGO}
-            alt="Milionerzy Logo"
+            alt="Zstlionerzy Logo"
             width={400}
             height={200}
             className="drop-shadow-2xl transition-all duration-700 ease-in-out opacity-100"
@@ -48,6 +48,7 @@ export function WaitingScreen({ isConnected }: WaitingScreenProps) {
             >
               Oczekiwanie na rozpoczęcie kolejnej gry
             </p>
+             <p className="text-2xl text-white font-semibold">Wejdź na stronę <b>zst.krzx.top</b>, aby oddać swój głos w głosowaniu publiczności!</p>
           </div>
         </div>
 

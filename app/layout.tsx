@@ -2,18 +2,18 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { LayoutClient } from "./layout-client";
-
+import { Analytics } from "@vercel/analytics/next"
 const interSans = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
-  title: "Milionerzy - Gra Quizowa",
+  title: "Zstlionerzy - Gra Quizowa",
   description:
-    "Zagraj w polską wersję kultowej gry quizowej Milionerzy! Odpowiadaj na pytania, używaj kół ratunkowych i zdobywaj wirtualne miliony. Sprawdź swoją wiedzę w tej emocjonującej grze online.",
+    "Zagraj w polską wersję kultowej gry quizowej Zstlionerzy! Odpowiadaj na pytania, używaj kół ratunkowych i zdobywaj wirtualne miliony. Sprawdź swoją wiedzę w tej emocjonującej grze online.",
   keywords: [
-    "Milionerzy",
+    "Zstlionerzy",
     "gra quizowa",
     "pytania i odpowiedzi",
     "kółka ratunkowe",
@@ -27,12 +27,11 @@ export const metadata: Metadata = {
   openGraph: {},
   twitter: {
     card: "summary_large_image",
-    title: "Milionerzy - Gra Quizowa",
+    title: "Zstlionerzy - Gra Quizowa",
     description:
-      "Zagraj w polską wersję kultowej gry quizowej Milionerzy! Odpowiadaj na pytania, używaj kół ratunkowych i zdobywaj wirtualne miliony. Sprawdź swoją wiedzę w tej emocjonującej grze online.",
+      "Zagraj w polską wersję kultowej gry quizowej Zstlionerzy! Odpowiadaj na pytania, używaj kół ratunkowych i zdobywaj wirtualne miliony. Sprawdź swoją wiedzę w tej emocjonującej grze online.",
   },
   icons: {
-    icon: "/favicon.ico",
     shortcut: "/logo.webp",
     apple: "/logo.webp",
   },
@@ -43,5 +42,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <LayoutClient fontClass={interSans.variable}>{children}</LayoutClient>;
+  return <>
+    <LayoutClient fontClass={interSans.variable}>{children}</LayoutClient>
+    <Analytics />
+  </>;
 }

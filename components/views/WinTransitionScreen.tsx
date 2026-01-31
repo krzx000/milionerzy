@@ -16,7 +16,7 @@ export function WinTransitionScreen() {
           <div className="transition-screen-logo">
             <Image
               src={IMAGES.LOGO}
-              alt="Logo Milionerzy"
+              alt="Logo Zstlionerzy"
               width={600}
               height={300}
               className="drop-shadow-2xl"

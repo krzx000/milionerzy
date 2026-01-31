@@ -4,20 +4,24 @@ import { Wifi, WifiOff } from "lucide-react";
 interface ConnectionBadgeProps {
   isConnected: boolean;
   className?: string;
+  version?: "small" | "large";
 }
 
 export function ConnectionBadge({
   isConnected,
   className = "",
+  version
 }: ConnectionBadgeProps) {
   if (isConnected) {
+
+
     return (
       <Badge
         variant="default"
         className={`bg-green-500 text-white ${className}`}
       >
         <Wifi className="w-4 h-4 mr-1" />
-        Połączono
+        {version === "small" ? "" : "Połączono"}
       </Badge>
     );
   }
@@ -28,7 +32,7 @@ export function ConnectionBadge({
       className={`bg-red-500 text-white ${className}`}
     >
       <WifiOff className="w-4 h-4 mr-1" />
-      Rozłączono
+      {version === "small" ? "" : "Rozłączono"}
     </Badge>
   );
 }

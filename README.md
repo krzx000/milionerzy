@@ -1,6 +1,6 @@
 ![Logo](./screenshots/logo.png)
 
-# 🎓 Milionerzy – Aplikacja Webowa do Przeprowadzania Teleturniejów Szkolnych
+# 🎓 Zstlionerzy – Aplikacja Webowa do Przeprowadzania Teleturniejów Szkolnych
 
 Nowoczesna aplikacja quizowa wzorowana na kultowym teleturnieju „Milionerzy", stworzona specjalnie z myślą o przeprowadzaniu konkursów wiedzy na auli szkolnej. System składa się z trzech modułów komunikujących się w czasie rzeczywistym, zapewniając profesjonalne i atrakcyjne przeprowadzenie teleturnieju w warunkach szkolnych.
 
@@ -16,7 +16,8 @@ Nowoczesna aplikacja quizowa wzorowana na kultowym teleturnieju „Milionerzy", 
 
 ## ✨ Kluczowe zalety
 
-- **💻 Działanie offline** – Aplikacja działa w sieci lokalnej bez dostępu do internetu
+<!-- - **💻 Działanie offline** – Aplikacja działa w sieci lokalnej bez dostępu do internetu -->
+
 - **⚡ Komunikacja w czasie rzeczywistym** – Wykorzystanie technologii Server-Sent Events (SSE)
 - **🎯 Trzy moduły** – Ekran główny, panel administratora i interfejs publiczności
 - **🎨 Profesjonalny wygląd** – Atrakcyjny interfejs nadający charakter prawdziwego teleturnieju
@@ -33,7 +34,7 @@ Nowoczesna aplikacja quizowa wzorowana na kultowym teleturnieju „Milionerzy", 
 
 ## 🖥 Moduły systemu
 
-### 👨‍💼 Panel administratora (`/admin`)
+### 👨‍💼 Panel administratora (`/host`)
 
 **Centrum zarządzania teleturniejem** dla prowadzącego:
 
@@ -44,7 +45,7 @@ Nowoczesna aplikacja quizowa wzorowana na kultowym teleturnieju „Milionerzy", 
 - Obsługa wszystkich kół ratunkowych
 - Podgląd stanu gry i historii odpowiedzi
 
-### 🎮 Widok gracza (`/player`)
+### 🎮 Widok gracza/auli/prowadzącego (`/player`)
 
 **Interfejs dla uczestnika teleturnieju**:
 
@@ -53,7 +54,7 @@ Nowoczesna aplikacja quizowa wzorowana na kultowym teleturnieju „Milionerzy", 
 - Podgląd drabinki nagród z oznaczeniem aktualnej pozycji
 - Wskaźniki statusu gry
 
-### 👥 Moduł publiczności (`/vote`)
+### 👥 Moduł publiczności
 
 **Aktywny udział widowni w teleturnieju**:
 
@@ -134,62 +135,19 @@ System wprowadza nowoczesną formę interaktywnych zajęć, która:
 - **🔧 Modułowość i skalowalność** ułatwiające przyszłe rozszerzenia
 - **👨‍👩‍👧‍👦 Włączenie społeczności** poprzez udział publiczności w czasie rzeczywistym
 
-## 🚀 Instalacja i uruchomienie
+## 🚀 Jak korzystać?
 
-### Wymagania systemowe
+**Nie musisz nic instalować!**
 
-- Node.js 18.17 lub nowszy
-- npm lub yarn
-- Przeglądarka internetowa (Chrome, Firefox, Edge)
+Aplikacja jest już dostępna online pod adresem: [https://zst.krzx.top](https://zst.krzx.top)
 
-### Kroki instalacji
+### Dostępne widoki:
 
-1. **Klonowanie repozytorium**
+- [https://zst.krzx.top](https://zst.krzx.top) – **ekran głosowania uczniów**
+- [https://zst.krzx.top/player](https://zst.krzx.top/player) – **widok gracza/auli/prowadzącego**
+- [https://zst.krzx.top/host](https://zst.krzx.top/host) – **widok administratora**
 
-```bash
-git clone https://github.com/krzx000/milionerzy.git
-cd milionerzy
-```
-
-2. **Instalacja zależności**
-
-```bash
-npm install
-```
-
-3. **Konfiguracja bazy danych**
-
-```bash
-npx prisma generate
-npx prisma db push
-npx prisma db seed
-```
-
-4. **Uruchomienie aplikacji**
-
-```bash
-npm run dev
-```
-
-5. **Dostęp do modułów**
-
-- Ekran główny: `http://localhost:3000`
-- Panel administratora: `http://localhost:3000/admin`
-- Widok gracza: `http://localhost:3000/player`
-- Moduł publiczności: `http://localhost:3000/vote`
-
-### Konfiguracja sieci lokalnej
-
-Aby umożliwić dostęp z innych urządzeń w sieci lokalnej:
-
-1. Znajdź adres IP swojego komputera
-2. Uruchom aplikację z flagą host:
-
-```bash
-npm run dev -- --host 0.0.0.0
-```
-
-3. Inne urządzenia mogą się połączyć używając: `http://[TWOJ-IP]:3000`
+Wejdź na odpowiedni adres, aby korzystać z aplikacji.
 
 ## 📝 Licencja
 

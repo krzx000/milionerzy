@@ -32,7 +32,7 @@ export function WinScreen({ isConnected, winnings }: WinScreenProps) {
         <div className="mb-8 transition-all duration-700 ease-in-out">
           <Image
             src={IMAGES.LOGO}
-            alt="Milionerzy Logo"
+            alt="Zstlionerzy Logo"
             width={400}
             height={200}
             className="drop-shadow-2xl transition-all duration-700 ease-in-out"

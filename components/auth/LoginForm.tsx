@@ -46,11 +46,11 @@ export function LoginForm({ role, onLogin }: LoginFormProps) {
   const roleTitle = role === "admin" ? "Administrator" : "Gracz";
   const roleDescription =
     role === "admin"
-      ? "Panel administracyjny gry Milionerzy"
-      : "Panel gracza gry Milionerzy";
+      ? "Panel administracyjny gry Zstlionerzy"
+      : "Panel gracza gry Zstlionerzy";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-900 to-purple-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-b from-blue-900 to-purple-900 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">{roleTitle}</CardTitle>
